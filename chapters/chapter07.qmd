@@ -1,34 +1,1366 @@
 ---
 title: "¿Cómo aprender visión con pocas etiquetas?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> resolver una tarea
-ambiental o científica con un conjunto etiquetado insuficiente para entrenar
-una red profunda desde cero.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-El dataset definitivo se elegirá después de verificar licencia, estabilidad de
-descarga, tamaño y pertinencia del análisis de errores.
+<div class="problem-banner">
+<strong>Problema:</strong> distinguir hojas sanas, roya y mancha angular con
+solo 1.034 fotografías etiquetadas. Compararemos aprender desde cero, reutilizar
+una representación de ImageNet y adaptar sus capas superiores, sin convertir el
+test en una fuente de decisiones.
+</div>
+
+## De reconocer objetos a examinar hojas
+
+El Capítulo 6 entrenó filtros desde cero. Con pocas etiquetas, una red profunda
+puede memorizar fondos, iluminación o dispositivos antes de aprender señales
+estables. El aprendizaje por transferencia parte de parámetros obtenidos en una
+tarea fuente y los reutiliza en una tarea objetivo.
+
+Usaremos una ResNet-18 entrenada en ImageNet-1K [@russakovsky2015imagenet]. Sus
+primeras capas pueden representar bordes, color y textura; las últimas están más
+especializadas en las clases fuente [@yosinski2014transferable]. Ninguna capa
+conoce de antemano las enfermedades del fríjol. Transferir no es copiar una
+respuesta: es elegir qué representación conservar y cuánto modificarla.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- distinguir preentrenamiento, extracción de características y fine-tuning;
+- sustituir una cabeza de clasificación y contar parámetros entrenables;
+- mantener BatchNorm estable cuando un backbone está congelado;
+- usar tasas diferenciadas y descongelamiento gradual;
+- comparar características aleatorias y preentrenadas;
+- seleccionar un protocolo mediante macro-F1 y costo;
+- evaluar calibración, errores y sensibilidad a iluminación; y
+- documentar límites de uso en una aplicación agrícola.
 :::
 
-## Objetivos
+## Preparar el entorno
 
-- explicar qué se transfiere desde un modelo preentrenado;
-- sustituir y entrenar una cabeza de clasificación;
-- comparar extracción de características y fine-tuning;
-- tratar desbalance y augmentación sin contaminar evaluación;
-- interpretar errores y sensibilidad al dominio; y
-- documentar límites de uso.
+```{python}
+from copy import deepcopy
+from hashlib import sha256
+from io import BytesIO
+import math
+from pathlib import Path
+import random
+from time import perf_counter
+from urllib.request import urlretrieve
+import zipfile
 
-## Ruta de desarrollo
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+from PIL import Image
+import sklearn
+import torch
+import torchvision
+from sklearn.metrics import confusion_matrix, f1_score
+from torch import nn
+from torch.nn import functional as F
+from torch.utils.data import DataLoader, Dataset
+from torchvision import transforms
+from torchvision.models import resnet18
+from torchvision.transforms import functional as TF
 
-1. Auditoría y línea base.
-2. Modelo entrenado desde cero.
-3. Backbone congelado.
-4. Fine-tuning gradual con tasas diferenciadas.
-5. Métricas por clase y calibración.
-6. Shift y ejemplos fuera del dominio.
+PAIR_SEEDS = [17, 29, 43]
+REPRESENTATIVE_SEED = 29
+EPOCHS = 4
+BATCH_SIZE = 32
 
-## Referencia conceptual
+random.seed(REPRESENTATIVE_SEED)
+np.random.seed(REPRESENTATIVE_SEED)
+torch.manual_seed(REPRESENTATIVE_SEED)
+torch.set_num_threads(1)
+torch.use_deterministic_algorithms(True)
+device = torch.device("cpu")
 
-Fine-tuning y visión aplicada en [@zhang2023dive].
+print(
+    f"PyTorch {torch.__version__} | torchvision {torchvision.__version__} | "
+    f"scikit-learn {sklearn.__version__}"
+)
+print(f"Dispositivo: {device} | hilos: {torch.get_num_threads()}")
+```
+
+La edición canónica usa CPU y un hilo para comparar tiempos. Las dimensiones de
+entrada se reducen a $96\times96$: ResNet admite esa resolución gracias al
+promedio global, aunque sus pesos se entrenaron con crops de $224\times224$.
+Esta decisión abarata el laboratorio y puede ocultar lesiones pequeñas.
+
+## Obtener Beans desde una revisión fija
+
+Beans reúne 1.295 imágenes RGB de hojas tomadas con teléfonos en campos de
+Uganda. Especialistas del National Crops Resources Research Institute anotaron
+hojas sanas, roya y mancha angular [@makerere2020beans]. El repositorio declara
+licencia MIT.
+
+Los enlaces históricos de Google Storage rechazan actualmente algunas
+descargas. Usamos los ZIP publicados por Makerere AI Lab en Hugging Face,
+fijados a una revisión inmutable, y verificamos SHA-256 antes de abrirlos.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar descarga verificada de datos y pesos"
+
+DATA_REVISION = "27aa014ce09b193e1a6f58112d4a66e0eddb69c5"
+DATA_BASE_URL = (
+    "https://huggingface.co/datasets/AI-Lab-Makerere/beans/resolve/"
+    f"{DATA_REVISION}/data"
+)
+DATA_DIR = Path(".cache/chapter07")
+DATA_FILES = {
+    "train.zip": "284fe8456ce20687f4367ae7ad94a64577e7f9fde2c2c6b1c74340ab5dc82715",
+    "validation.zip": "90b7aa1c26d91d9afff07a30bbc67a5ea34f1f1397f068d8675be09d7d0c602d",
+    "test.zip": "ca67b15d960d1e2fd9d23fd8498ce86818ead90755c630a43baf19ec4af09312",
+}
+WEIGHTS_URL = "https://download.pytorch.org/models/resnet18-f37072fd.pth"
+WEIGHTS_FILE = "resnet18-f37072fd.pth"
+WEIGHTS_SHA256 = "f37072fd47e89c5e827621c5baffa7500819f7896bbacec160b1a16c560e07ec"
+
+
+def file_sha256(path, chunk_size=1 << 20):
+    digest = sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verified_download(url, path, expected_hash):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if path.exists() and file_sha256(path) == expected_hash:
+        return "caché verificada"
+    temporary = path.with_suffix(path.suffix + ".download")
+    temporary.unlink(missing_ok=True)
+    urlretrieve(url, temporary)
+    actual_hash = file_sha256(temporary)
+    if actual_hash != expected_hash:
+        temporary.unlink(missing_ok=True)
+        raise ValueError(f"SHA-256 inesperado para {path.name}: {actual_hash}")
+    temporary.replace(path)
+    return "descarga verificada"
+
+
+download_rows = []
+for filename, expected_hash in DATA_FILES.items():
+    status = verified_download(
+        f"{DATA_BASE_URL}/{filename}", DATA_DIR / filename, expected_hash
+    )
+    download_rows.append({"archivo": filename, "estado": status})
+
+weights_status = verified_download(
+    WEIGHTS_URL, DATA_DIR / WEIGHTS_FILE, WEIGHTS_SHA256
+)
+download_rows.append({"archivo": WEIGHTS_FILE, "estado": weights_status})
+pd.DataFrame(download_rows)
+```
+
+Verificar el archivo no valida la calidad de las etiquetas ni la pertinencia
+del dominio fuente. Sí fija los bytes usados por esta edición y evita cargar
+pesos o imágenes alterados silenciosamente.
+
+## Auditar sin extraer los ZIP
+
+Leemos imágenes directamente desde cada ZIP. Aceptamos solo archivos JPEG o PNG
+bajo uno de tres directorios de clase; no ejecutamos contenido del archivo.
+
+```{python}
+CLASS_NAMES = ["mancha angular", "roya", "sana"]
+CLASS_TO_INDEX = {
+    "angular_leaf_spot": 0,
+    "bean_rust": 1,
+    "healthy": 2,
+}
+ignored_members = []
+
+
+def inspect_archive(path):
+    rows = []
+    with zipfile.ZipFile(path) as archive:
+        if archive.testzip() is not None:
+            raise ValueError(f"ZIP corrupto: {path.name}")
+        for member in archive.infolist():
+            if member.is_dir():
+                continue
+            if member.file_size > 10_000_000:
+                raise ValueError(f"Imagen demasiado grande: {member.filename}")
+            suffix = Path(member.filename).suffix.lower()
+            if suffix not in {".jpg", ".jpeg", ".png"}:
+                ignored_members.append(member.filename)
+                continue
+            parts = Path(member.filename).parts
+            labels = [part for part in parts if part in CLASS_TO_INDEX]
+            if len(labels) != 1:
+                raise ValueError(f"Ruta sin clase única: {member.filename}")
+            payload = archive.read(member)
+            with Image.open(BytesIO(payload)) as image:
+                image.verify()
+            rows.append({
+                "archivo_zip": path.name,
+                "miembro": member.filename,
+                "clase": CLASS_NAMES[CLASS_TO_INDEX[labels[0]]],
+                "etiqueta": CLASS_TO_INDEX[labels[0]],
+                "hash_imagen": sha256(payload).hexdigest(),
+            })
+    return rows
+
+
+audit_rows = []
+for filename in DATA_FILES:
+    audit_rows.extend(inspect_archive(DATA_DIR / filename))
+image_audit = pd.DataFrame(audit_rows)
+
+split_names = {
+    "train.zip": "ajuste",
+    "validation.zip": "validación",
+    "test.zip": "test bloqueado",
+}
+image_audit["partición"] = image_audit["archivo_zip"].map(split_names)
+split_class_table = pd.crosstab(image_audit["partición"], image_audit["clase"])
+split_class_table
+```
+
+```{python}
+duplicate_summary = pd.Series({
+    "imágenes": len(image_audit),
+    "entradas no gráficas excluidas": len(ignored_members),
+    "duplicados exactos": int(image_audit["hash_imagen"].duplicated().sum()),
+    "hashes presentes en más de una partición": int(
+        (image_audit.groupby("hash_imagen")["partición"].nunique() > 1).sum()
+    ),
+})
+duplicate_summary
+```
+
+La auditoría excluye una entrada sin extensión gráfica llamada
+`healthy_train.120tore`; no la interpreta ni la cuenta como imagen. El dataset
+está casi balanceado, por lo que no usaremos pesos de clase. Los
+hashes detectan archivos idénticos, no hojas de la misma planta ni fotografías
+casi duplicadas. No hay metadatos de finca, distrito, dispositivo o sesión que
+permitan auditar dependencia por grupos.
+
+## Construir un dataset sobre archivos comprimidos
+
+```{python}
+class BeanZipDataset(Dataset):
+    def __init__(self, archive_path, transform):
+        self.archive = zipfile.ZipFile(archive_path)
+        self.transform = transform
+        self.samples = []
+        for member in self.archive.namelist():
+            if Path(member).suffix.lower() not in {".jpg", ".jpeg", ".png"}:
+                continue
+            label_name = next(
+                part for part in Path(member).parts if part in CLASS_TO_INDEX
+            )
+            self.samples.append((member, CLASS_TO_INDEX[label_name]))
+        self.samples.sort()
+
+    def __len__(self):
+        return len(self.samples)
+
+    def __getitem__(self, index):
+        member, label = self.samples[index]
+        payload = self.archive.read(member)
+        image = Image.open(BytesIO(payload)).convert("RGB")
+        return self.transform(image), label, member
+```
+
+Usaremos las estadísticas de ImageNet porque forman parte de la interfaz con
+los pesos preentrenados. Cambiar su escala de entrada sería una forma accidental
+de shift.
+
+```{python}
+IMAGENET_MEAN = [0.485, 0.456, 0.406]
+IMAGENET_STD = [0.229, 0.224, 0.225]
+
+train_transform = transforms.Compose([
+    transforms.Resize((108, 108)),
+    transforms.RandomCrop(96),
+    transforms.RandomHorizontalFlip(),
+    transforms.RandomVerticalFlip(),
+    transforms.RandomRotation(15),
+    transforms.ToTensor(),
+    transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+])
+evaluation_transform = transforms.Compose([
+    transforms.Resize((96, 96)),
+    transforms.ToTensor(),
+    transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+])
+
+fit_dataset = BeanZipDataset(DATA_DIR / "train.zip", train_transform)
+fit_evaluation_dataset = BeanZipDataset(
+    DATA_DIR / "train.zip", evaluation_transform
+)
+validation_dataset = BeanZipDataset(
+    DATA_DIR / "validation.zip", evaluation_transform
+)
+```
+
+```{python}
+#| label: fig-beans-examples
+#| fig-cap: "Tres imágenes de ajuste por clase, antes de normalizar."
+#| fig-alt: "Nueve fotografías de hojas muestran mancha angular, roya y hojas sanas."
+#| fig-width: 9
+#| fig-height: 6
+
+display_transform = transforms.Compose([
+    transforms.Resize((160, 160)), transforms.ToTensor()
+])
+display_dataset = BeanZipDataset(DATA_DIR / "train.zip", display_transform)
+fig, axes = plt.subplots(3, 3, figsize=(8, 8))
+for label in range(3):
+    positions = [
+        index for index, (_, sample_label) in enumerate(display_dataset.samples)
+        if sample_label == label
+    ][:3]
+    for column, position in enumerate(positions):
+        image, _, _ = display_dataset[position]
+        axes[label, column].imshow(image.permute(1, 2, 0))
+        axes[label, column].axis("off")
+        if column == 0:
+            axes[label, column].set_title(CLASS_NAMES[label])
+fig.tight_layout()
+plt.show()
+```
+
+Fondos, escala, iluminación y severidad varían dentro de cada clase. Una red
+puede aprovechar correlaciones del entorno en vez de síntomas. Clasificar estas
+imágenes no equivale a diagnosticar cualquier planta en campo.
+
+## Augmentar sin alterar el color diagnóstico
+
+Rotación y reflexiones expresan que la orientación de una hoja no define la
+enfermedad. El crop conserva la mayor parte de la imagen. Evitamos jitter fuerte
+de color porque manchas y tonos son parte de la evidencia clínica.
+
+```{python}
+#| label: fig-beans-augmentation
+#| fig-cap: "Vistas geométricas de una hoja; el color no se perturba deliberadamente."
+#| fig-alt: "Una hoja original junto a cinco crops, rotaciones y reflexiones."
+#| fig-width: 10
+#| fig-height: 3
+
+random.seed(701)
+torch.manual_seed(701)
+original, original_label, _ = display_dataset[0]
+with Image.open(BytesIO(display_dataset.archive.read(display_dataset.samples[0][0]))) as image:
+    source_image = image.convert("RGB")
+    augmented_views = [train_transform(source_image) for _ in range(5)]
+
+mean_tensor = torch.tensor(IMAGENET_MEAN).view(3, 1, 1)
+std_tensor = torch.tensor(IMAGENET_STD).view(3, 1, 1)
+fig, axes = plt.subplots(1, 6, figsize=(10, 3))
+axes[0].imshow(original.permute(1, 2, 0))
+axes[0].set_title("original")
+for index, view in enumerate(augmented_views, start=1):
+    axes[index].imshow((view * std_tensor + mean_tensor).clamp(0, 1).permute(1, 2, 0))
+    axes[index].set_title(f"vista {index}")
+for axis in axes:
+    axis.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+Validación y test usan siempre `evaluation_transform`. Una transformación
+aleatoria en evaluación convertiría la métrica en una variable adicional.
+
+## Qué se transfiere
+
+Sea un modelo fuente la composición
+
+$$
+f(x)=h_{\text{fuente}}(\phi(x)),
+$$
+
+donde $\phi$ es el backbone y $h$ la cabeza de 1.000 clases. Para Beans
+reemplazamos la cabeza por
+
+$$
+h_{\text{Beans}}(z)=Wz+b, \qquad W\in\mathbb{R}^{3\times512}.
+$$
+
+En extracción de características optimizamos solo $W,b$. En fine-tuning también
+actualizamos parte de $\phi$, con una tasa menor para no destruir abruptamente
+la representación inicial.
+
+```{python}
+def load_pretrained_resnet():
+    model = resnet18(weights=None)
+    state = torch.load(
+        DATA_DIR / WEIGHTS_FILE, map_location="cpu", weights_only=True
+    )
+    model.load_state_dict(state)
+    return model
+
+
+def make_transfer_model(mode):
+    model = load_pretrained_resnet()
+    model.fc = nn.Linear(model.fc.in_features, 3)
+    for parameter in model.parameters():
+        parameter.requires_grad = False
+    for parameter in model.fc.parameters():
+        parameter.requires_grad = True
+    if mode == "fine-tuning":
+        for parameter in model.layer4.parameters():
+            parameter.requires_grad = True
+    return model
+```
+
+El nuevo clasificador tiene solo $512\times3+3=1.539$ parámetros. El resto de
+la red conserva conocimiento fuente, junto con sus sesgos.
+
+## Línea base desde cero
+
+La línea base es la CNN modular del capítulo anterior, adaptada a tres clases.
+Tiene mucha menos capacidad que ResNet-18, pero aprende exclusivamente de Beans.
+
+```{python}
+class CompactCNN(nn.Sequential):
+    def __init__(self):
+        layers = []
+        channels = [3, 8, 16, 32]
+        for in_channels, out_channels in zip(channels[:-1], channels[1:]):
+            layers.extend([
+                nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=False),
+                nn.BatchNorm2d(out_channels),
+                nn.ReLU(inplace=True),
+                nn.MaxPool2d(2),
+            ])
+        layers.extend([
+            nn.AdaptiveAvgPool2d(1), nn.Flatten(), nn.Linear(32, 3)
+        ])
+        super().__init__(*layers)
+```
+
+```{python}
+resource_rows = []
+for name, model in {
+    "CNN desde cero": CompactCNN(),
+    "Extractor congelado": make_transfer_model("congelado"),
+    "Fine-tuning layer4": make_transfer_model("fine-tuning"),
+}.items():
+    resource_rows.append({
+        "protocolo": name,
+        "parámetros totales": sum(p.numel() for p in model.parameters()),
+        "parámetros entrenables": sum(
+            p.numel() for p in model.parameters() if p.requires_grad
+        ),
+    })
+resource_table = pd.DataFrame(resource_rows)
+resource_table
+```
+
+Congelar reduce memoria de gradientes y grados de libertad, no el costo del
+forward. Una ResNet congelada todavía debe transformar cada imagen.
+
+## Separabilidad antes de entrenar la cabeza
+
+Comparamos un backbone ResNet-18 aleatorio con el preentrenado. Extraemos sus
+vectores de 512 componentes con evaluación determinista y ajustamos la misma
+regresión logística. Esta prueba aísla los pesos; no participa en la selección
+final.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar extracción de características"
+
+@torch.inference_mode()
+def extract_features(backbone, dataset):
+    loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
+    backbone.eval()
+    features = []
+    labels = []
+    for images, batch_labels, _ in loader:
+        features.append(backbone(images).cpu())
+        labels.append(batch_labels)
+    return torch.cat(features).numpy(), torch.cat(labels).numpy()
+
+
+torch.manual_seed(REPRESENTATIVE_SEED)
+random_backbone = resnet18(weights=None)
+random_backbone.fc = nn.Identity()
+pretrained_backbone = load_pretrained_resnet()
+pretrained_backbone.fc = nn.Identity()
+
+random_fit_features, probe_fit_labels = extract_features(
+    random_backbone, fit_evaluation_dataset
+)
+random_validation_features, probe_validation_labels = extract_features(
+    random_backbone, validation_dataset
+)
+pretrained_fit_features, _ = extract_features(
+    pretrained_backbone, fit_evaluation_dataset
+)
+pretrained_validation_features, _ = extract_features(
+    pretrained_backbone, validation_dataset
+)
+
+probe_rows = []
+
+
+def linear_probe_macro_f1(fit_features, fit_labels, validation_features, validation_labels):
+    fit_tensor = torch.from_numpy(fit_features.astype(np.float64))
+    validation_tensor = torch.from_numpy(validation_features.astype(np.float64))
+    mean = fit_tensor.mean(dim=0, keepdim=True)
+    std = fit_tensor.std(dim=0, keepdim=True).clamp_min(1e-8)
+    fit_tensor = (fit_tensor - mean) / std
+    validation_tensor = (validation_tensor - mean) / std
+    fit_labels = torch.from_numpy(fit_labels)
+
+    torch.manual_seed(REPRESENTATIVE_SEED)
+    probe = nn.Linear(fit_tensor.shape[1], 3, dtype=torch.float64)
+    optimizer = torch.optim.LBFGS(
+        probe.parameters(), lr=0.5, max_iter=100, line_search_fn="strong_wolfe"
+    )
+
+    def closure():
+        optimizer.zero_grad()
+        logits = probe(fit_tensor)
+        loss = F.cross_entropy(logits, fit_labels)
+        loss = loss + 1e-4 * probe.weight.square().sum()
+        loss.backward()
+        return loss
+
+    optimizer.step(closure)
+    with torch.inference_mode():
+        predictions = probe(validation_tensor).argmax(dim=1).numpy()
+    return f1_score(validation_labels, predictions, average="macro")
+
+
+for feature_name, fit_features, validation_features in [
+    ("aleatorias", random_fit_features, random_validation_features),
+    ("ImageNet", pretrained_fit_features, pretrained_validation_features),
+]:
+    probe_rows.append({
+        "características": feature_name,
+        "macro-F1 validación": linear_probe_macro_f1(
+            fit_features,
+            probe_fit_labels,
+            validation_features,
+            probe_validation_labels,
+        ),
+    })
+probe_results = pd.DataFrame(probe_rows)
+probe_results
+```
+
+La arquitectura aleatoria ya induce una representación no trivial. La diferencia
+de la tabla cuantifica qué añaden los pesos fuente bajo la misma sonda lineal.
+Esta comparación no incluye augmentación ni optimización del backbone.
+
+```{python}
+#| label: fig-transfer-pca
+#| fig-cap: "Proyección PCA de características ImageNet antes de ajustar una cabeza neuronal."
+#| fig-alt: "Puntos de validación en dos componentes principales, coloreados por tres estados de la hoja."
+#| fig-width: 7
+#| fig-height: 5
+
+torch.manual_seed(REPRESENTATIVE_SEED)
+pca_fit = torch.from_numpy(pretrained_fit_features.astype(np.float64))
+pca_validation = torch.from_numpy(
+    pretrained_validation_features.astype(np.float64)
+)
+pca_mean = pca_fit.mean(dim=0, keepdim=True)
+_, _, pca_components = torch.pca_lowrank(
+    pca_fit - pca_mean, q=2, center=False, niter=10
+)
+validation_projection = ((pca_validation - pca_mean) @ pca_components).numpy()
+fig, axis = plt.subplots(figsize=(7, 5))
+for label, class_name in enumerate(CLASS_NAMES):
+    mask = probe_validation_labels == label
+    axis.scatter(
+        validation_projection[mask, 0], validation_projection[mask, 1],
+        label=class_name, alpha=0.75, s=35,
+    )
+axis.set(xlabel="componente 1", ylabel="componente 2")
+axis.legend(frameon=False)
+axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+PCA conserva solo dos direcciones y no mide por sí sola separabilidad. La
+regresión logística usa las 512 componentes y ofrece el control cuantitativo.
+
+## BatchNorm cuando se congela un backbone
+
+`requires_grad=False` impide actualizar parámetros, pero `model.train()` aún
+modificaría las medias móviles de BatchNorm. Con pocos ejemplos, eso puede borrar
+estadísticas fuente. Mantendremos todos los módulos BatchNorm en `eval()` durante
+los dos protocolos transferidos.
+
+```{python}
+def keep_batchnorm_in_evaluation(model):
+    for module in model.modules():
+        if isinstance(module, nn.BatchNorm2d):
+            module.eval()
+```
+
+En fine-tuning, las convoluciones de `layer4` sí reciben gradiente, mientras sus
+BatchNorm conservan medias y varianzas de ImageNet. Es una decisión de
+estabilidad, no la única receta posible.
+
+## Predeclarar el experimento
+
+Entrenaremos tres protocolos con semillas 17, 29 y 43:
+
+1. CNN compacta desde cero;
+2. ResNet-18 preentrenada con solo la cabeza entrenable; y
+3. ResNet-18 con cabeza y `layer4` entrenables.
+
+Todos usan los mismos crops geométricos, cuatro épocas, batch 32 y checkpoint de
+mayor macro-F1 de validación. En fine-tuning, la primera época actualiza solo la
+cabeza; después se descongela `layer4` con tasa diez veces menor.
+
+::: {.callout-important title="Hipótesis y regla fijadas antes de test"}
+
+- Consideraremos fuerte la transferencia congelada si supera a la CNN en al
+  menos 0,10 de macro-F1 mediano y en las tres semillas.
+- Consideraremos material el fine-tuning si mejora al extractor congelado en al
+  menos 0,03 de mediana y gana en dos de tres semillas.
+- Elegiremos el mayor macro-F1 mediano. Los protocolos a menos de 0,02 se
+  resolverán por menos parámetros entrenables y luego menor tiempo.
+- Solo el protocolo elegido se evaluará en test.
+
+:::
+
+La partición de validación tiene 133 imágenes. Un cambio de pocos casos puede
+mover sensiblemente la métrica; los umbrales evitan narrar cualquier decimal
+como una mejora sustantiva.
+
+## Implementar entrenamiento y evaluación
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar ciclo de transferencia"
+
+@torch.inference_mode()
+def evaluate_model(model, dataset, return_outputs=False):
+    loader = DataLoader(dataset, batch_size=BATCH_SIZE, shuffle=False)
+    model.eval()
+    losses = 0.0
+    logits_parts = []
+    label_parts = []
+    name_parts = []
+    for images, labels, names in loader:
+        logits = model(images.contiguous(memory_format=torch.channels_last))
+        losses += F.cross_entropy(logits, labels, reduction="sum").item()
+        logits_parts.append(logits.cpu())
+        label_parts.append(labels.cpu())
+        name_parts.extend(names)
+    logits = torch.cat(logits_parts)
+    labels = torch.cat(label_parts)
+    predictions = logits.argmax(1)
+    result = {
+        "loss": losses / len(labels),
+        "accuracy": (predictions == labels).float().mean().item(),
+        "macro_f1": f1_score(labels.numpy(), predictions.numpy(), average="macro"),
+    }
+    if return_outputs:
+        result.update({
+            "logits": logits, "labels": labels,
+            "predictions": predictions, "names": name_parts,
+        })
+    return result
+
+
+def build_protocol(protocol):
+    if protocol == "CNN desde cero":
+        return CompactCNN()
+    mode = "congelado" if protocol == "Extractor congelado" else "fine-tuning"
+    return make_transfer_model(mode)
+
+
+def train_protocol(protocol, seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    model = build_protocol(protocol).to(
+        device=device, memory_format=torch.channels_last
+    )
+
+    if protocol == "CNN desde cero":
+        optimizer = torch.optim.AdamW(
+            model.parameters(), lr=3e-3, weight_decay=5e-4
+        )
+    elif protocol == "Extractor congelado":
+        optimizer = torch.optim.AdamW(
+            model.fc.parameters(), lr=3e-3, weight_decay=5e-4
+        )
+    else:
+        optimizer = torch.optim.AdamW([
+            {"params": model.layer4.parameters(), "lr": 1e-4},
+            {"params": model.fc.parameters(), "lr": 1e-3},
+        ], weight_decay=5e-4)
+
+    scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(optimizer, EPOCHS)
+    order_generator = torch.Generator().manual_seed(seed + 10_000)
+    loader = DataLoader(
+        fit_dataset, batch_size=BATCH_SIZE, shuffle=True,
+        generator=order_generator, num_workers=0,
+    )
+    best = {"macro_f1": -math.inf, "loss": math.inf}
+    best_state = None
+    history = []
+    started = perf_counter()
+
+    for epoch in range(1, EPOCHS + 1):
+        model.train()
+        if protocol != "CNN desde cero":
+            keep_batchnorm_in_evaluation(model)
+        if protocol == "Fine-tuning layer4":
+            requires_layer4_grad = epoch > 1
+            for parameter in model.layer4.parameters():
+                parameter.requires_grad = requires_layer4_grad
+
+        train_loss_sum = 0.0
+        train_correct = 0
+        for images, labels, _ in loader:
+            images = images.contiguous(memory_format=torch.channels_last)
+            optimizer.zero_grad(set_to_none=True)
+            logits = model(images)
+            loss = F.cross_entropy(logits, labels)
+            loss.backward()
+            optimizer.step()
+            train_loss_sum += loss.item() * len(labels)
+            train_correct += (logits.argmax(1) == labels).sum().item()
+        scheduler.step()
+
+        validation = evaluate_model(model, validation_dataset)
+        history.append({
+            "época": epoch,
+            "loss ajuste": train_loss_sum / len(fit_dataset),
+            "exactitud ajuste": train_correct / len(fit_dataset),
+            "loss validación": validation["loss"],
+            "macro-F1 validación": validation["macro_f1"],
+        })
+        improved = validation["macro_f1"] > best["macro_f1"]
+        tied_better_loss = (
+            validation["macro_f1"] == best["macro_f1"]
+            and validation["loss"] < best["loss"]
+        )
+        if improved or tied_better_loss:
+            best = {**validation, "epoch": epoch}
+            best_state = deepcopy(model.state_dict())
+
+    model.load_state_dict(best_state)
+    if protocol == "Fine-tuning layer4":
+        for parameter in model.layer4.parameters():
+            parameter.requires_grad = True
+    return {
+        "model": model,
+        "history": pd.DataFrame(history),
+        "best": best,
+        "seconds": perf_counter() - started,
+        "total_parameters": sum(p.numel() for p in model.parameters()),
+        "trainable_parameters": sum(
+            p.numel() for p in model.parameters() if p.requires_grad
+        ),
+    }
+```
+
+## Ejecutar nueve corridas
+
+```{python}
+PROTOCOLS = ["CNN desde cero", "Extractor congelado", "Fine-tuning layer4"]
+runs = {}
+validation_rows = []
+
+for protocol in PROTOCOLS:
+    for seed in PAIR_SEEDS:
+        run = train_protocol(protocol, seed)
+        runs[(protocol, seed)] = run
+        validation_rows.append({
+            "protocolo": protocol,
+            "semilla": seed,
+            "mejor época": run["best"]["epoch"],
+            "macro-F1 validación": run["best"]["macro_f1"],
+            "exactitud validación": run["best"]["accuracy"],
+            "loss validación": run["best"]["loss"],
+            "segundos": run["seconds"],
+            "parámetros entrenables": run["trainable_parameters"],
+        })
+        print(
+            f"{protocol:22s} | semilla {seed} | "
+            f"F1 {run['best']['macro_f1']:.4f} | {run['seconds']:.1f} s"
+        )
+
+validation_results = pd.DataFrame(validation_rows)
+validation_results
+```
+
+## Leer aprendizaje y variabilidad
+
+```{python}
+#| label: fig-transfer-curves
+#| fig-cap: "Curvas de la semilla representativa para los tres protocolos."
+#| fig-alt: "Dos paneles comparan pérdida de ajuste y macro-F1 de validación durante cuatro épocas."
+#| fig-width: 10
+#| fig-height: 4
+
+colors = {
+    "CNN desde cero": "#7A5195",
+    "Extractor congelado": "#2F6F9F",
+    "Fine-tuning layer4": "#D55E00",
+}
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+for protocol in PROTOCOLS:
+    history = runs[(protocol, REPRESENTATIVE_SEED)]["history"]
+    axes[0].plot(
+        history["época"], history["loss ajuste"], marker="o",
+        color=colors[protocol], label=protocol,
+    )
+    axes[1].plot(
+        history["época"], history["macro-F1 validación"], marker="o",
+        color=colors[protocol], label=protocol,
+    )
+axes[0].set(xlabel="época", ylabel="entropía cruzada", title="Pérdida de ajuste")
+axes[1].set(xlabel="época", ylabel="macro-F1", title="Validación")
+for axis in axes:
+    axis.set_xticks(range(1, EPOCHS + 1))
+    axis.grid(alpha=0.2)
+axes[1].legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+validation_summary = (
+    validation_results.groupby("protocolo", sort=False)
+    .agg(
+        mediana_macro_f1=("macro-F1 validación", "median"),
+        mínimo_macro_f1=("macro-F1 validación", "min"),
+        máximo_macro_f1=("macro-F1 validación", "max"),
+        mediana_segundos=("segundos", "median"),
+        parámetros_entrenables=("parámetros entrenables", "first"),
+    )
+    .reset_index()
+)
+validation_summary
+```
+
+Las medianas son 0,758 para la CNN, 0,784 para el extractor congelado y 0,843
+para fine-tuning. La adaptación mejora más, pero deja 8,40 millones de parámetros
+entrenables frente a 1.539 de la cabeza congelada.
+
+```{python}
+#| label: fig-transfer-seeds
+#| fig-cap: "Macro-F1 de validación por protocolo y semilla pareada."
+#| fig-alt: "Tres puntos por protocolo muestran variabilidad y ventaja del fine-tuning."
+#| fig-width: 8
+#| fig-height: 4.5
+
+fig, axis = plt.subplots(figsize=(8, 4.5))
+offsets = {17: -0.12, 29: 0.0, 43: 0.12}
+for seed in PAIR_SEEDS:
+    rows = validation_results[validation_results["semilla"] == seed].set_index(
+        "protocolo"
+    ).loc[PROTOCOLS]
+    axis.scatter(
+        np.arange(3) + offsets[seed], rows["macro-F1 validación"],
+        s=60, label=f"semilla {seed}",
+    )
+axis.set_xticks(range(3), ["desde cero", "congelado", "fine-tuning"])
+axis.set_ylabel("macro-F1 de validación")
+axis.grid(axis="y", alpha=0.2)
+axis.legend(frameon=False, ncol=3)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+paired = validation_results.pivot(
+    index="semilla", columns="protocolo", values="macro-F1 validación"
+)
+transfer_delta = paired["Extractor congelado"] - paired["CNN desde cero"]
+finetuning_delta = paired["Fine-tuning layer4"] - paired["Extractor congelado"]
+pd.DataFrame({
+    "delta transferencia": transfer_delta,
+    "delta fine-tuning": finetuning_delta,
+})
+```
+
+```{python}
+pd.Series({
+    "mediana delta transferencia": transfer_delta.median(),
+    "victorias transferencia": int((transfer_delta > 0).sum()),
+    "alcanza umbral 0.10": bool(
+        transfer_delta.median() >= 0.10 and (transfer_delta > 0).all()
+    ),
+    "mediana delta fine-tuning": finetuning_delta.median(),
+    "victorias fine-tuning": int((finetuning_delta > 0).sum()),
+    "alcanza umbral 0.03": bool(
+        finetuning_delta.median() >= 0.03
+        and (finetuning_delta > 0).sum() >= 2
+    ),
+})
+```
+
+La transferencia congelada gana en las tres semillas, pero su delta mediano es
+solo 0,0164: no alcanza el exigente umbral 0,10. Fine-tuning gana también en las
+tres, con delta mediano 0,0774, y sí supera el umbral 0,03. Una hipótesis puede
+fallar aunque la diferencia sea positiva; los umbrales distinguen dirección de
+magnitud relevante.
+
+## Precisión frente a costo de adaptación
+
+```{python}
+#| label: fig-transfer-cost
+#| fig-cap: "Macro-F1, tiempo y parámetros entrenables forman una decisión de adaptación."
+#| fig-alt: "Dispersión de tiempo frente a macro-F1; el tamaño de cada punto representa parámetros entrenables."
+#| fig-width: 8
+#| fig-height: 5
+
+fig, axis = plt.subplots(figsize=(8, 5))
+for row in validation_summary.itertuples():
+    size = 70 + 55 * math.log10(row.parámetros_entrenables)
+    axis.scatter(
+        row.mediana_segundos, row.mediana_macro_f1, s=size,
+        color=colors[row.protocolo], edgecolor="black", alpha=0.85,
+    )
+    axis.annotate(
+        row.protocolo, (row.mediana_segundos, row.mediana_macro_f1),
+        xytext=(6, 5), textcoords="offset points", fontsize=8,
+    )
+axis.set(xlabel="segundos medianos", ylabel="macro-F1 mediano de validación")
+axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+El extractor congelado entrena pocos pesos, pero su forward sigue siendo más
+costoso que la CNN compacta. Fine-tuning añade gradientes para millones de
+parámetros; debe justificar ese costo con validación.
+
+## Seleccionar antes de abrir test
+
+```{python}
+best_median = validation_summary["mediana_macro_f1"].max()
+eligible = validation_summary[
+    (best_median - validation_summary["mediana_macro_f1"]) < 0.02
+].copy()
+decision_row = eligible.sort_values(
+    ["parámetros_entrenables", "mediana_segundos", "protocolo"]
+).iloc[0]
+selected_protocol = decision_row["protocolo"]
+
+pd.Series({
+    "mejor mediana": best_median,
+    "protocolos dentro de 0.02": ", ".join(eligible["protocolo"]),
+    "protocolo seleccionado": selected_protocol,
+    "parámetros entrenables": decision_row["parámetros_entrenables"],
+})
+```
+
+::: {.callout-important title="Test se abre después de esta decisión"}
+Arquitectura, épocas, semillas, augmentación, regla y protocolo quedaron
+cerrados. No evaluaremos en test los protocolos descartados.
+:::
+
+## Evaluar el protocolo elegido
+
+```{python}
+test_dataset = BeanZipDataset(DATA_DIR / "test.zip", evaluation_transform)
+test_outputs = {}
+test_rows = []
+for seed in PAIR_SEEDS:
+    outputs = evaluate_model(
+        runs[(selected_protocol, seed)]["model"],
+        test_dataset,
+        return_outputs=True,
+    )
+    test_outputs[seed] = outputs
+    test_rows.append({
+        "semilla": seed,
+        "macro-F1 test": outputs["macro_f1"],
+        "exactitud test": outputs["accuracy"],
+        "loss test": outputs["loss"],
+    })
+test_results = pd.DataFrame(test_rows)
+test_results
+```
+
+```{python}
+pd.Series({
+    "protocolo": selected_protocol,
+    "macro-F1 mediano test": test_results["macro-F1 test"].median(),
+    "mínimo test": test_results["macro-F1 test"].min(),
+    "máximo test": test_results["macro-F1 test"].max(),
+})
+```
+
+Fine-tuning obtiene macro-F1 mediano de 0,841 en test, pero las corridas abarcan
+de 0,738 a 0,868. Esa dispersión es una advertencia práctica: tres semillas
+reducen dependencia de una inicialización, pero no corrigen la incertidumbre por
+muestreo ni posibles correlaciones entre las 128 fotografías.
+
+## Calibrar confianza con validación
+
+Una probabilidad máxima alta no garantiza que la frecuencia de acierto sea
+igual. Ajustaremos una temperatura $T>0$ sobre logits de validación:
+
+$$
+p_T(y=k\mid x)=\operatorname{softmax}(z/T)_k.
+$$
+
+La temperatura no cambia el `argmax`; solo modifica confianza
+[@guo2017calibration].
+
+```{python}
+representative_model = runs[
+    (selected_protocol, REPRESENTATIVE_SEED)
+]["model"]
+validation_outputs = evaluate_model(
+    representative_model, validation_dataset, return_outputs=True
+)
+calibration_logits = torch.from_numpy(
+    validation_outputs["logits"].numpy().copy()
+)
+calibration_labels = torch.from_numpy(
+    validation_outputs["labels"].numpy().copy()
+)
+
+log_temperature = nn.Parameter(torch.zeros(()))
+calibration_optimizer = torch.optim.LBFGS(
+    [log_temperature], lr=0.1, max_iter=50, line_search_fn="strong_wolfe"
+)
+
+
+def calibration_closure():
+    calibration_optimizer.zero_grad()
+    temperature = log_temperature.exp()
+    loss = F.cross_entropy(
+        calibration_logits / temperature,
+        calibration_labels,
+    )
+    loss.backward()
+    return loss
+
+
+calibration_optimizer.step(calibration_closure)
+temperature = log_temperature.exp().detach()
+print(f"Temperatura ajustada solo con validación: {temperature.item():.3f}")
+```
+
+```{python}
+def calibration_metrics(logits, labels, bins=5):
+    probabilities = logits.softmax(dim=1)
+    confidence, predictions = probabilities.max(dim=1)
+    correctness = predictions.eq(labels)
+    edges = torch.linspace(0, 1, bins + 1)
+    ece = torch.tensor(0.0)
+    rows = []
+    for lower, upper in zip(edges[:-1], edges[1:]):
+        mask = (confidence > lower) & (confidence <= upper)
+        if mask.any():
+            accuracy = correctness[mask].float().mean()
+            mean_confidence = confidence[mask].mean()
+            ece += mask.float().mean() * (accuracy - mean_confidence).abs()
+            rows.append({
+                "confianza": mean_confidence.item(),
+                "exactitud": accuracy.item(),
+                "n": int(mask.sum()),
+            })
+    targets = F.one_hot(labels, num_classes=3).float()
+    brier = ((probabilities - targets) ** 2).sum(dim=1).mean()
+    return {
+        "NLL": F.cross_entropy(logits, labels).item(),
+        "Brier": brier.item(), "ECE": ece.item(),
+        "bins": pd.DataFrame(rows),
+    }
+
+
+representative_test = test_outputs[REPRESENTATIVE_SEED]
+raw_calibration = calibration_metrics(
+    representative_test["logits"], representative_test["labels"]
+)
+scaled_calibration = calibration_metrics(
+    representative_test["logits"] / temperature,
+    representative_test["labels"],
+)
+pd.DataFrame([
+    {"estado": "sin calibrar", **{k: raw_calibration[k] for k in ["NLL", "Brier", "ECE"]}},
+    {"estado": "temperatura", **{k: scaled_calibration[k] for k in ["NLL", "Brier", "ECE"]}},
+])
+```
+
+La temperatura queda en 0,992, casi sin cambio. ECE baja de 0,0347 a 0,0333,
+mientras NLL y Brier empeoran ligeramente. No hay evidencia para afirmar una
+mejora global de calibración; el conjunto de validación es demasiado pequeño
+para esperar una estimación estable.
+
+```{python}
+#| label: fig-beans-calibration
+#| fig-cap: "Exactitud y confianza por bin antes y después de temperature scaling."
+#| fig-alt: "Dos series comparan exactitud observada con confianza media y una diagonal ideal."
+#| fig-width: 7
+#| fig-height: 5
+
+fig, axis = plt.subplots(figsize=(7, 5))
+axis.plot([0, 1], [0, 1], linestyle="--", color="gray", label="ideal")
+for label, metrics, color in [
+    ("sin calibrar", raw_calibration, "#D55E00"),
+    ("temperatura", scaled_calibration, "#2F6F9F"),
+]:
+    bins = metrics["bins"]
+    axis.plot(
+        bins["confianza"], bins["exactitud"], marker="o",
+        color=color, label=label,
+    )
+axis.set(xlabel="confianza media", ylabel="exactitud observada", xlim=(0, 1), ylim=(0, 1))
+axis.legend(frameon=False)
+axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+Con 133 imágenes de calibración y cinco bins, ECE es inestable. La figura es un
+diagnóstico, no una garantía probabilística para despliegue.
+
+## Confusiones y errores
+
+```{python}
+labels = representative_test["labels"]
+predictions = representative_test["predictions"]
+normalized_confusion = confusion_matrix(
+    labels.numpy(), predictions.numpy(), labels=range(3), normalize="true"
+)
+class_recall = pd.DataFrame({
+    "clase": CLASS_NAMES,
+    "recall": np.diag(normalized_confusion),
+}).sort_values("recall")
+class_recall
+```
+
+En la corrida representativa, recall es 0,767 para mancha angular, 0,810 para
+hojas sanas y 0,930 para roya. La métrica agregada oculta una diferencia de más
+de 0,16 entre enfermedades.
+
+```{python}
+#| label: fig-beans-confusion
+#| fig-cap: "Matriz de confusión normalizada del protocolo elegido, semilla 29."
+#| fig-alt: "Mapa de calor de tres clases con proporciones por clase real."
+#| fig-width: 6
+#| fig-height: 5
+
+fig, axis = plt.subplots(figsize=(6, 5))
+image = axis.imshow(normalized_confusion, cmap="YlGn", vmin=0, vmax=1)
+axis.set_xticks(range(3), CLASS_NAMES, rotation=25, ha="right")
+axis.set_yticks(range(3), CLASS_NAMES)
+axis.set(xlabel="predicha", ylabel="real")
+fig.colorbar(image, ax=axis, label="proporción por clase real")
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: fig-beans-errors
+#| fig-cap: "Primeros errores según el orden del test, sin escoger ejemplos favorables."
+#| fig-alt: "Fotografías de hojas mal clasificadas con clase real, predicción y confianza."
+#| fig-width: 10
+#| fig-height: 6
+
+error_positions = torch.where(predictions != labels)[0][:9]
+test_display_dataset = BeanZipDataset(DATA_DIR / "test.zip", display_transform)
+probabilities = representative_test["logits"].softmax(dim=1)
+fig, axes = plt.subplots(3, 3, figsize=(9, 8))
+for axis, position in zip(axes.flat, error_positions):
+    image, true_label, _ = test_display_dataset[int(position)]
+    predicted_label = int(predictions[position])
+    confidence = probabilities[position, predicted_label].item()
+    axis.imshow(image.permute(1, 2, 0))
+    axis.set_title(
+        f"real: {CLASS_NAMES[true_label]}\n"
+        f"pred.: {CLASS_NAMES[predicted_label]} ({confidence:.2f})",
+        fontsize=8,
+    )
+    axis.axis("off")
+for axis in axes.flat[len(error_positions):]:
+    axis.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+La confianza es interna al modelo. Una lesión atípica, una hoja parcialmente
+visible o un fondo correlacionado requieren revisión agronómica, no una
+explicación causal improvisada a partir de la imagen.
+
+## Estrés de iluminación
+
+Predeclaramos una reducción de brillo a 55% como prueba sintética de captura. No
+afirma representar la distribución de otro distrito o teléfono.
+
+```{python}
+dark_transform = transforms.Compose([
+    transforms.Resize((96, 96)),
+    transforms.Lambda(lambda image: TF.adjust_brightness(image, 0.55)),
+    transforms.ToTensor(),
+    transforms.Normalize(IMAGENET_MEAN, IMAGENET_STD),
+])
+dark_test_dataset = BeanZipDataset(DATA_DIR / "test.zip", dark_transform)
+
+shift_rows = []
+for seed in PAIR_SEEDS:
+    model = runs[(selected_protocol, seed)]["model"]
+    clean = test_outputs[seed]
+    dark = evaluate_model(model, dark_test_dataset)
+    shift_rows.append({
+        "semilla": seed,
+        "macro-F1 limpio": clean["macro_f1"],
+        "macro-F1 oscuro": dark["macro_f1"],
+        "delta": dark["macro_f1"] - clean["macro_f1"],
+    })
+shift_results = pd.DataFrame(shift_rows)
+shift_results
+```
+
+Oscurecer reduce macro-F1 en las tres semillas. El delta mediano es -0,127 y
+varía entre -0,159 y -0,060, pese a que la etiqueta semántica no cambia.
+
+```{python}
+#| label: fig-beans-shift
+#| fig-cap: "Sensibilidad pareada a una reducción sintética de iluminación."
+#| fig-alt: "Tres líneas conectan macro-F1 limpio y oscuro para cada semilla."
+#| fig-width: 6
+#| fig-height: 4.5
+
+fig, axis = plt.subplots(figsize=(6, 4.5))
+for row in shift_results.itertuples():
+    axis.plot(
+        [0, 1], [row._2, row._3], marker="o", alpha=0.75,
+        label=f"semilla {row.semilla}",
+    )
+axis.set_xticks([0, 1], ["limpio", "brillo 55%"])
+axis.set_ylabel("macro-F1 de test")
+axis.grid(axis="y", alpha=0.2)
+axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+La prueba usa test después de cerrar el modelo y la intervención. Sirve para
+describir sensibilidad, no para volver a elegir protocolo.
+
+## Entradas claramente fuera del dominio
+
+Softmax siempre reparte probabilidad entre las tres clases, incluso cuando la
+entrada no es una hoja. Usamos controles procedurales para comprobar esa
+limitación sin presentarlos como un benchmark OOD real.
+
+```{python}
+generator = torch.Generator().manual_seed(7007)
+green = torch.zeros(3, 96, 96)
+green[1] = 0.65
+noise = torch.rand(3, 96, 96, generator=generator)
+grid = torch.zeros(3, 96, 96)
+grid[:, ::8, :] = 1
+grid[:, :, ::8] = 1
+ood_images = torch.stack([green, noise, grid])
+ood_normalized = (
+    ood_images - torch.tensor(IMAGENET_MEAN).view(1, 3, 1, 1)
+) / torch.tensor(IMAGENET_STD).view(1, 3, 1, 1)
+
+representative_model.eval()
+with torch.inference_mode():
+    ood_logits = representative_model(
+        ood_normalized.contiguous(memory_format=torch.channels_last)
+    )
+ood_probabilities = ood_logits.softmax(dim=1)
+ood_scaled_probabilities = (ood_logits / temperature).softmax(dim=1)
+
+pd.DataFrame({
+    "control": ["verde uniforme", "ruido", "cuadrícula"],
+    "clase asignada": [CLASS_NAMES[index] for index in ood_probabilities.argmax(1)],
+    "confianza": ood_probabilities.max(1).values.numpy(),
+    "confianza calibrada": ood_scaled_probabilities.max(1).values.numpy(),
+})
+```
+
+Temperatura puede moderar confianza promedio, pero no crea una clase "ninguna de
+las anteriores". De hecho, la cuadrícula recibe la etiqueta roya con confianza
+0,899, y la calibración la eleva levemente. Detectar dominio requiere datos y
+objetivos adicionales.
+
+## Qué permite concluir el experimento
+
+- La comparación aleatoria frente a ImageNet prueba si los pesos, no solo la
+  arquitectura, aportan separabilidad.
+- Congelar reduce parámetros entrenables y riesgo de sobreajuste, pero conserva
+  el costo del backbone.
+- Fine-tuning adapta características superiores y puede mejorar la tarea
+  objetivo a cambio de más grados de libertad.
+- Una ventaja positiva puede no alcanzar el umbral material predeclarado.
+- Calibración, recall por clase y estrés revelan fallos que macro-F1 no resume.
+
+No permite afirmar que:
+
+- el sistema diagnostique plantas fuera de estas tres etiquetas;
+- el test represente otras regiones, variedades, cámaras o severidades;
+- ImageNet sea una fuente neutral o libre de sesgos;
+- una imagen oscurecida reproduzca un shift de campo real; ni
+- una probabilidad alta sustituya confirmación experta.
+
+## Limitaciones y condiciones de uso
+
+- Solo hay 133 imágenes de validación y 128 de test.
+- No conocemos agrupación por planta, finca, sesión o dispositivo.
+- Las clases son mutuamente exclusivas, aunque enfermedades pueden coexistir.
+- Reducir a $96\times96$ puede borrar síntomas finos.
+- Los pesos derivan de ImageNet, cuyas imágenes tienen restricciones de uso y un
+  dominio distinto [@russakovsky2015imagenet].
+- Cuatro épocas comparan aprendizaje rápido, no convergencia completa.
+- Temperature scaling reutiliza la misma validación empleada en selección.
+- El estrés sintético y los controles procedurales no sustituyen datos externos.
+- Un uso agrícola debe incluir rechazo, trazabilidad y revisión profesional.
+
+## Cierre
+
+- Preentrenamiento ofrece un punto inicial, no una solución objetivo.
+- Una cabeza congelada mide utilidad de la representación sin alterar el
+  backbone.
+- Fine-tuning debe usar tasas menores y una selección independiente de test.
+- BatchNorm conserva estado aunque sus parámetros no reciban gradiente.
+- El número de parámetros entrenables importa junto con tiempo y desempeño.
+- Calibrar confianza no resuelve entradas fuera del dominio.
+- En aplicaciones científicas, límites de datos y condiciones de uso son parte
+  del modelo.
+
+## Ejercicios
+
+1. Calcula manualmente los 1.539 parámetros de la nueva cabeza.
+2. Explica por qué `requires_grad=False` no congela las medias de BatchNorm.
+3. Repite la sonda lineal sin `StandardScaler` y analiza el cambio.
+4. Sustituye $96\times96$ por $128\times128$ y compara costo y macro-F1 sin abrir
+   nuevamente test para seleccionar.
+5. Descongela solo el segundo bloque de `layer4` y cuenta parámetros.
+6. Prueba jitter de color moderado y argumenta por qué puede alterar síntomas.
+7. Calcula intervalos bootstrap para macro-F1 de test y explica qué incertidumbre
+   no capturan.
+8. Cambia el número de bins de ECE y estudia su inestabilidad.
+9. Implementa una regla de abstención por confianza y mide cobertura y error.
+10. Propón metadatos necesarios para validar generalización entre fincas.
+
+## Reto
+
+Diseña una evaluación externa sin reutilizar test. Debe definir una población
+objetivo, recolectar hojas por finca y planta, admitir casos mixtos o desconocidos
+y fijar antes de observar resultados una métrica por enfermedad, una regla de
+abstención y un costo de error. Compara extractor congelado y fine-tuning sin
+ajustar decisiones con la evaluación externa.
+
+::: {.callout-important title="Puente a secuencias"}
+Hasta aquí cada imagen se procesa como una observación completa. La Parte III
+abordará datos cuyo orden contiene información: señales, texto y otras
+secuencias donde el contexto cambia paso a paso.
+:::
