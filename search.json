@@ -34,7 +34,7 @@
     "href": "index.html#estado-de-la-edición",
     "title": "Deep Learning: de los problemas a las redes neuronales",
     "section": "Estado de la edición",
-    "text": "Estado de la edición\nEsta primera versión publicable contiene la arquitectura completa del libro y el capítulo piloto sobre tensores y PyTorch. Los demás capítulos presentan el problema articulador, los objetivos y la ruta de desarrollo para hacer visible la progresión del curso.",
+    "text": "Estado de la edición\nEsta edición contiene la arquitectura completa del libro, el capítulo sobre tensores y PyTorch y el primer proyecto de aprendizaje con regresión y consumo energético. Los capítulos restantes presentan el problema articulador, los objetivos y la ruta de desarrollo para hacer visible la progresión del curso.",
     "crumbs": [
       "Aprender resolviendo problemas"
     ]
@@ -299,62 +299,227 @@
     "href": "chapters/chapter02.html",
     "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
     "section": "",
-    "text": "2.1 Objetivos",
+    "text": "2.1 Del problema aplicado al problema de aprendizaje\nUna vivienda de bajo consumo contiene sensores ambientales, pero medir por separado la energía de los electrodomésticos puede requerir instrumentación adicional. Construiremos un sensor virtual que estime el consumo del intervalo actual a partir de la información ambiental y temporal disponible al final de ese intervalo.\nEsta formulación es importante. No afirmaremos que el modelo pronostica el consumo futuro: varias entradas se observan durante el mismo periodo que el objetivo. Tampoco interpretaremos los coeficientes como efectos causales. El sistema resuelve una regresión supervisada contemporánea.",
     "crumbs": [
       "Parte I - Aprender representaciones",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
     ]
   },
   {
-    "objectID": "chapters/chapter02.html#objetivos",
-    "href": "chapters/chapter02.html#objetivos",
+    "objectID": "chapters/chapter02.html#del-problema-aplicado-al-problema-de-aprendizaje",
+    "href": "chapters/chapter02.html#del-problema-aplicado-al-problema-de-aprendizaje",
     "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
     "section": "",
-    "text": "formular regresión como minimización de una pérdida;\nimplementar regresión lineal con tensores y autograd;\ndistinguir parámetros, hiperparámetros, pérdida y métrica;\nconstruir el primer ciclo de entrenamiento con mini-batches;\ncomparar contra una predicción constante; y\nevaluar sin utilizar test para seleccionar el modelo.",
+    "text": "NotaObjetivos de aprendizaje\n\n\n\nAl terminar este capítulo podrás:\n\ntraducir un problema aplicado a entradas, objetivo, unidad de análisis y criterio de éxito;\ncrear particiones temporales de entrenamiento, validación y test;\nestablecer líneas base antes de entrenar un modelo;\nexpresar regresión lineal y error cuadrático en forma matricial;\nobtener una solución de mínimos cuadrados con torch.linalg.lstsq;\nderivar e implementar el gradiente del error cuadrático;\nverificar un gradiente manual mediante autograd;\nentrenar nn.Linear con mini-batches, Dataset y DataLoader;\ndistinguir parámetros, hiperparámetros, pérdida y métricas; y\nevaluar una vez en test, analizar residuos y declarar limitaciones.",
     "crumbs": [
       "Parte I - Aprender representaciones",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
     ]
   },
   {
-    "objectID": "chapters/chapter02.html#caso-y-datos",
-    "href": "chapters/chapter02.html#caso-y-datos",
+    "objectID": "chapters/chapter02.html#preparar-el-entorno",
+    "href": "chapters/chapter02.html#preparar-el-entorno",
     "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
-    "section": "2.2 Caso y datos",
-    "text": "2.2 Caso y datos\nSe seleccionará un dataset abierto de consumo o demanda con licencia, fuente y diccionario documentados. La división respetará el mecanismo temporal cuando exista dependencia cronológica.",
+    "section": "2.2 Preparar el entorno",
+    "text": "2.2 Preparar el entorno\n\nfrom copy import deepcopy\nfrom pathlib import Path\nfrom urllib.request import urlretrieve\nfrom zipfile import ZipFile\n\nimport matplotlib.pyplot as plt\nimport numpy as np\nimport pandas as pd\nimport torch\nfrom torch import nn\nfrom torch.utils.data import DataLoader, TensorDataset\n\nSEED = 42\ntorch.manual_seed(SEED)\nnp.random.seed(SEED)\n\n\ndef select_device():\n    if torch.cuda.is_available():\n        return torch.device(\"cuda\")\n    if torch.backends.mps.is_available():\n        return torch.device(\"mps\")\n    return torch.device(\"cpu\")\n\n\ndevice = select_device()\nprint(f\"PyTorch {torch.__version__} | dispositivo: {device}\")\n\nPyTorch 2.8.0 | dispositivo: mps\n\n\nLos cálculos de mínimos cuadrados y gradiente batch permanecerán en CPU para que sean reproducibles y fáciles de inspeccionar. El entrenamiento con mini-batches utilizará el dispositivo disponible.",
     "crumbs": [
       "Parte I - Aprender representaciones",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
     ]
   },
   {
-    "objectID": "chapters/chapter02.html#ruta-de-desarrollo",
-    "href": "chapters/chapter02.html#ruta-de-desarrollo",
+    "objectID": "chapters/chapter02.html#obtener-y-validar-los-datos",
+    "href": "chapters/chapter02.html#obtener-y-validar-los-datos",
     "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
-    "section": "2.3 Ruta de desarrollo",
-    "text": "2.3 Ruta de desarrollo\n\nLínea base por media o último valor observado.\nModelo lineal y error cuadrático.\nDerivación del gradiente.\nImplementación manual y con nn.Linear.\nDataset, DataLoader y ciclo de entrenamiento.\nCurvas de pérdida, residuos y evaluación final.",
+    "section": "2.3 Obtener y validar los datos",
+    "text": "2.3 Obtener y validar los datos\nEl dataset Appliances Energy Prediction registra 19.735 intervalos consecutivos de diez minutos entre enero y mayo de 2016. Incluye consumo en Wh, temperatura y humedad en nueve espacios, mediciones exteriores y clima de una estación cercana (Candanedo 2017; Candanedo et al. 2017). Se distribuye con licencia CC BY 4.0.\nLa descarga se guarda en caché. Leemos el CSV directamente desde el ZIP y verificamos nombre, columnas y número de observaciones antes de modelar.\n\nDATA_URL = (\n    \"https://archive.ics.uci.edu/static/public/374/\"\n    \"appliances+energy+prediction.zip\"\n)\nDATA_DIR = Path(\".cache/chapter02\")\nARCHIVE_PATH = DATA_DIR / \"appliances-energy.zip\"\nCSV_NAME = \"energydata_complete.csv\"\n\nEXPECTED_COLUMNS = {\n    \"date\",\n    \"Appliances\",\n    \"lights\",\n    \"T1\",\n    \"RH_1\",\n    \"T_out\",\n    \"Press_mm_hg\",\n    \"RH_out\",\n    \"Windspeed\",\n    \"Visibility\",\n    \"Tdewpoint\",\n    \"rv1\",\n    \"rv2\",\n}\n\n\ndef load_energy_data():\n    DATA_DIR.mkdir(parents=True, exist_ok=True)\n    if not ARCHIVE_PATH.exists():\n        temporary_path = ARCHIVE_PATH.with_suffix(\".download\")\n        urlretrieve(DATA_URL, temporary_path)\n        temporary_path.replace(ARCHIVE_PATH)\n\n    with ZipFile(ARCHIVE_PATH) as archive:\n        if archive.namelist() != [CSV_NAME]:\n            raise ValueError(f\"Contenido inesperado: {archive.namelist()}\")\n        if archive.testzip() is not None:\n            raise ValueError(\"El archivo descargado está corrupto\")\n        with archive.open(CSV_NAME) as csv_file:\n            frame = pd.read_csv(csv_file)\n\n    missing_columns = EXPECTED_COLUMNS.difference(frame.columns)\n    if missing_columns:\n        raise ValueError(f\"Faltan columnas: {sorted(missing_columns)}\")\n    if len(frame) != 19_735:\n        raise ValueError(f\"Se esperaban 19.735 filas; se obtuvieron {len(frame)}\")\n\n    frame[\"date\"] = pd.to_datetime(frame[\"date\"], errors=\"raise\")\n    if not frame[\"date\"].is_monotonic_increasing:\n        raise ValueError(\"Las observaciones no están ordenadas por tiempo\")\n    if frame.isna().any().any():\n        raise ValueError(\"El dataset contiene valores faltantes inesperados\")\n    return frame\n\n\nenergy = load_energy_data()\nenergy[[\"date\", \"Appliances\", \"lights\", \"T1\", \"RH_1\"]].head()\n\n\n\n\n\n\n\n\ndate\nAppliances\nlights\nT1\nRH_1\n\n\n\n\n0\n2016-01-11 17:00:00\n60\n30\n19.89\n47.596667\n\n\n1\n2016-01-11 17:10:00\n60\n30\n19.89\n46.693333\n\n\n2\n2016-01-11 17:20:00\n50\n30\n19.89\n46.300000\n\n\n3\n2016-01-11 17:30:00\n50\n40\n19.89\n46.066667\n\n\n4\n2016-01-11 17:40:00\n60\n40\n19.89\n46.333333\n\n\n\n\n\n\n\nCada fila representa un intervalo de diez minutos. Appliances es la energía consumida por los electrodomésticos durante el intervalo, en Wh.\n\nenergy_audit = pd.Series({\n    \"observaciones\": len(energy),\n    \"variables\": energy.shape[1],\n    \"inicio\": energy[\"date\"].min(),\n    \"fin\": energy[\"date\"].max(),\n    \"intervalo_modal\": energy[\"date\"].diff().mode().iloc[0],\n    \"faltantes\": int(energy.isna().sum().sum()),\n})\nenergy_audit\n\nobservaciones                    19735\nvariables                           29\ninicio             2016-01-11 17:00:00\nfin                2016-05-27 18:00:00\nintervalo_modal        0 days 00:10:00\nfaltantes                            0\ndtype: object\n\n\nDos columnas, rv1 y rv2, son variables aleatorias añadidas por los autores para comprobar si un método asigna importancia a ruido. Las excluiremos de las entradas. Esta decisión usa el diccionario de datos, no una correlación calculada sobre test.",
     "crumbs": [
       "Parte I - Aprender representaciones",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
     ]
   },
   {
-    "objectID": "chapters/chapter02.html#experimento-central",
-    "href": "chapters/chapter02.html#experimento-central",
+    "objectID": "chapters/chapter02.html#crear-y-bloquear-las-particiones-temporales",
+    "href": "chapters/chapter02.html#crear-y-bloquear-las-particiones-temporales",
     "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
-    "section": "2.4 Experimento central",
-    "text": "2.4 Experimento central\nComparar solución analítica, descenso por gradiente batch y mini-batch bajo distintas escalas y tasas de aprendizaje.",
+    "section": "2.4 Crear y bloquear las particiones temporales",
+    "text": "2.4 Crear y bloquear las particiones temporales\nUna división aleatoria mezclaría enero y mayo en entrenamiento y test. El protocolo debe representar el uso propuesto: ajustar con el pasado y aplicar el modelo a periodos posteriores.\nUsaremos:\n\n70% inicial para estimar parámetros y transformaciones;\n15% siguiente para comparar tasas de aprendizaje y estados del modelo;\n15% final como test bloqueado.\n\n\nn_total = len(energy)\ntrain_end = int(0.70 * n_total)\nvalidation_end = int(0.85 * n_total)\n\ntrain_frame = energy.iloc[:train_end].copy()\nvalidation_frame = energy.iloc[train_end:validation_end].copy()\ntest_frame = energy.iloc[validation_end:].copy()\n\nsplit_summary = pd.DataFrame({\n    \"partición\": [\"entrenamiento\", \"validación\", \"test bloqueado\"],\n    \"filas\": [len(train_frame), len(validation_frame), len(test_frame)],\n    \"inicio\": [\n        train_frame[\"date\"].min(),\n        validation_frame[\"date\"].min(),\n        test_frame[\"date\"].min(),\n    ],\n    \"fin\": [\n        train_frame[\"date\"].max(),\n        validation_frame[\"date\"].max(),\n        test_frame[\"date\"].max(),\n    ],\n})\nsplit_summary\n\n\n\n\n\n\n\n\npartición\nfilas\ninicio\nfin\n\n\n\n\n0\nentrenamiento\n13814\n2016-01-11 17:00:00\n2016-04-16 15:10:00\n\n\n1\nvalidación\n2960\n2016-04-16 15:20:00\n2016-05-07 04:30:00\n\n\n2\ntest bloqueado\n2961\n2016-05-07 04:40:00\n2016-05-27 18:00:00\n\n\n\n\n\n\n\n\nassert train_frame[\"date\"].max() &lt; validation_frame[\"date\"].min()\nassert validation_frame[\"date\"].max() &lt; test_frame[\"date\"].min()\n\nDesde este punto no utilizaremos test_frame hasta fijar transformaciones, hiperparámetros y estados de los modelos.",
     "crumbs": [
       "Parte I - Aprender representaciones",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
     ]
   },
   {
-    "objectID": "chapters/chapter02.html#referencia-conceptual",
-    "href": "chapters/chapter02.html#referencia-conceptual",
+    "objectID": "chapters/chapter02.html#explorar-únicamente-entrenamiento",
+    "href": "chapters/chapter02.html#explorar-únicamente-entrenamiento",
     "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
-    "section": "2.5 Referencia conceptual",
-    "text": "2.5 Referencia conceptual\nRedes lineales para regresión, generalización y weight decay en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "section": "2.5 Explorar únicamente entrenamiento",
+    "text": "2.5 Explorar únicamente entrenamiento\nEl consumo tiene una distribución asimétrica: muchos intervalos de consumo bajo y pocos picos de gran magnitud.\n\ntrain_frame[\"Appliances\"].describe(percentiles=[0.5, 0.75, 0.9, 0.99]).round(1)\n\ncount    13814.0\nmean        98.8\nstd        106.9\nmin         10.0\n50%         60.0\n75%        100.0\n90%        220.0\n99%        590.0\nmax       1080.0\nName: Appliances, dtype: float64\n\n\n\nfig, axes = plt.subplots(1, 2, figsize=(11, 4))\n\ninitial_window = train_frame.iloc[: 7 * 24 * 6]\naxes[0].plot(\n    initial_window[\"date\"],\n    initial_window[\"Appliances\"],\n    color=\"#6042a6\",\n    linewidth=0.9,\n)\naxes[0].set_title(\"Primera semana de entrenamiento\")\naxes[0].set_ylabel(\"Energía de electrodomésticos (Wh)\")\naxes[0].tick_params(axis=\"x\", rotation=25)\n\naxes[1].hist(\n    train_frame[\"Appliances\"],\n    bins=50,\n    color=\"#327c78\",\n    edgecolor=\"white\",\n)\naxes[1].set_title(\"Distribución de entrenamiento\")\naxes[1].set_xlabel(\"Energía de electrodomésticos (Wh)\")\naxes[1].set_ylabel(\"Intervalos\")\n\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\nFigura 2.1: Consumo en la partición de entrenamiento: serie inicial y distribución completa.\n\n\n\n\n\nEsta forma afecta la evaluación. El RMSE penaliza fuertemente los errores en picos; el MAE describe un error absoluto típico con menor influencia de esos picos. Reportaremos ambos y evitaremos llamar a cualquiera de ellos un “score” genérico.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#definir-entradas-y-transformaciones",
+    "href": "chapters/chapter02.html#definir-entradas-y-transformaciones",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.6 Definir entradas y transformaciones",
+    "text": "2.6 Definir entradas y transformaciones\nUsaremos temperaturas y humedades interiores, clima exterior, consumo de luces y calendario. La hora y el día semanal son cíclicos: las 23:50 y las 00:00 deben estar cerca. Para una variable periódica \\(t\\) de periodo \\(P\\):\n\\[\ns(t)=\\sin\\left(2\\pi\\frac{t}{P}\\right),\\qquad\nc(t)=\\cos\\left(2\\pi\\frac{t}{P}\\right).\n\\]\n\nSENSOR_COLUMNS = [\n    \"lights\",\n    *[name for room in range(1, 10) for name in (f\"T{room}\", f\"RH_{room}\")],\n    \"T_out\",\n    \"Press_mm_hg\",\n    \"RH_out\",\n    \"Windspeed\",\n    \"Visibility\",\n    \"Tdewpoint\",\n]\nCALENDAR_COLUMNS = [\"hour_sin\", \"hour_cos\", \"dow_sin\", \"dow_cos\"]\nFEATURE_COLUMNS = SENSOR_COLUMNS + CALENDAR_COLUMNS\nTARGET = \"Appliances\"\n\n\ndef add_calendar_features(frame):\n    result = frame.copy()\n    hour = result[\"date\"].dt.hour + result[\"date\"].dt.minute / 60\n    day_of_week = result[\"date\"].dt.dayofweek\n    result[\"hour_sin\"] = np.sin(2 * np.pi * hour / 24)\n    result[\"hour_cos\"] = np.cos(2 * np.pi * hour / 24)\n    result[\"dow_sin\"] = np.sin(2 * np.pi * day_of_week / 7)\n    result[\"dow_cos\"] = np.cos(2 * np.pi * day_of_week / 7)\n    return result\n\n\ntrain_model = add_calendar_features(train_frame)\nvalidation_model = add_calendar_features(validation_frame)\n\nX_train_raw = torch.tensor(\n    train_model[FEATURE_COLUMNS].to_numpy(), dtype=torch.float32\n)\nX_validation_raw = torch.tensor(\n    validation_model[FEATURE_COLUMNS].to_numpy(), dtype=torch.float32\n)\ny_train_raw = torch.tensor(train_model[TARGET].to_numpy(), dtype=torch.float32)\ny_validation_raw = torch.tensor(\n    validation_model[TARGET].to_numpy(), dtype=torch.float32\n)\n\nprint(\"X entrenamiento:\", X_train_raw.shape)\nprint(\"y entrenamiento:\", y_train_raw.shape)\n\nX entrenamiento: torch.Size([13814, 29])\ny entrenamiento: torch.Size([13814])\n\n\nLas escalas se estiman solo con entrenamiento. Estandarizamos también el objetivo para que las tasas de aprendizaje sean interpretables.\n\nx_mean = X_train_raw.mean(dim=0)\nx_std = X_train_raw.std(dim=0, unbiased=False).clamp_min(1e-6)\ny_mean = y_train_raw.mean()\ny_std = y_train_raw.std(unbiased=False).clamp_min(1e-6)\n\n\ndef standardize_features(values):\n    return (values - x_mean) / x_std\n\n\ndef standardize_target(values):\n    return (values - y_mean) / y_std\n\n\ndef restore_target(values):\n    return values * y_std + y_mean\n\n\nX_train = standardize_features(X_train_raw)\nX_validation = standardize_features(X_validation_raw)\ny_train = standardize_target(y_train_raw)\ny_validation = standardize_target(y_validation_raw)\n\nassert torch.isfinite(X_train).all()\nassert torch.isfinite(y_train).all()\nassert torch.allclose(X_train.mean(dim=0), torch.zeros(X_train.shape[1]), atol=1e-4)\n\nAplicar medias o desviaciones calculadas con validación o test permitiría que información futura influyera en el desarrollo del modelo.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#establecer-líneas-base",
+    "href": "chapters/chapter02.html#establecer-líneas-base",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.7 Establecer líneas base",
+    "text": "2.7 Establecer líneas base\nAntes de optimizar pesos necesitamos saber si aprender características aporta algo. Compararemos dos predictores constantes estimados con entrenamiento:\n\nla media minimiza el error cuadrático sobre entrenamiento;\nla mediana minimiza el error absoluto sobre entrenamiento.\n\n\ndef regression_metrics(y_true, y_pred):\n    errors = y_pred - y_true\n    return {\n        \"MAE\": errors.abs().mean().item(),\n        \"RMSE\": errors.square().mean().sqrt().item(),\n    }\n\n\ntrain_mean = y_train_raw.mean()\ntrain_median = y_train_raw.median()\n\nbaseline_validation = pd.DataFrame({\n    \"Media de entrenamiento\": regression_metrics(\n        y_validation_raw,\n        torch.full_like(y_validation_raw, train_mean),\n    ),\n    \"Mediana de entrenamiento\": regression_metrics(\n        y_validation_raw,\n        torch.full_like(y_validation_raw, train_median),\n    ),\n}).T\nbaseline_validation.round(1)\n\n\n\n\n\n\n\n\nMAE\nRMSE\n\n\n\n\nMedia de entrenamiento\n54.0\n92.4\n\n\nMediana de entrenamiento\n42.6\n98.1\n\n\n\n\n\n\n\nEs posible que una línea base sea mejor en MAE y otra en RMSE. Esto no es una contradicción: optimizan aspectos distintos de la distribución de errores.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#formular-la-regresión-lineal",
+    "href": "chapters/chapter02.html#formular-la-regresión-lineal",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.8 Formular la regresión lineal",
+    "text": "2.8 Formular la regresión lineal\nPara una observación estandarizada \\(\\mathbf{x}_i\\in\\mathbb{R}^d\\), el modelo calcula\n\\[\n\\widehat{y}_i=\\mathbf{x}_i^\\mathsf{T}\\mathbf{w}+b,\n\\]\ndonde \\(\\mathbf{w}\\in\\mathbb{R}^d\\) y \\(b\\in\\mathbb{R}\\) son parámetros aprendidos. Con \\(N\\) observaciones, matriz \\(\\mathbf{X}\\in\\mathbb{R}^{N\\times d}\\) y una columna de unos para el intercepto:\n\\[\n\\widetilde{\\mathbf{X}}=\n\\begin{bmatrix}\\mathbf{1}&\\mathbf{X}\\end{bmatrix},\\qquad\n\\boldsymbol{\\theta}=\\begin{bmatrix}b\\\\\\mathbf{w}\\end{bmatrix},\\qquad\n\\widehat{\\mathbf{y}}=\\widetilde{\\mathbf{X}}\\boldsymbol{\\theta}.\n\\]\nEstimaremos los parámetros minimizando el error cuadrático medio estandarizado:\n\\[\n\\mathcal{L}(\\boldsymbol{\\theta})=\n\\frac{1}{N}\\left\\|\n\\widetilde{\\mathbf{X}}\\boldsymbol{\\theta}-\\mathbf{y}\n\\right\\|_2^2.\n\\]\nLa pérdida guía la estimación de parámetros. RMSE y MAE se reportan en Wh para evaluar el modelo; no deben confundirse con el objetivo estandarizado de entrenamiento.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#una-solución-de-mínimos-cuadrados",
+    "href": "chapters/chapter02.html#una-solución-de-mínimos-cuadrados",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.9 Una solución de mínimos cuadrados",
+    "text": "2.9 Una solución de mínimos cuadrados\nLa expresión conocida como ecuación normal involucra \\((\\widetilde{\\mathbf{X}}^\\mathsf{T}\\widetilde{\\mathbf{X}})^{-1}\\), pero formar esa inversa explícitamente es innecesario e inestable cuando hay variables correlacionadas. torch.linalg.lstsq utiliza una solución numérica de mínimos cuadrados.\n\nX_train_bias = torch.cat(\n    [torch.ones((len(X_train), 1)), X_train], dim=1\n)\nX_validation_bias = torch.cat(\n    [torch.ones((len(X_validation), 1)), X_validation], dim=1\n)\n\ntheta_lstsq = torch.linalg.lstsq(X_train_bias, y_train[:, None]).solution[:, 0]\n\nvalidation_lstsq_std = X_validation_bias @ theta_lstsq\nvalidation_lstsq = restore_target(validation_lstsq_std)\n\npd.Series(\n    regression_metrics(y_validation_raw, validation_lstsq),\n    name=\"Mínimos cuadrados en validación\",\n).round(1)\n\nMAE     52.3\nRMSE    86.4\nName: Mínimos cuadrados en validación, dtype: float64\n\n\nEsta solución establece una referencia para comprobar los métodos iterativos. En modelos profundos no existe una solución cerrada equivalente; por eso el descenso por gradiente es central.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#derivar-el-gradiente",
+    "href": "chapters/chapter02.html#derivar-el-gradiente",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.10 Derivar el gradiente",
+    "text": "2.10 Derivar el gradiente\nEl gradiente del MSE respecto a todos los parámetros es\n\\[\n\\nabla_{\\boldsymbol{\\theta}}\\mathcal{L}\n=\\frac{2}{N}\\widetilde{\\mathbf{X}}^\\mathsf{T}\n\\left(\n\\widetilde{\\mathbf{X}}\\boldsymbol{\\theta}-\\mathbf{y}\n\\right).\n\\]\nDescenso por gradiente actualiza\n\\[\n\\boldsymbol{\\theta}^{(t+1)}=\n\\boldsymbol{\\theta}^{(t)}-\n\\eta\\nabla_{\\boldsymbol{\\theta}}\\mathcal{L}\n(\\boldsymbol{\\theta}^{(t)}),\n\\]\ndonde \\(\\eta\\) es la tasa de aprendizaje. theta es un parámetro; learning_rate y epochs son hiperparámetros porque no se estiman por diferenciación.\n\ndef train_batch_gradient_descent(learning_rate, epochs=200):\n    theta = torch.zeros(X_train_bias.shape[1])\n    training_losses = []\n    validation_losses = []\n\n    for _ in range(epochs):\n        training_errors = X_train_bias @ theta - y_train\n        training_loss = training_errors.square().mean()\n        gradient = 2 / len(X_train_bias) * X_train_bias.T @ training_errors\n        theta -= learning_rate * gradient\n\n        validation_errors = X_validation_bias @ theta - y_validation\n        validation_loss = validation_errors.square().mean()\n        training_losses.append(training_loss.item())\n        validation_losses.append(validation_loss.item())\n\n    return {\n        \"theta\": theta,\n        \"training_loss\": np.asarray(training_losses),\n        \"validation_loss\": np.asarray(validation_losses),\n    }\n\n\nlearning_rates = [0.001, 0.01, 0.05]\nbatch_runs = {\n    rate: train_batch_gradient_descent(rate)\n    for rate in learning_rates\n}\n\nLa validación, no test, selecciona la tasa. Primero observamos las trayectorias.\n\nfig, ax = plt.subplots(figsize=(8, 4.5))\nfor rate, run in batch_runs.items():\n    ax.plot(run[\"validation_loss\"], label=fr\"$\\eta={rate}$\")\n\nax.axhline(\n    torch.mean((validation_lstsq_std - y_validation) ** 2).item(),\n    color=\"black\",\n    linestyle=\"--\",\n    label=\"Mínimos cuadrados\",\n)\nax.set_xlabel(\"Época\")\nax.set_ylabel(\"MSE estandarizado de validación\")\nax.set_yscale(\"log\")\nax.legend()\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\nFigura 2.2: La tasa de aprendizaje controla la rapidez de convergencia del mismo modelo lineal.\n\n\n\n\n\n\nlearning_rate_results = pd.DataFrame({\n    \"tasa\": learning_rates,\n    \"MSE entrenamiento final\": [\n        batch_runs[rate][\"training_loss\"][-1] for rate in learning_rates\n    ],\n    \"MSE validación final\": [\n        batch_runs[rate][\"validation_loss\"][-1] for rate in learning_rates\n    ],\n}).sort_values(\"MSE validación final\")\n\nselected_learning_rate = float(learning_rate_results.iloc[0][\"tasa\"])\ntheta_batch = batch_runs[selected_learning_rate][\"theta\"]\n\nlearning_rate_results.round(4)\n\n\n\n\n\n\n\n\ntasa\nMSE entrenamiento final\nMSE validación final\n\n\n\n\n2\n0.050\n0.7933\n0.6385\n\n\n1\n0.010\n0.8109\n0.6452\n\n\n0\n0.001\n0.8908\n0.6972\n\n\n\n\n\n\n\nUna tasa demasiado pequeña avanza lentamente. Una tasa mayor puede converger antes, pero eventualmente valores aún mayores producirían oscilación o divergencia. La escala de las variables cambia esta geometría; esa es una razón computacional para estandarizar.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#verificar-el-gradiente-con-autograd",
+    "href": "chapters/chapter02.html#verificar-el-gradiente-con-autograd",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.11 Verificar el gradiente con autograd",
+    "text": "2.11 Verificar el gradiente con autograd\nRepetiremos exactamente el entrenamiento batch, pero pediremos a PyTorch que calcule el gradiente. La estructura del algoritmo permanece visible.\n\ntheta_autograd = torch.zeros(X_train_bias.shape[1], requires_grad=True)\nautograd_losses = []\n\nfor _ in range(200):\n    predictions = X_train_bias @ theta_autograd\n    loss = (predictions - y_train).square().mean()\n    loss.backward()\n\n    with torch.no_grad():\n        theta_autograd -= selected_learning_rate * theta_autograd.grad\n\n    theta_autograd.grad.zero_()\n    autograd_losses.append(loss.item())\n\nprint(\"Gradiente manual y autograd coinciden:\", torch.allclose(\n    theta_batch,\n    theta_autograd.detach(),\n    atol=1e-5,\n))\n\nGradiente manual y autograd coinciden: True\n\n\nAutograd no elige la pérdida, la tasa, las variables ni el protocolo de evaluación. Solo automatiza la regla de la cadena una vez que definimos el cálculo.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#entrenar-con-nn.linear-y-mini-batches",
+    "href": "chapters/chapter02.html#entrenar-con-nn.linear-y-mini-batches",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.12 Entrenar con nn.Linear y mini-batches",
+    "text": "2.12 Entrenar con nn.Linear y mini-batches\nnn.Linear(d, 1) encapsula \\(\\mathbf{w}\\) y \\(b\\). El optimizador actualiza esos parámetros, mientras DataLoader entrega subconjuntos aleatorios del periodo de entrenamiento.\nUsaremos una tasa menor que en batch porque ahora una época contiene muchas actualizaciones ruidosas. El número de épocas y la tasa se fijan antes de abrir test; validación conservará el mejor estado observado.\n\ntrain_dataset = TensorDataset(X_train, y_train[:, None])\ntrain_loader = DataLoader(\n    train_dataset,\n    batch_size=256,\n    shuffle=True,\n    generator=torch.Generator().manual_seed(SEED),\n)\n\ntorch.manual_seed(SEED)\nlinear_model = nn.Linear(X_train.shape[1], 1).to(device)\noptimizer = torch.optim.SGD(linear_model.parameters(), lr=0.01)\ncriterion = nn.MSELoss()\n\nmini_batch_history = []\nbest_validation_loss = np.inf\nbest_epoch = None\nbest_state = None\n\nfor epoch in range(60):\n    linear_model.train()\n    training_loss_sum = 0.0\n\n    for batch_X, batch_y in train_loader:\n        batch_X = batch_X.to(device)\n        batch_y = batch_y.to(device)\n\n        optimizer.zero_grad()\n        batch_predictions = linear_model(batch_X)\n        batch_loss = criterion(batch_predictions, batch_y)\n        batch_loss.backward()\n        optimizer.step()\n\n        training_loss_sum += batch_loss.item() * len(batch_X)\n\n    linear_model.eval()\n    with torch.no_grad():\n        validation_predictions = linear_model(X_validation.to(device))[:, 0]\n        validation_loss = criterion(\n            validation_predictions,\n            y_validation.to(device),\n        ).item()\n\n    training_loss = training_loss_sum / len(train_dataset)\n    mini_batch_history.append({\n        \"epoch\": epoch + 1,\n        \"training_loss\": training_loss,\n        \"validation_loss\": validation_loss,\n    })\n\n    if validation_loss &lt; best_validation_loss:\n        best_validation_loss = validation_loss\n        best_epoch = epoch + 1\n        best_state = deepcopy(linear_model.state_dict())\n\nlinear_model.load_state_dict(best_state)\nhistory = pd.DataFrame(mini_batch_history)\n\npd.Series({\n    \"mejor época según validación\": best_epoch,\n    \"mejor MSE estandarizado\": best_validation_loss,\n})\n\nmejor época según validación    18.000000\nmejor MSE estandarizado          0.633151\ndtype: float64\n\n\nGuardar el mejor estado es una decisión de selección. La pérdida de validación no es una estimación independiente del desempeño final porque participó en esa decisión.\n\nfig, ax = plt.subplots(figsize=(8, 4.5))\nax.plot(history[\"epoch\"], history[\"training_loss\"], label=\"Entrenamiento\")\nax.plot(history[\"epoch\"], history[\"validation_loss\"], label=\"Validación\")\nax.axvline(best_epoch, color=\"black\", linestyle=\"--\", label=\"Estado conservado\")\nax.set_xlabel(\"Época\")\nax.set_ylabel(\"MSE estandarizado\")\nax.legend()\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\nFigura 2.3: Pérdida de entrenamiento y validación durante el aprendizaje con mini-batches.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#comparar-los-modelos-en-validación",
+    "href": "chapters/chapter02.html#comparar-los-modelos-en-validación",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.13 Comparar los modelos en validación",
+    "text": "2.13 Comparar los modelos en validación\n\ndef predict_linear_module(model, X):\n    model.eval()\n    with torch.no_grad():\n        predictions_std = model(X.to(device))[:, 0].cpu()\n    return restore_target(predictions_std)\n\n\nvalidation_predictions = {\n    \"Media\": torch.full_like(y_validation_raw, train_mean),\n    \"Mediana\": torch.full_like(y_validation_raw, train_median),\n    \"Mínimos cuadrados\": validation_lstsq,\n    \"Gradiente batch\": restore_target(X_validation_bias @ theta_batch),\n    \"SGD mini-batch\": predict_linear_module(linear_model, X_validation),\n}\n\nvalidation_comparison = pd.DataFrame({\n    name: regression_metrics(y_validation_raw, predictions)\n    for name, predictions in validation_predictions.items()\n}).T.sort_values(\"RMSE\")\n\nvalidation_comparison.round(1)\n\n\n\n\n\n\n\n\nMAE\nRMSE\n\n\n\n\nSGD mini-batch\n48.8\n85.0\n\n\nGradiente batch\n50.3\n85.4\n\n\nMínimos cuadrados\n52.3\n86.4\n\n\nMedia\n54.0\n92.4\n\n\nMediana\n42.6\n98.1\n\n\n\n\n\n\n\nLos tres procedimientos lineales producen resultados cercanos, pero no idénticos. Mínimos cuadrados minimiza MSE de entrenamiento, mientras el estado de SGD se selecciona por validación antes de converger al óptimo de entrenamiento; esa parada actúa como regularización implícita. Las diferencias no provienen de una familia funcional distinta.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#evaluar-una-vez-en-test",
+    "href": "chapters/chapter02.html#evaluar-una-vez-en-test",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.14 Evaluar una vez en test",
+    "text": "2.14 Evaluar una vez en test\nLas decisiones están cerradas. Ahora transformamos test con estadísticas de entrenamiento y calculamos predicciones una sola vez.\n\ntest_model = add_calendar_features(test_frame)\nX_test_raw = torch.tensor(\n    test_model[FEATURE_COLUMNS].to_numpy(), dtype=torch.float32\n)\ny_test_raw = torch.tensor(test_model[TARGET].to_numpy(), dtype=torch.float32)\nX_test = standardize_features(X_test_raw)\nX_test_bias = torch.cat([torch.ones((len(X_test), 1)), X_test], dim=1)\n\ntest_predictions = {\n    \"Media\": torch.full_like(y_test_raw, train_mean),\n    \"Mediana\": torch.full_like(y_test_raw, train_median),\n    \"Mínimos cuadrados\": restore_target(X_test_bias @ theta_lstsq),\n    \"Gradiente batch\": restore_target(X_test_bias @ theta_batch),\n    \"SGD mini-batch\": predict_linear_module(linear_model, X_test),\n}\n\ntest_comparison = pd.DataFrame({\n    name: regression_metrics(y_test_raw, predictions)\n    for name, predictions in test_predictions.items()\n}).T.sort_values(\"RMSE\")\n\ntest_comparison.round(1)\n\n\n\n\n\n\n\n\nMAE\nRMSE\n\n\n\n\nSGD mini-batch\n46.0\n83.3\n\n\nGradiente batch\n49.5\n83.8\n\n\nMínimos cuadrados\n51.0\n84.8\n\n\nMedia\n52.8\n90.9\n\n\nMediana\n43.3\n98.1\n\n\n\n\n\n\n\nLa regresión lineal puede mejorar RMSE al representar parte de los picos y, al mismo tiempo, perder frente a la mediana en MAE. El resultado muestra por qué la elección de métrica forma parte del problema y no debe decidirse después de ver test.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#diagnosticar-predicciones-y-residuos",
+    "href": "chapters/chapter02.html#diagnosticar-predicciones-y-residuos",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.15 Diagnosticar predicciones y residuos",
+    "text": "2.15 Diagnosticar predicciones y residuos\nUsaremos el modelo de mínimos cuadrados para el diagnóstico porque representa el óptimo numérico de la pérdida lineal estudiada. El residuo se define como \\(e_i=y_i-\\widehat{y}_i\\).\n\nselected_test_predictions = test_predictions[\"Mínimos cuadrados\"]\ntest_residuals = y_test_raw - selected_test_predictions\n\n\nfig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2))\n\naxes[0].scatter(\n    y_test_raw.numpy(),\n    selected_test_predictions.numpy(),\n    s=12,\n    alpha=0.25,\n    color=\"#6042a6\",\n)\nlimits = [0, max(y_test_raw.max().item(), selected_test_predictions.max().item())]\naxes[0].plot(limits, limits, \"--\", color=\"black\")\naxes[0].set_xlabel(\"Consumo observado (Wh)\")\naxes[0].set_ylabel(\"Consumo estimado (Wh)\")\naxes[0].set_title(\"Observado frente a estimado\")\n\naxes[1].hist(test_residuals.numpy(), bins=50, color=\"#327c78\", edgecolor=\"white\")\naxes[1].axvline(0, color=\"black\", linestyle=\"--\")\naxes[1].set_xlabel(\"Residuo: observado - estimado (Wh)\")\naxes[1].set_ylabel(\"Intervalos\")\naxes[1].set_title(\"Distribución de residuos\")\n\nplt.tight_layout()\nplt.show()\n\n\n\n\n\n\n\nFigura 2.4: Diagnóstico final del modelo lineal en el periodo de test.\n\n\n\n\n\n\ntest_diagnostics = pd.Series({\n    \"residuo medio\": test_residuals.mean().item(),\n    \"MAE en consumo bajo (&lt;= mediana de test)\": test_residuals[\n        y_test_raw &lt;= y_test_raw.median()\n    ].abs().mean().item(),\n    \"MAE en consumo alto (&gt; mediana de test)\": test_residuals[\n        y_test_raw &gt; y_test_raw.median()\n    ].abs().mean().item(),\n    \"correlación residuo-predicción\": torch.corrcoef(torch.stack([\n        test_residuals,\n        selected_test_predictions,\n    ]))[0, 1].item(),\n})\ntest_diagnostics.round(1)\n\nresiduo medio                               -6.2\nMAE en consumo bajo (&lt;= mediana de test)    35.8\nMAE en consumo alto (&gt; mediana de test)     66.7\ncorrelación residuo-predicción              -0.1\ndtype: float64\n\n\nUna nube comprimida alrededor de la media y errores mayores en consumos altos son señales de capacidad limitada. El modelo lineal no representa con facilidad interacciones, umbrales ni dinámicas temporales complejas. Estas observaciones motivan las redes no lineales del próximo capítulo; no autorizan a regresar a selección después de consultar test.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#interpretar-parámetros-con-cautela",
+    "href": "chapters/chapter02.html#interpretar-parámetros-con-cautela",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.16 Interpretar parámetros con cautela",
+    "text": "2.16 Interpretar parámetros con cautela\nComo las entradas y el objetivo están estandarizados, la magnitud absoluta de un coeficiente permite una comparación descriptiva dentro del modelo.\n\nstandardized_coefficients = pd.Series(\n    theta_lstsq[1:].numpy(),\n    index=FEATURE_COLUMNS,\n    name=\"coeficiente estandarizado\",\n)\n\nstandardized_coefficients.reindex(\n    standardized_coefficients.abs().sort_values(ascending=False).index\n).head(10).round(3).to_frame()\n\n\n\n\n\n\n\n\ncoeficiente estandarizado\n\n\n\n\nTdewpoint\n0.380\n\n\nT3\n0.376\n\n\nRH_2\n-0.336\n\n\nT_out\n-0.326\n\n\nRH_1\n0.312\n\n\nRH_3\n0.311\n\n\nT9\n-0.247\n\n\nhour_cos\n-0.243\n\n\nT2\n-0.210\n\n\nhour_sin\n-0.174\n\n\n\n\n\n\n\nUn coeficiente no es un efecto causal. Temperaturas y humedades de distintas habitaciones están correlacionadas; el valor asignado a una variable depende de cuáles otras están en el modelo. La importancia tampoco demuestra que el sensor estará disponible o medirá lo mismo en producción.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#qué-hemos-aprendido",
+    "href": "chapters/chapter02.html#qué-hemos-aprendido",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.17 Qué hemos aprendido",
+    "text": "2.17 Qué hemos aprendido\n\nLa formulación determina si el sistema estima el presente o pronostica el futuro.\nUna partición temporal evalúa aplicación a periodos posteriores y evita mezclar indiscriminadamente el tiempo.\nLas transformaciones se estiman solo con entrenamiento.\nMedia y mediana son líneas base asociadas a pérdidas distintas.\nLa regresión lineal aprende parámetros minimizando una función de pérdida.\ntorch.linalg.lstsq, gradiente manual, autograd y nn.Linear pueden estimar la misma familia funcional por rutas computacionales diferentes.\nAutograd calcula derivadas; no selecciona variables, métricas ni protocolos.\nValidación permite seleccionar hiperparámetros y estados; test se abre una sola vez.\nRMSE y MAE pueden preferir modelos diferentes cuando el objetivo es asimétrico.\nLos residuos muestran fallos que una métrica promedio oculta.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#limitaciones-del-caso",
+    "href": "chapters/chapter02.html#limitaciones-del-caso",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.18 Limitaciones del caso",
+    "text": "2.18 Limitaciones del caso\nEl dataset corresponde a una sola vivienda y aproximadamente cuatro meses. No permite afirmar generalización a otros hogares, climas, ocupaciones o equipos. Las variables ambientales contemporáneas tampoco convierten este análisis en un pronóstico. Antes de desplegar se necesitarían validación externa, auditoría de sensores, definición de latencia, manejo de valores faltantes y monitoreo de cambio de distribución.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#ejercicios",
+    "href": "chapters/chapter02.html#ejercicios",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.19 Ejercicios",
+    "text": "2.19 Ejercicios\n\nRecalcula las líneas base con entrenamiento y explica por qué la media y la mediana minimizan pérdidas diferentes.\nSustituye la partición temporal por una aleatoria. Compara resultados y argumenta por qué el valor obtenido responde a otra pregunta de evaluación.\nImplementa MAE como pérdida de entrenamiento. Compara su gradiente y su desempeño con el MSE, sin modificar decisiones después de consultar test.\nElimina la estandarización de entradas y repite las curvas de tasas de aprendizaje. Explica el resultado mediante la geometría de la pérdida.\nImplementa descenso por gradiente estocástico sin torch.optim y comprueba cómo cambia la trayectoria de la pérdida.\nAñade weight decay a nn.Linear. Selecciona su intensidad en validación y compara coeficientes y RMSE.\nConstruye una validación temporal con ventanas expansivas en lugar de una sola partición. Reporta variación entre periodos.\nAjusta un modelo lineal para log1p(Appliances) y transforma las predicciones de regreso a Wh. Discute qué métrica y qué regiones del objetivo cambian.\nAnaliza MAE por hora del día y día de la semana. Identifica periodos donde el sensor virtual falla sistemáticamente.\nRedacta un contrato de entrada que especifique columnas, unidades, rangos, frecuencia y estrategia ante sensores ausentes.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#reto",
+    "href": "chapters/chapter02.html#reto",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.20 Reto",
+    "text": "2.20 Reto\nConstruye una versión de pronóstico a diez minutos. Desplaza el objetivo un intervalo hacia el futuro, elimina cualquier entrada que no estaría disponible al emitir la predicción y crea características rezagadas usando solo el pasado. Compara contra persistencia y documenta exactamente por qué este nuevo sistema responde a una pregunta diferente del capítulo.\n\n\n\n\nCandanedo, Luis. 2017. «Appliances Energy Prediction». UCI Machine Learning Repository. https://doi.org/10.24432/C5VC8G.\n\n\nCandanedo, Luis M., Véronique Feldheim, y Dominique Deramaix. 2017. «Data driven prediction models of energy use of appliances in a low-energy house». Energy and Buildings 140: 81-97. https://doi.org/10.1016/j.enbuild.2017.01.083.",
     "crumbs": [
       "Parte I - Aprender representaciones",
       "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
@@ -1014,7 +1179,7 @@
     "href": "references.html",
     "title": "Referencias",
     "section": "",
-    "text": "PyTorch Foundation. 2026. PyTorch Documentation. Online\ndocumentation. https://pytorch.org/docs/stable/.\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, and Alexander J. Smola. 2023.\nDive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "text": "Candanedo, Luis. 2017. “Appliances Energy Prediction.” UCI\nMachine Learning Repository. https://doi.org/10.24432/C5VC8G.\n\n\nCandanedo, Luis M., Véronique Feldheim, and Dominique Deramaix. 2017.\n“Data Driven Prediction Models of Energy Use of Appliances in a\nLow-Energy House.” Energy and Buildings 140: 81–97. https://doi.org/10.1016/j.enbuild.2017.01.083.\n\n\nPyTorch Foundation. 2026. PyTorch Documentation. Online\ndocumentation. https://pytorch.org/docs/stable/.\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, and Alexander J. Smola. 2023.\nDive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
     "crumbs": [
       "Material adicional",
       "Referencias"
