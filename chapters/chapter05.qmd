@@ -1,37 +1,1234 @@
 ---
 title: "¿Cómo reconocer patrones espaciales?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> clasificar imágenes sin
-tratar cada píxel como una característica independiente de su vecindad.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-El capítulo comenzará con una convolución observable antes de usar `nn.Conv2d`.
+<div class="problem-banner">
+<strong>Problema:</strong> clasificar imágenes normalizadas de prendas en diez
+categorías. Una MLP puede aplanar los 784 píxeles, pero no expresa que píxeles
+cercanos forman bordes y siluetas ni que un mismo patrón puede aparecer en
+distintas posiciones. Compararemos esa representación con una CNN pequeña de
+presupuesto de parámetros casi idéntico.
+</div>
+
+## Del píxel aislado a la vecindad
+
+Aplanar una imagen conserva sus valores, pero elimina de la interfaz del modelo
+la organización espacial explícita. Una capa densa aprende un peso distinto
+para cada conexión entre píxel y unidad. Una capa convolucional introduce dos
+hipótesis:
+
+- **localidad:** los patrones útiles se forman inicialmente en vecindarios;
+- **pesos compartidos:** un detector puede reutilizarse en distintas posiciones.
+
+Estas hipótesis reducen parámetros y producen mapas que conservan posición. No
+son leyes universales: la ubicación absoluta puede importar y los bordes de una
+imagen requieren condiciones especiales. Las CNN modernas heredan estas ideas
+de arquitecturas como LeNet [@lecun1998gradient].
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- calcular una correlación cruzada bidimensional manualmente;
+- explicar por qué PyTorch llama convolución a esa operación;
+- seguir formas NCHW y kernels con canales de entrada y salida;
+- calcular dimensiones después de padding, stride y pooling;
+- contar parámetros y calcular el campo receptivo de una CNN;
+- distinguir equivariancia aproximada de invariancia;
+- construir una CNN pequeña con `nn.Conv2d`;
+- comparar CNN y MLP con parámetros, datos y semillas controlados; y
+- analizar filtros, activaciones, confusiones, errores y costo.
 :::
 
-## Objetivos
+## Preparar el entorno
 
-- calcular una convolución bidimensional;
-- explicar conectividad local y pesos compartidos;
-- anticipar formas después de padding, stride y pooling;
-- construir una CNN pequeña;
-- comparar CNN y MLP con un presupuesto razonable; y
-- visualizar filtros, mapas de activación y errores.
+```{python}
+from copy import deepcopy
+import gzip
+from hashlib import sha256
+from pathlib import Path
+import struct
+from time import perf_counter
+from urllib.request import urlretrieve
 
-## Caso y línea base
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import sklearn
+import torch
+from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.model_selection import train_test_split
+from torch import nn
+from torch.nn import functional as F
+from torch.utils.data import DataLoader, TensorDataset
 
-CIFAR-10 o Fashion-MNIST permitirá comparar una regresión softmax, un MLP y una
-CNN pequeña con las mismas particiones.
+SEED = 42
+PAIR_SEEDS = [7, 19, 42, 73, 101]
 
-## Ruta de desarrollo
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+torch.set_num_threads(1)
+torch.use_deterministic_algorithms(True)
+device = torch.device("cpu")
 
-1. Filtros manuales sobre una imagen.
-2. Operación de correlación y dimensiones.
-3. Canales de entrada y salida.
-4. Pooling y campo receptivo.
-5. CNN inspirada en LeNet.
-6. Evaluación por clase y costo computacional.
+print(
+    f"PyTorch {torch.__version__} | NumPy {np.__version__} | "
+    f"pandas {pd.__version__} | scikit-learn {sklearn.__version__}"
+)
+print(f"Dispositivo: {device} | hilos de PyTorch: {torch.get_num_threads()}")
+```
 
-## Referencia conceptual
+La ejecución canónica usa CPU y un hilo para comparar tiempos y semillas. El
+notebook puede adaptarse a GPU, pero mezclar dispositivos haría que los tiempos
+de esta edición dejaran de ser comparables.
 
-Redes convolucionales en [@zhang2023dive].
+## Obtener Fashion-MNIST sin depender de torchvision
+
+Fashion-MNIST contiene 60.000 imágenes oficiales de entrenamiento y 10.000 de
+test, balanceadas entre diez clases [@xiao2017fashion]. Cada imagen es de
+$28\times28$ píxeles en escala de grises. El proyecto oficial declara licencia
+MIT en su repositorio.
+
+Descargamos los cuatro archivos IDX comprimidos desde una revisión inmutable del
+repositorio oficial. Cada archivo se valida con SHA-256 antes de abrirlo.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar descarga y lector IDX"
+
+DATA_COMMIT = "b2617bb6d3ffa2e429640350f613e3291e10b141"
+DATA_BASE_URL = (
+    "https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/"
+    f"{DATA_COMMIT}/data/fashion"
+)
+DATA_DIR = Path(".cache/chapter05")
+
+FILE_HASHES = {
+    "train-images-idx3-ubyte.gz": (
+        "3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84"
+    ),
+    "train-labels-idx1-ubyte.gz": (
+        "a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845"
+    ),
+    "t10k-images-idx3-ubyte.gz": (
+        "346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073"
+    ),
+    "t10k-labels-idx1-ubyte.gz": (
+        "67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5"
+    ),
+}
+
+CLASS_NAMES = [
+    "Camiseta/top",
+    "Pantalón",
+    "Jersey",
+    "Vestido",
+    "Abrigo",
+    "Sandalia",
+    "Camisa",
+    "Zapatilla",
+    "Bolso",
+    "Botín",
+]
+
+
+def download_fashion_mnist():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    for filename, expected_hash in FILE_HASHES.items():
+        path = DATA_DIR / filename
+        current_hash = sha256(path.read_bytes()).hexdigest() if path.exists() else None
+        if current_hash != expected_hash:
+            temporary_path = path.with_suffix(path.suffix + ".part")
+            urlretrieve(f"{DATA_BASE_URL}/{filename}", temporary_path)
+            temporary_hash = sha256(temporary_path.read_bytes()).hexdigest()
+            if temporary_hash != expected_hash:
+                temporary_path.unlink(missing_ok=True)
+                raise ValueError(
+                    f"SHA-256 inesperado al descargar {filename}: {temporary_hash}"
+                )
+            temporary_path.replace(path)
+        actual_hash = sha256(path.read_bytes()).hexdigest()
+        if actual_hash != expected_hash:
+            raise ValueError(f"SHA-256 inesperado para {filename}: {actual_hash}")
+
+
+def read_idx_images(path):
+    with gzip.open(path, "rb") as source:
+        magic, count, rows, columns = struct.unpack(">IIII", source.read(16))
+        payload = source.read()
+    if magic != 2051 or len(payload) != count * rows * columns:
+        raise ValueError(f"Archivo IDX de imágenes inválido: {path.name}")
+    return np.frombuffer(payload, dtype=np.uint8).reshape(count, rows, columns).copy()
+
+
+def read_idx_labels(path):
+    with gzip.open(path, "rb") as source:
+        magic, count = struct.unpack(">II", source.read(8))
+        payload = source.read()
+    if magic != 2049 or len(payload) != count:
+        raise ValueError(f"Archivo IDX de etiquetas inválido: {path.name}")
+    return np.frombuffer(payload, dtype=np.uint8).copy()
+
+
+download_fashion_mnist()
+official_train_images = read_idx_images(
+    DATA_DIR / "train-images-idx3-ubyte.gz"
+)
+official_train_labels = read_idx_labels(
+    DATA_DIR / "train-labels-idx1-ubyte.gz"
+)
+official_test_images = read_idx_images(DATA_DIR / "t10k-images-idx3-ubyte.gz")
+official_test_labels = read_idx_labels(DATA_DIR / "t10k-labels-idx1-ubyte.gz")
+```
+
+```{python}
+if official_train_images.shape != (60_000, 28, 28):
+    raise ValueError("Forma inesperada en las imágenes oficiales de entrenamiento")
+if official_test_images.shape != (10_000, 28, 28):
+    raise ValueError("Forma inesperada en las imágenes oficiales de test")
+if set(np.unique(official_train_labels)) != set(range(10)):
+    raise ValueError("Las etiquetas no corresponden a las diez clases")
+
+train_hashes = pd.Series([
+    sha256(image.tobytes()).hexdigest() for image in official_train_images
+])
+test_hashes = pd.Series([
+    sha256(image.tobytes()).hexdigest() for image in official_test_images
+])
+
+data_audit = pd.Series({
+    "imágenes de entrenamiento oficiales": len(official_train_images),
+    "imágenes de test oficiales": len(official_test_images),
+    "alto": official_train_images.shape[1],
+    "ancho": official_train_images.shape[2],
+    "clases": len(np.unique(official_train_labels)),
+    "mínimo de píxel": int(official_train_images.min()),
+    "máximo de píxel": int(official_train_images.max()),
+    "duplicados internos en entrenamiento": int(train_hashes.duplicated().sum()),
+    "duplicados internos en test": int(test_hashes.duplicated().sum()),
+    "imágenes compartidas entre splits": len(set(train_hashes) & set(test_hashes)),
+})
+data_audit
+```
+
+Los duplicados exactos se reportan como propiedad del benchmark; no los
+eliminamos porque respetaremos el test oficial y construiremos ajuste y
+validación sin solapamiento de índices. La auditoría no detecta duplicados
+cercanos ni etiquetas contradictorias visualmente.
+
+## Fijar un presupuesto y bloquear test
+
+Para que cinco semillas y una prueba mecanística sean ejecutables en CPU,
+extraemos de las 60.000 imágenes oficiales 20.000 para ajuste y 5.000 para
+validación, ambas estratificadas. Las otras 35.000 no participan. El test
+oficial permanece bloqueado hasta cerrar modelos, épocas y regla de checkpoint.
+
+```{python}
+all_indices = np.arange(len(official_train_labels))
+development_indices, unused_indices = train_test_split(
+    all_indices,
+    train_size=25_000,
+    stratify=official_train_labels,
+    random_state=SEED,
+)
+fit_indices, validation_indices = train_test_split(
+    development_indices,
+    train_size=20_000,
+    stratify=official_train_labels[development_indices],
+    random_state=SEED,
+)
+
+split_summary = pd.DataFrame({
+    "partición": ["ajuste", "validación", "no utilizada", "test oficial"],
+    "imágenes": [
+        len(fit_indices),
+        len(validation_indices),
+        len(unused_indices),
+        len(official_test_labels),
+    ],
+    "uso": [
+        "parámetros",
+        "checkpoint y comparación",
+        "ninguno",
+        "evaluación final",
+    ],
+})
+split_summary
+```
+
+```{python}
+fit_uint8 = official_train_images[fit_indices]
+validation_uint8 = official_train_images[validation_indices]
+
+fit_mean = fit_uint8.mean() / 255.0
+fit_std = fit_uint8.std() / 255.0
+if fit_std == 0:
+    raise ValueError("La desviación de los píxeles de ajuste es cero")
+
+
+def images_to_tensor(images):
+    tensor = torch.from_numpy(images.copy()).to(torch.float32).div_(255.0)
+    tensor.sub_(fit_mean).div_(fit_std)
+    return tensor.unsqueeze(1)
+
+
+X_fit = images_to_tensor(fit_uint8)
+y_fit = torch.from_numpy(
+    official_train_labels[fit_indices].astype(np.int64)
+)
+X_validation = images_to_tensor(validation_uint8)
+y_validation = torch.from_numpy(
+    official_train_labels[validation_indices].astype(np.int64)
+)
+
+print(f"Media de ajuste: {fit_mean:.6f} | desviación: {fit_std:.6f}")
+print("Ajuste:", X_fit.shape, y_fit.shape)
+print("Validación:", X_validation.shape, y_validation.shape)
+```
+
+```{python}
+#| label: fig-fashion-examples
+#| fig-cap: "Dos imágenes de ajuste por clase de Fashion-MNIST."
+#| fig-alt: "Cuadrícula de veinte imágenes pequeñas de prendas, dos por cada clase."
+#| fig-width: 10
+#| fig-height: 5
+
+fig, axes = plt.subplots(2, 10, figsize=(10, 5))
+for class_index, class_name in enumerate(CLASS_NAMES):
+    positions = np.flatnonzero(y_fit.numpy() == class_index)[:2]
+    for row, position in enumerate(positions):
+        axes[row, class_index].imshow(fit_uint8[position], cmap="gray", vmin=0, vmax=255)
+        axes[row, class_index].axis("off")
+        if row == 0:
+            axes[row, class_index].set_title(class_name, fontsize=8, rotation=25)
+fig.tight_layout()
+plt.show()
+```
+
+Las imágenes están centradas, sin color y con fondo uniforme. Esto hace visible
+la operación espacial, pero no representa fotografías reales de inventario.
+
+## Observar un filtro antes de aprenderlo
+
+PyTorch implementa **correlación cruzada**, aunque la API y la literatura de
+deep learning la llaman convolución. Para una entrada $\mathbf{X}$ y un kernel
+$\mathbf{K}$,
+
+$$
+Y_{ij}=\sum_{u=0}^{K_h-1}\sum_{v=0}^{K_w-1}
+K_{uv}X_{i+u,j+v}.
+$$
+
+La convolución matemática invertiría el kernel. Como los pesos serán aprendidos,
+esa inversión solo cambia la parametrización y se conserva el nombre habitual.
+
+```{python}
+synthetic_image = torch.zeros(7, 7)
+synthetic_image[:, 3:] = 1.0
+vertical_kernel = torch.tensor([
+    [-1.0, 0.0, 1.0],
+    [-1.0, 0.0, 1.0],
+    [-1.0, 0.0, 1.0],
+])
+
+
+def correlate2d(image, kernel):
+    output_height = image.shape[0] - kernel.shape[0] + 1
+    output_width = image.shape[1] - kernel.shape[1] + 1
+    output = torch.empty(output_height, output_width)
+    for row in range(output_height):
+        for column in range(output_width):
+            window = image[
+                row:row + kernel.shape[0],
+                column:column + kernel.shape[1],
+            ]
+            output[row, column] = (window * kernel).sum()
+    return output
+
+
+manual_response = correlate2d(synthetic_image, vertical_kernel)
+pytorch_response = F.conv2d(
+    synthetic_image[None, None],
+    vertical_kernel[None, None],
+)[0, 0]
+
+assert torch.allclose(manual_response, pytorch_response)
+print(manual_response)
+```
+
+```{python}
+#| label: fig-manual-correlation
+#| fig-cap: "Un kernel vertical responde donde cambia localmente la intensidad."
+#| fig-alt: "Imagen sintética con borde, kernel de tres por tres y mapa de respuesta."
+#| fig-width: 9
+#| fig-height: 3
+
+fig, axes = plt.subplots(1, 3, figsize=(9, 3))
+for axis, values, title in [
+    (axes[0], synthetic_image, "Entrada"),
+    (axes[1], vertical_kernel, "Kernel vertical"),
+    (axes[2], manual_response, "Respuesta"),
+]:
+    image = axis.imshow(values, cmap="coolwarm")
+    axis.set_title(title)
+    axis.set_xticks([])
+    axis.set_yticks([])
+    fig.colorbar(image, ax=axis, fraction=0.046)
+fig.tight_layout()
+plt.show()
+```
+
+El valor de cada salida resume una ventana de $3\times3$. Una respuesta
+positiva y una negativa distinguen la dirección del cambio; su magnitud indica
+qué tan compatible es la ventana con el patrón fijado.
+
+## Aplicar detectores manuales a una prenda
+
+```{python}
+horizontal_kernel = torch.tensor([
+    [-1.0, -1.0, -1.0],
+    [0.0, 0.0, 0.0],
+    [1.0, 1.0, 1.0],
+])
+
+real_image = torch.from_numpy(fit_uint8[0].copy()).to(torch.float32) / 255.0
+vertical_response = F.conv2d(
+    real_image[None, None], vertical_kernel[None, None], padding=1
+)[0, 0]
+horizontal_response = F.conv2d(
+    real_image[None, None], horizontal_kernel[None, None], padding=1
+)[0, 0]
+edge_magnitude = torch.sqrt(vertical_response ** 2 + horizontal_response ** 2)
+```
+
+```{python}
+#| label: fig-manual-fashion-filters
+#| fig-cap: "Filtros manuales resaltan cambios horizontales y verticales en una prenda."
+#| fig-alt: "Imagen de una prenda y tres mapas de respuesta de bordes."
+#| fig-width: 10
+#| fig-height: 3
+
+fig, axes = plt.subplots(1, 4, figsize=(10, 3))
+for axis, values, title, cmap in [
+    (axes[0], real_image, "Imagen", "gray"),
+    (axes[1], vertical_response, "Cambio vertical", "coolwarm"),
+    (axes[2], horizontal_response, "Cambio horizontal", "coolwarm"),
+    (axes[3], edge_magnitude, "Magnitud", "magma"),
+]:
+    axis.imshow(values, cmap=cmap)
+    axis.set_title(title)
+    axis.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+Estos kernels no fueron aprendidos y no son una explicación del modelo final.
+Solo hacen observable el cálculo que una capa entrenable generalizará.
+
+## Padding, stride y forma de salida
+
+Para entrada espacial $H_{\mathrm{in}}\times W_{\mathrm{in}}$, kernel $K$,
+padding $P$, stride $S$ y dilatación $D$,
+
+$$
+H_{\mathrm{out}}=
+\left\lfloor
+\frac{H_{\mathrm{in}}+2P_h-D_h(K_h-1)-1}{S_h}+1
+\right\rfloor,
+$$
+
+y de manera análoga para el ancho. En este capítulo usaremos dilatación uno.
+
+```{python}
+def convolution_output_size(size, kernel, padding=0, stride=1, dilation=1):
+    return (size + 2 * padding - dilation * (kernel - 1) - 1) // stride + 1
+
+
+shape_cases = pd.DataFrame([
+    {"entrada": "28x28", "kernel": 3, "padding": 0, "stride": 1},
+    {"entrada": "28x28", "kernel": 3, "padding": 1, "stride": 1},
+    {"entrada": "28x28", "kernel": 3, "padding": 1, "stride": 2},
+    {"entrada": "28x28", "kernel": 5, "padding": 2, "stride": 1},
+])
+shape_cases["salida"] = shape_cases.apply(
+    lambda row: convolution_output_size(
+        28, row["kernel"], row["padding"], row["stride"]
+    ),
+    axis=1,
+).map(lambda size: f"{size}x{size}")
+shape_cases
+```
+
+Padding agrega una condición de borde, no información. Stride reduce el número
+de posiciones evaluadas y puede descartar detalle. La fórmula debe auditarse
+antes de conectar una cabeza densa.
+
+## Canales y parámetros compartidos
+
+Para entrada
+$\mathbf{X}\in\mathbb{R}^{N\times C_{\mathrm{in}}\times H\times W}$, los
+pesos de `Conv2d` tienen forma
+
+$$
+C_{\mathrm{out}}\times C_{\mathrm{in}}\times K_h\times K_w.
+$$
+
+Cada canal de salida suma respuestas sobre todos los canales de entrada. Su
+número de parámetros es
+
+$$
+C_{\mathrm{out}}(C_{\mathrm{in}}K_hK_w+1),
+$$
+
+independiente del alto y ancho de la imagen.
+
+```{python}
+torch.manual_seed(SEED)
+observable_conv = nn.Conv2d(1, 8, kernel_size=3, padding=1)
+example_batch = X_fit[:32]
+example_maps = observable_conv(example_batch)
+example_loss = example_maps.square().mean()
+example_loss.backward()
+
+print("Entrada:", example_batch.shape)
+print("Pesos:", observable_conv.weight.shape)
+print("Sesgo:", observable_conv.bias.shape)
+print("Salida:", example_maps.shape)
+print("Parámetros:", sum(p.numel() for p in observable_conv.parameters()))
+print("Gradiente de pesos:", observable_conv.weight.grad.shape)
+```
+
+Los ocho canales de salida no son clases: son ocho mapas cuyos kernels se
+actualizarán desde la pérdida.
+
+## Pooling resume vecindarios
+
+Max pooling conserva el máximo de cada ventana y no tiene parámetros:
+
+$$
+Y_{n,c,i,j}=\max_{0\leq u<K_h,\,0\leq v<K_w}
+X_{n,c,iS_h+u,jS_w+v}.
+$$
+
+```{python}
+pool_input = torch.tensor([
+    [1.0, 3.0, 2.0, 0.0],
+    [4.0, 6.0, 5.0, 1.0],
+    [0.0, 2.0, 8.0, 7.0],
+    [1.0, 3.0, 4.0, 9.0],
+])
+max_pooled = F.max_pool2d(pool_input[None, None], kernel_size=2)[0, 0]
+average_pooled = F.avg_pool2d(pool_input[None, None], kernel_size=2)[0, 0]
+
+print("Max pooling:\n", max_pooled)
+print("Average pooling:\n", average_pooled)
+```
+
+Pooling reduce resolución y puede estabilizar respuestas ante desplazamientos
+pequeños, pero no garantiza invariancia. Un desplazamiento de un píxel puede
+cambiar qué valores comparten ventana.
+
+## Campo receptivo
+
+El campo receptivo teórico indica qué región original puede influir en una
+unidad. Si $r_\ell$ es su tamaño y $j_\ell$ el salto entre unidades vecinas,
+
+$$
+j_\ell=j_{\ell-1}s_\ell,
+\qquad
+r_\ell=r_{\ell-1}+(k_\ell-1)j_{\ell-1},
+$$
+
+con $r_0=j_0=1$.
+
+```{python}
+receptive_operations = [
+    ("Entrada", 1, 1, "28x28"),
+    ("Conv 3x3", 3, 1, "28x28"),
+    ("MaxPool 2x2", 2, 2, "14x14"),
+    ("Conv 3x3", 3, 1, "14x14"),
+    ("MaxPool 2x2", 2, 2, "7x7"),
+]
+
+receptive_rows = []
+receptive_field = 1
+jump = 1
+for index, (operation, kernel, stride, resolution) in enumerate(
+    receptive_operations
+):
+    if index > 0:
+        receptive_field += (kernel - 1) * jump
+        jump *= stride
+    receptive_rows.append({
+        "operación": operation,
+        "resolución": resolution,
+        "salto": jump,
+        "campo receptivo": receptive_field,
+    })
+
+pd.DataFrame(receptive_rows)
+```
+
+Una unidad del último mapa depende teóricamente de una región $10\times10$. La
+cabeza densa combina todas las posiciones y puede usar la imagen completa. El
+campo efectivo suele concentrarse en una región menor [@luo2016receptive].
+
+## Construir modelos comparables
+
+La MLP y la CNN tendrán alrededor de 26,6 mil parámetros. Así evitamos atribuir
+a la estructura espacial una ventaja causada simplemente por tamaño.
+
+```{python}
+class FashionMLP(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.hidden1 = nn.Linear(28 * 28, 32)
+        self.hidden2 = nn.Linear(32, 32)
+        self.output = nn.Linear(32, 10)
+
+    def forward(self, X):
+        hidden = torch.relu(self.hidden1(X.flatten(start_dim=1)))
+        hidden = torch.relu(self.hidden2(hidden))
+        return self.output(hidden)
+
+
+class FashionCNN(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, padding=1)
+        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, padding=1)
+        self.hidden = nn.Linear(16 * 7 * 7, 32)
+        self.output = nn.Linear(32, 10)
+
+    def features(self, X):
+        maps1 = torch.relu(self.conv1(X))
+        pooled1 = F.max_pool2d(maps1, kernel_size=2)
+        maps2 = torch.relu(self.conv2(pooled1))
+        pooled2 = F.max_pool2d(maps2, kernel_size=2)
+        return maps1, maps2, pooled2
+
+    def forward(self, X):
+        _, _, pooled = self.features(X)
+        hidden = torch.relu(self.hidden(pooled.flatten(start_dim=1)))
+        return self.output(hidden)
+
+
+def initialize_relu_model(model):
+    learned_layers = [
+        module
+        for module in model.modules()
+        if isinstance(module, (nn.Linear, nn.Conv2d))
+    ]
+    for layer in learned_layers[:-1]:
+        nn.init.kaiming_normal_(layer.weight, nonlinearity="relu")
+        nn.init.zeros_(layer.bias)
+    nn.init.xavier_uniform_(learned_layers[-1].weight)
+    nn.init.zeros_(learned_layers[-1].bias)
+
+
+torch.manual_seed(SEED)
+mlp_example = FashionMLP()
+cnn_example = FashionCNN()
+initialize_relu_model(mlp_example)
+initialize_relu_model(cnn_example)
+
+model_audit = pd.DataFrame({
+    "modelo": ["MLP", "CNN"],
+    "parámetros": [
+        sum(parameter.numel() for parameter in mlp_example.parameters()),
+        sum(parameter.numel() for parameter in cnn_example.parameters()),
+    ],
+    "forma de logits": [
+        tuple(mlp_example(X_fit[:16]).shape),
+        tuple(cnn_example(X_fit[:16]).shape),
+    ],
+})
+model_audit
+```
+
+```{python}
+with torch.no_grad():
+    maps1, maps2, pooled2 = cnn_example.features(X_fit[:16])
+
+shape_audit = pd.DataFrame({
+    "etapa": ["Entrada", "Conv1", "Pool1", "Conv2", "Pool2", "Logits"],
+    "forma": [
+        tuple(X_fit[:16].shape),
+        tuple(maps1.shape),
+        (16, 8, 14, 14),
+        tuple(maps2.shape),
+        tuple(pooled2.shape),
+        tuple(cnn_example(X_fit[:16]).shape),
+    ],
+})
+shape_audit
+```
+
+La CNN tiene solo 192 parámetros más. Igualar parámetros no iguala operaciones:
+reutilizar un kernel sobre muchas posiciones requiere más cómputo que una
+matriz densa pequeña.
+
+## Protocolo controlado MLP-CNN
+
+Ambos modelos usarán:
+
+- los mismos índices y normalización;
+- AdamW con tasa 0,001 y sin weight decay;
+- batch de 256, ocho épocas y entropía cruzada;
+- ReLU con inicialización Kaiming y salida Xavier;
+- checkpoint de menor pérdida de validación;
+- cinco semillas pareadas y CPU.
+
+Antes de ejecutar declaramos:
+
+1. la CNN superará macro-F1 de validación en al menos cuatro de cinco semillas;
+2. una mejora material requiere mediana del delta CNN-MLP de al menos 0,01;
+3. al permutar los píxeles, la CNN perderá más desempeño que la MLP.
+
+La tasa común controla la receta, pero no demuestra que cada arquitectura esté
+óptimamente ajustada.
+
+```{python}
+EPOCHS = 8
+BATCH_SIZE = 256
+
+
+def macro_f1(labels, predictions):
+    return f1_score(
+        labels.numpy(),
+        predictions.numpy(),
+        labels=np.arange(10),
+        average="macro",
+        zero_division=0,
+    )
+
+
+def evaluate_model(model, X, y):
+    model.eval()
+    with torch.no_grad():
+        logits = model(X)
+        loss = F.cross_entropy(logits, y).item()
+        predictions = logits.argmax(dim=1)
+    return loss, macro_f1(y, predictions), predictions, logits
+
+
+def train_visual_model(model_class, seed, train_X=X_fit, validation_X=X_validation):
+    torch.manual_seed(seed)
+    model = model_class().to(device)
+    initialize_relu_model(model)
+    loader = DataLoader(
+        TensorDataset(train_X, y_fit),
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        generator=torch.Generator().manual_seed(seed),
+        num_workers=0,
+    )
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=0.001, weight_decay=0.0
+    )
+    best_loss = float("inf")
+    best_epoch = 0
+    best_state = None
+    history_rows = []
+    started_at = perf_counter()
+
+    for epoch in range(1, EPOCHS + 1):
+        model.train()
+        for batch_X, batch_y in loader:
+            optimizer.zero_grad(set_to_none=True)
+            loss = F.cross_entropy(model(batch_X), batch_y)
+            loss.backward()
+            optimizer.step()
+
+        fit_loss, fit_f1, _, _ = evaluate_model(model, train_X, y_fit)
+        validation_loss, validation_f1, _, _ = evaluate_model(
+            model, validation_X, y_validation
+        )
+        history_rows.append({
+            "epoch": epoch,
+            "fit_loss": fit_loss,
+            "validation_loss": validation_loss,
+            "fit_macro_f1": fit_f1,
+            "validation_macro_f1": validation_f1,
+        })
+
+        if validation_loss < best_loss:
+            best_loss = validation_loss
+            best_epoch = epoch
+            best_state = deepcopy(model.state_dict())
+
+    elapsed_seconds = perf_counter() - started_at
+    model.load_state_dict(best_state)
+    return {
+        "model": model,
+        "history": pd.DataFrame(history_rows),
+        "best_epoch": best_epoch,
+        "seconds": elapsed_seconds,
+    }
+```
+
+## Entrenar cinco semillas pareadas
+
+```{python}
+paired_runs = {}
+validation_rows = []
+
+for seed in PAIR_SEEDS:
+    for model_name, model_class in [("MLP", FashionMLP), ("CNN", FashionCNN)]:
+        run = train_visual_model(model_class, seed)
+        paired_runs[(seed, model_name)] = run
+        validation_loss, validation_f1, _, _ = evaluate_model(
+            run["model"], X_validation, y_validation
+        )
+        validation_rows.append({
+            "semilla": seed,
+            "modelo": model_name,
+            "mejor época": run["best_epoch"],
+            "loss validación": validation_loss,
+            "macro-F1 validación": validation_f1,
+            "parámetros": sum(
+                parameter.numel() for parameter in run["model"].parameters()
+            ),
+            "segundos protocolo": run["seconds"],
+        })
+
+validation_results = pd.DataFrame(validation_rows)
+validation_results
+```
+
+```{python}
+#| label: fig-fashion-training-curves
+#| fig-cap: "Curvas de la semilla 42, fijada antes de comparar resultados."
+#| fig-alt: "Pérdida y macro-F1 de ajuste y validación para MLP y CNN."
+#| fig-width: 10
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+for model_name, color in [("MLP", "#6042a6"), ("CNN", "#327c78")]:
+    history = paired_runs[(42, model_name)]["history"]
+    axes[0].plot(
+        history["epoch"], history["validation_loss"], color=color, label=model_name
+    )
+    axes[1].plot(
+        history["epoch"],
+        history["validation_macro_f1"],
+        color=color,
+        label=model_name,
+    )
+
+axes[0].set(xlabel="Época", ylabel="Entropía cruzada", title="Validación")
+axes[1].set(xlabel="Época", ylabel="Macro-F1", title="Validación")
+for axis in axes:
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+validation_pivot = validation_results.pivot(
+    index="semilla", columns="modelo", values="macro-F1 validación"
+)
+validation_pivot["Delta CNN-MLP"] = (
+    validation_pivot["CNN"] - validation_pivot["MLP"]
+)
+print(
+    "Mediana del delta CNN-MLP:",
+    f"{validation_pivot['Delta CNN-MLP'].median():.4f}",
+)
+validation_pivot
+```
+
+La CNN supera a la MLP en todas las semillas. Sin embargo, la mediana del delta
+es 0,0093: la mejora es consistente, pero **no alcanza** el umbral predefinido
+de relevancia material en validación. Debe interpretarse junto con el costo, no
+como una victoria universal de todas las CNN sobre todas las MLP.
+
+## Destruir la vecindad sin destruir la información
+
+Una permutación fija renumera los 784 píxeles. Para una MLP, la familia
+funcional permanece esencialmente igual porque todas las entradas siguen
+conectadas a cada unidad. Para una CNN, cada ventana local pasa a reunir píxeles
+que antes estaban lejos.
+
+Esta prueba usa solo ajuste y validación, con semilla 42. Es una demostración
+ilustrativa, no una estimación de estabilidad: vuelve a entrenar ambos modelos y
+no empareja los pesos de entrada de la MLP bajo la permutación. No modifica la
+comparación principal ni consulta test.
+
+```{python}
+permutation_generator = torch.Generator().manual_seed(2_026)
+pixel_permutation = torch.randperm(28 * 28, generator=permutation_generator)
+
+
+def permute_pixels(images):
+    return images.flatten(start_dim=1)[:, pixel_permutation].reshape_as(images)
+
+
+X_fit_permuted = permute_pixels(X_fit)
+X_validation_permuted = permute_pixels(X_validation)
+
+permutation_rows = []
+for model_name, model_class in [("MLP", FashionMLP), ("CNN", FashionCNN)]:
+    normal_run = paired_runs[(42, model_name)]
+    _, normal_f1, _, _ = evaluate_model(
+        normal_run["model"], X_validation, y_validation
+    )
+    permuted_run = train_visual_model(
+        model_class,
+        seed=42,
+        train_X=X_fit_permuted,
+        validation_X=X_validation_permuted,
+    )
+    _, permuted_f1, _, _ = evaluate_model(
+        permuted_run["model"], X_validation_permuted, y_validation
+    )
+    permutation_rows.extend([
+        {"modelo": model_name, "estructura": "Espacial", "macro-F1": normal_f1},
+        {"modelo": model_name, "estructura": "Permutada", "macro-F1": permuted_f1},
+    ])
+
+permutation_results = pd.DataFrame(permutation_rows)
+permutation_results
+```
+
+```{python}
+#| label: fig-spatial-permutation
+#| fig-cap: "La permutación fija perjudica más a la CNN porque destruye vecindarios locales."
+#| fig-alt: "Líneas comparan macro-F1 de MLP y CNN con imágenes normales y píxeles permutados."
+#| fig-width: 7
+#| fig-height: 4
+
+fig, ax = plt.subplots(figsize=(7, 4))
+permutation_pivot = permutation_results.pivot(
+    index="modelo", columns="estructura", values="macro-F1"
+)
+for model_name, color in [("MLP", "#6042a6"), ("CNN", "#327c78")]:
+    ax.plot(
+        [0, 1],
+        [
+            permutation_pivot.loc[model_name, "Espacial"],
+            permutation_pivot.loc[model_name, "Permutada"],
+        ],
+        marker="o",
+        linewidth=2,
+        color=color,
+        label=model_name,
+    )
+ax.set_xticks([0, 1], ["Espacial", "Permutada"])
+ax.set_ylabel("Macro-F1 de validación")
+ax.set_ylim(0.82, 0.88)
+ax.legend(frameon=False)
+ax.grid(axis="y", alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+La MLP cambia poco; la CNN pierde la ventaja y cae por debajo. El experimento no
+demuestra que toda estructura local sea útil, pero conecta el desempeño con el
+sesgo inductivo que queríamos estudiar.
+
+## Abrir el test oficial
+
+Arquitecturas, semillas, épocas y checkpoints están cerrados. Evaluamos una vez
+los diez modelos en el test oficial; después no reajustaremos el capítulo con
+estos resultados.
+
+```{python}
+X_test = images_to_tensor(official_test_images)
+y_test = torch.from_numpy(official_test_labels.astype(np.int64))
+
+test_rows = []
+test_outputs = {}
+for seed in PAIR_SEEDS:
+    for model_name in ["MLP", "CNN"]:
+        run = paired_runs[(seed, model_name)]
+        test_loss, test_f1, predictions, logits = evaluate_model(
+            run["model"], X_test, y_test
+        )
+        test_outputs[(seed, model_name)] = (predictions, logits)
+        test_rows.append({
+            "semilla": seed,
+            "modelo": model_name,
+            "loss test": test_loss,
+            "macro-F1 test": test_f1,
+            "segundos protocolo": run["seconds"],
+        })
+
+test_results = pd.DataFrame(test_rows)
+test_pivot = test_results.pivot(
+    index="semilla", columns="modelo", values="macro-F1 test"
+)
+test_pivot["Delta CNN-MLP"] = test_pivot["CNN"] - test_pivot["MLP"]
+print(
+    "Mediana del delta CNN-MLP:",
+    f"{test_pivot['Delta CNN-MLP'].median():.4f}",
+)
+test_pivot
+```
+
+```{python}
+#| label: fig-cnn-mlp-paired
+#| fig-cap: "Comparación pareada de MLP y CNN en validación y test."
+#| fig-alt: "Líneas por semilla conectan macro-F1 de MLP y CNN en dos particiones."
+#| fig-width: 9
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(9, 4))
+for axis, pivot, title in [
+    (axes[0], validation_pivot, "Validación"),
+    (axes[1], test_pivot, "Test oficial"),
+]:
+    for seed in PAIR_SEEDS:
+        axis.plot(
+            [0, 1],
+            [pivot.loc[seed, "MLP"], pivot.loc[seed, "CNN"]],
+            marker="o",
+            alpha=0.65,
+        )
+    axis.set_xticks([0, 1], ["MLP", "CNN"])
+    axis.set_ylabel("Macro-F1")
+    axis.set_title(title)
+    axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+La ventaja de la CNN aparece en las cinco semillas de ambas particiones. Aun
+así, el tamaño del efecto es modesto: compartir detectores locales ayuda en este
+benchmark, pero no sustituye una evaluación de dominio real.
+
+## Parámetros, tiempo e inferencia
+
+Medimos inferencia con batch 256, una pasada de calentamiento y cinco
+repeticiones. Los segundos son propios de este equipo; parámetros y formas son
+portables.
+
+```{python}
+def inference_throughput(model, images, repetitions=5):
+    model.eval()
+    batches = list(images.split(BATCH_SIZE))
+    with torch.no_grad():
+        for batch in batches:
+            model(batch)
+        times = []
+        for _ in range(repetitions):
+            started_at = perf_counter()
+            for batch in batches:
+                model(batch)
+            times.append(perf_counter() - started_at)
+    median_seconds = float(np.median(times))
+    return len(images) / median_seconds
+
+
+cost_rows = []
+for model_name in ["MLP", "CNN"]:
+    model = paired_runs[(42, model_name)]["model"]
+    cost_rows.append({
+        "modelo": model_name,
+        "parámetros": sum(parameter.numel() for parameter in model.parameters()),
+        "memoria FP32 (KiB)": sum(
+            parameter.numel() for parameter in model.parameters()
+        ) * 4 / 1024,
+        "segundos protocolo mediana": validation_results[
+            validation_results["modelo"] == model_name
+        ]["segundos protocolo"].median(),
+        "imágenes/s inferencia": inference_throughput(model, X_test),
+        "macro-F1 test mediana": test_results[
+            test_results["modelo"] == model_name
+        ]["macro-F1 test"].median(),
+    })
+
+cost_results = pd.DataFrame(cost_rows).set_index("modelo")
+cost_results
+```
+
+La CNN paga más operaciones y tiempo aunque tenga casi los mismos parámetros.
+Una mejora predictiva debe evaluarse junto con latencia y recursos.
+
+## Qué aprendió la primera capa
+
+Visualizamos los ocho kernels y sus mapas para la primera imagen de test. Los
+mapas son respuestas internas, no explicaciones causales de la predicción
+[@zeiler2014visualizing].
+
+```{python}
+#| label: fig-learned-kernels
+#| fig-cap: "Kernels y mapas de activación de la primera capa de la CNN con semilla 42."
+#| fig-alt: "Dos filas muestran ocho kernels aprendidos y ocho mapas de activación."
+#| fig-width: 11
+#| fig-height: 5
+
+cnn_for_analysis = paired_runs[(42, "CNN")]["model"]
+cnn_for_analysis.eval()
+with torch.no_grad():
+    first_maps, _, _ = cnn_for_analysis.features(X_test[:1])
+
+kernel_limit = cnn_for_analysis.conv1.weight.detach().abs().max().item()
+map_limit = first_maps.max().item()
+
+fig, axes = plt.subplots(2, 8, figsize=(11, 5))
+for index in range(8):
+    axes[0, index].imshow(
+        cnn_for_analysis.conv1.weight[index, 0].detach(),
+        cmap="coolwarm",
+        vmin=-kernel_limit,
+        vmax=kernel_limit,
+    )
+    axes[0, index].set_title(f"Kernel {index}", fontsize=8)
+    axes[1, index].imshow(first_maps[0, index], cmap="magma", vmin=0, vmax=map_limit)
+    axes[1, index].set_title(f"Mapa {index}", fontsize=8)
+    axes[0, index].axis("off")
+    axes[1, index].axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+Los kernels no tienen nombres semánticos garantizados. Sus combinaciones y las
+capas posteriores, no un filtro aislado, producen los logits.
+
+## Diagnosticar clases y ejemplos
+
+Usamos la semilla 42, fijada antes de observar resultados, y matrices
+normalizadas por clase real.
+
+```{python}
+mlp_test_predictions, mlp_test_logits = test_outputs[(42, "MLP")]
+cnn_test_predictions, cnn_test_logits = test_outputs[(42, "CNN")]
+
+mlp_confusion = confusion_matrix(
+    y_test.numpy(), mlp_test_predictions.numpy(), labels=np.arange(10), normalize="true"
+)
+cnn_confusion = confusion_matrix(
+    y_test.numpy(), cnn_test_predictions.numpy(), labels=np.arange(10), normalize="true"
+)
+```
+
+```{python}
+#| label: fig-fashion-confusions
+#| fig-cap: "Matrices de confusión normalizadas de MLP y CNN en test para la semilla 42."
+#| fig-alt: "Dos matrices de diez por diez comparan errores por clase real."
+#| fig-width: 11
+#| fig-height: 5
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 5))
+for axis, matrix, title in [
+    (axes[0], mlp_confusion, "MLP"),
+    (axes[1], cnn_confusion, "CNN"),
+]:
+    image = axis.imshow(matrix, cmap="Purples", vmin=0, vmax=1)
+    axis.set_xticks(range(10), CLASS_NAMES, rotation=55, ha="right", fontsize=7)
+    axis.set_yticks(range(10), CLASS_NAMES, fontsize=7)
+    axis.set(xlabel="Predicha", ylabel="Real", title=title)
+fig.colorbar(image, ax=axes, label="Proporción de la clase real", shrink=0.8)
+plt.show()
+```
+
+```{python}
+cnn_correct_mlp_wrong = np.flatnonzero(
+    (cnn_test_predictions == y_test) & (mlp_test_predictions != y_test)
+)
+both_wrong = np.flatnonzero(
+    (cnn_test_predictions != y_test) & (mlp_test_predictions != y_test)
+)
+selected_examples = np.concatenate([
+    cnn_correct_mlp_wrong[:6],
+    both_wrong[:6],
+])
+```
+
+```{python}
+#| label: fig-fashion-errors
+#| fig-cap: "Desacuerdos y errores compartidos seleccionados por posición, no por confianza."
+#| fig-alt: "Doce imágenes con clase real y predicciones de MLP y CNN."
+#| fig-width: 10
+#| fig-height: 5
+
+fig, axes = plt.subplots(2, 6, figsize=(10, 5))
+for axis, position in zip(axes.flat, selected_examples):
+    axis.imshow(official_test_images[position], cmap="gray", vmin=0, vmax=255)
+    axis.set_title(
+        f"Real: {CLASS_NAMES[y_test[position]]}\n"
+        f"MLP: {CLASS_NAMES[mlp_test_predictions[position]]}\n"
+        f"CNN: {CLASS_NAMES[cnn_test_predictions[position]]}",
+        fontsize=7,
+    )
+    axis.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+Las prendas superiores concentran ambigüedad porque la resolución elimina
+textura y detalle. Los errores posteriores a test describen límites; cualquier
+cambio motivado por ellos requeriría una nueva evaluación independiente.
+
+## Qué aporta y qué no aporta una CNN pequeña
+
+La comparación respalda que localidad y pesos compartidos son útiles en
+Fashion-MNIST. No demuestra que:
+
+- la CNN sea robusta a rotación, escala, oclusión o iluminación;
+- pooling produzca invariancia exacta;
+- los mapas de activación expliquen causalmente la decisión;
+- una MLP mejor ajustada no reduzca la diferencia;
+- el desempeño se transfiera a fotografías reales; ni
+- el test oficial represente otra tienda, cámara o población.
+
+Igualar parámetros no iguala FLOPs ni tiempo. Cinco semillas miden variabilidad
+algorítmica con una partición fija, no incertidumbre poblacional.
+
+::: {.callout-important title="Frontera con el próximo capítulo"}
+Aquí usamos dos convoluciones, sin augmentación, BatchNorm ni conexiones
+residuales. El Capítulo 6 estudiará cómo aumentar profundidad y robustez visual
+mediante bloques, normalización, augmentación y diseño residual.
+:::
+
+## Qué hemos aprendido
+
+- Aplanar conserva valores, pero oculta vecindad al modelo.
+- `Conv2d` usa conectividad local y pesos compartidos.
+- PyTorch implementa correlación cruzada bajo el nombre de convolución.
+- Padding, stride y pooling cambian resolución y condiciones de borde.
+- Los canales de salida son mapas aprendidos, no clases.
+- El campo receptivo crece con kernels y strides acumulados.
+- Equivarianza aproximada no equivale a invariancia.
+- Con parámetros casi iguales, la CNN supera consistentemente a la MLP en este
+  experimento, aunque la validación no alcanza el umbral material predefinido y
+  el costo computacional es mayor.
+- Permutar píxeles muestra que la ventaja depende de vecindarios informativos.
+- Filtros, activaciones, errores y costo complementan una métrica promedio.
+
+## Ejercicios
+
+1. Calcula manualmente la correlación de una matriz $5\times5$ con un kernel
+   $3\times3$ y comprueba el resultado con `F.conv2d`.
+2. Modifica `correlate2d()` para aceptar padding y stride.
+3. Invierte el kernel y demuestra la diferencia entre correlación y convolución
+   matemática.
+4. Deriva las formas de salida para cinco combinaciones de kernel, padding,
+   stride y dilatación.
+5. Calcula parámetros de una convolución RGB con 32 canales de salida y kernel
+   $5\times5$.
+6. Construye dos matrices distintas que produzcan el mismo max pooling.
+7. Calcula el campo receptivo de una red con tres convoluciones y dos pooling.
+8. Sustituye max pooling por convoluciones con stride dos manteniendo fijo el
+   resto del protocolo.
+9. Desplaza las imágenes un píxel y mide cuándo se rompe la equivariancia.
+10. Compara recall por clase y encuentra dónde la CNN pierde frente a la MLP.
+11. Estima multiplicaciones de las capas densas y convolucionales; explica por
+    qué parámetros y tiempo no son equivalentes.
+12. Repite el protocolo con KMNIST y documenta fuente, licencia y clases antes
+    de entrenar.
+
+## Reto
+
+Amplía la prueba de permutación a cinco semillas pareadas. Entrena MLP y CNN con
+imágenes normales y con una misma permutación fija, conserva exactamente el
+presupuesto y reporta el cambio de macro-F1, tiempo y errores por clase. Define
+antes qué resultado respaldaría que el sesgo local ayuda y acepta explícitamente
+una conclusión nula o contraria.
