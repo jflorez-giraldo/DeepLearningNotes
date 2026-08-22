@@ -460,7 +460,7 @@ window.Quarto = {
 <section id="preparar-el-entorno" class="level2" data-number="1.2">
 <h2 data-number="1.2" class="anchored" data-anchor-id="preparar-el-entorno"><span class="header-section-number">1.2</span> Preparar el entorno</h2>
 <p>El notebook está diseñado para PyTorch 2.4 o posterior. En Google Colab, PyTorch suele estar instalado; la siguiente celda permite comprobar el entorno.</p>
-<div id="b0804f99" class="cell">
+<div id="21ce3dbc" class="cell" data-execution_count="1">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> platform</span>
 <span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
@@ -471,19 +471,26 @@ window.Quarto = {
 <span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
 <span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Python: </span><span class="sc">{</span>platform<span class="sc">.</span>python_version()<span class="sc">}</span><span class="ss">"</span>)</span>
 <span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"PyTorch: </span><span class="sc">{</span>torch<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Python: 3.9.6
+PyTorch: 2.8.0</code></pre>
+</div>
 </div>
 <p>La selección de dispositivo debe ocurrir en un solo lugar. CUDA corresponde a GPU NVIDIA; MPS permite usar GPU en equipos Apple compatibles.</p>
-<div id="25411d95" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> select_device():</span>
-<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.cuda.is_available():</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.device(<span class="st">"cuda"</span>)</span>
-<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.backends.mps.is_available():</span>
-<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.device(<span class="st">"mps"</span>)</span>
-<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.device(<span class="st">"cpu"</span>)</span>
-<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> select_device()</span>
-<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dispositivo seleccionado: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="717273bf" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> select_device():</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.cuda.is_available():</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.device(<span class="st">"cuda"</span>)</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.backends.mps.is_available():</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.device(<span class="st">"mps"</span>)</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.device(<span class="st">"cpu"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> select_device()</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dispositivo seleccionado: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Dispositivo seleccionado: mps</code></pre>
+</div>
 </div>
 <div class="callout callout-style-simple callout-important callout-titled" title="Una regla operacional">
 <div class="callout-header d-flex align-content-center">
@@ -502,49 +509,55 @@ window.Quarto = {
 <section id="del-arreglo-al-tensor" class="level2" data-number="1.3">
 <h2 data-number="1.3" class="anchored" data-anchor-id="del-arreglo-al-tensor"><span class="header-section-number">1.3</span> Del arreglo al tensor</h2>
 <p>Representaremos inicialmente cuatro imágenes de un sensor. Cada imagen tiene un canal, cuatro filas y cinco columnas. La forma del lote es, por tanto, <span class="math inline">\((N,C,H,W)=(4,1,4,5)\)</span>.</p>
-<div id="1b4c2de0" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>image_values <span class="op">=</span> [</span>
-<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    [</span>
-<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        [</span>
-<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">15</span>, <span class="dv">13</span>, <span class="dv">11</span>],</span>
-<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">13</span>, <span class="dv">16</span>, <span class="dv">18</span>, <span class="dv">17</span>, <span class="dv">12</span>],</span>
-<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">11</span>, <span class="dv">15</span>, <span class="dv">19</span>, <span class="dv">16</span>, <span class="dv">10</span>],</span>
-<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">10</span>, <span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">13</span>, <span class="dv">9</span>],</span>
-<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        ]</span>
-<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    ],</span>
-<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    [</span>
-<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        [</span>
-<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">30</span>, <span class="dv">31</span>, <span class="dv">29</span>, <span class="dv">28</span>, <span class="dv">30</span>],</span>
-<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">31</span>, <span class="dv">35</span>, <span class="dv">37</span>, <span class="dv">34</span>, <span class="dv">29</span>],</span>
-<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">29</span>, <span class="dv">36</span>, <span class="dv">42</span>, <span class="dv">35</span>, <span class="dv">28</span>],</span>
-<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">31</span>, <span class="dv">30</span>, <span class="dv">26</span>],</span>
-<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        ]</span>
-<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    ],</span>
-<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    [</span>
-<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        [</span>
-<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">9</span>],</span>
-<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">9</span>, <span class="dv">11</span>, <span class="dv">12</span>, <span class="dv">11</span>, <span class="dv">8</span>],</span>
-<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">13</span>, <span class="dv">10</span>, <span class="dv">7</span>],</span>
-<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">7</span>, <span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">8</span>, <span class="dv">6</span>],</span>
-<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        ]</span>
-<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    ],</span>
-<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    [</span>
-<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        [</span>
-<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">20</span>, <span class="dv">22</span>, <span class="dv">21</span>, <span class="dv">19</span>, <span class="dv">18</span>],</span>
-<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">21</span>, <span class="dv">25</span>, <span class="dv">28</span>, <span class="dv">24</span>, <span class="dv">20</span>],</span>
-<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">19</span>, <span class="dv">26</span>, <span class="dv">32</span>, <span class="dv">25</span>, <span class="dv">18</span>],</span>
-<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">17</span>, <span class="dv">20</span>, <span class="dv">22</span>, <span class="dv">20</span>, <span class="dv">16</span>],</span>
-<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        ]</span>
-<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    ],</span>
-<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>]</span>
-<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>images <span class="op">=</span> torch.tensor(image_values, dtype<span class="op">=</span>torch.float32)</span>
-<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> torch.tensor([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>], dtype<span class="op">=</span>torch.int64)</span>
-<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de imágenes:"</span>, images.shape)</span>
-<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de etiquetas:"</span>, labels.shape)</span>
-<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tipo de imágenes:"</span>, images.dtype)</span>
-<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tipo de etiquetas:"</span>, labels.dtype)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="dee294e5" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>image_values <span class="op">=</span> [</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">15</span>, <span class="dv">13</span>, <span class="dv">11</span>],</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">13</span>, <span class="dv">16</span>, <span class="dv">18</span>, <span class="dv">17</span>, <span class="dv">12</span>],</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">11</span>, <span class="dv">15</span>, <span class="dv">19</span>, <span class="dv">16</span>, <span class="dv">10</span>],</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">10</span>, <span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">13</span>, <span class="dv">9</span>],</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">30</span>, <span class="dv">31</span>, <span class="dv">29</span>, <span class="dv">28</span>, <span class="dv">30</span>],</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">31</span>, <span class="dv">35</span>, <span class="dv">37</span>, <span class="dv">34</span>, <span class="dv">29</span>],</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">29</span>, <span class="dv">36</span>, <span class="dv">42</span>, <span class="dv">35</span>, <span class="dv">28</span>],</span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">31</span>, <span class="dv">30</span>, <span class="dv">26</span>],</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">9</span>],</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">9</span>, <span class="dv">11</span>, <span class="dv">12</span>, <span class="dv">11</span>, <span class="dv">8</span>],</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">13</span>, <span class="dv">10</span>, <span class="dv">7</span>],</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">7</span>, <span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">8</span>, <span class="dv">6</span>],</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">20</span>, <span class="dv">22</span>, <span class="dv">21</span>, <span class="dv">19</span>, <span class="dv">18</span>],</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">21</span>, <span class="dv">25</span>, <span class="dv">28</span>, <span class="dv">24</span>, <span class="dv">20</span>],</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">19</span>, <span class="dv">26</span>, <span class="dv">32</span>, <span class="dv">25</span>, <span class="dv">18</span>],</span>
+<span id="cb6-31"><a href="#cb6-31" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">17</span>, <span class="dv">20</span>, <span class="dv">22</span>, <span class="dv">20</span>, <span class="dv">16</span>],</span>
+<span id="cb6-32"><a href="#cb6-32" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb6-33"><a href="#cb6-33" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-34"><a href="#cb6-34" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb6-35"><a href="#cb6-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-36"><a href="#cb6-36" aria-hidden="true" tabindex="-1"></a>images <span class="op">=</span> torch.tensor(image_values, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb6-37"><a href="#cb6-37" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> torch.tensor([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>], dtype<span class="op">=</span>torch.int64)</span>
+<span id="cb6-38"><a href="#cb6-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-39"><a href="#cb6-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de imágenes:"</span>, images.shape)</span>
+<span id="cb6-40"><a href="#cb6-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de etiquetas:"</span>, labels.shape)</span>
+<span id="cb6-41"><a href="#cb6-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tipo de imágenes:"</span>, images.dtype)</span>
+<span id="cb6-42"><a href="#cb6-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tipo de etiquetas:"</span>, labels.dtype)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Forma de imágenes: torch.Size([4, 1, 4, 5])
+Forma de etiquetas: torch.Size([4])
+Tipo de imágenes: torch.float32
+Tipo de etiquetas: torch.int64</code></pre>
+</div>
 </div>
 <p>La forma no es una anotación decorativa. Es parte del significado:</p>
 <table class="caption-top table">
@@ -581,80 +594,133 @@ window.Quarto = {
 <p>Las imágenes usan <code>float32</code> porque las operaciones de una red y sus gradientes requieren números de punto flotante. Las etiquetas usan <code>int64</code> porque muchas funciones de clasificación esperan índices enteros de clase.</p>
 <section id="propiedades-que-siempre-deben-inspeccionarse" class="level3" data-number="1.3.1">
 <h3 data-number="1.3.1" class="anchored" data-anchor-id="propiedades-que-siempre-deben-inspeccionarse"><span class="header-section-number">1.3.1</span> Propiedades que siempre deben inspeccionarse</h3>
-<div id="4a4f1aa9" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>tensor_audit <span class="op">=</span> {</span>
-<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"shape"</span>: <span class="bu">tuple</span>(images.shape),</span>
-<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ndim"</span>: images.ndim,</span>
-<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"numel"</span>: images.numel(),</span>
-<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dtype"</span>: <span class="bu">str</span>(images.dtype),</span>
-<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"device"</span>: <span class="bu">str</span>(images.device),</span>
-<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"requires_grad"</span>: images.requires_grad,</span>
-<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span>
-<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>tensor_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="1cdba488" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>tensor_audit <span class="op">=</span> {</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"shape"</span>: <span class="bu">tuple</span>(images.shape),</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ndim"</span>: images.ndim,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"numel"</span>: images.numel(),</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dtype"</span>: <span class="bu">str</span>(images.dtype),</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"device"</span>: <span class="bu">str</span>(images.device),</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"requires_grad"</span>: images.requires_grad,</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>tensor_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>{'shape': (4, 1, 4, 5),
+ 'ndim': 4,
+ 'numel': 80,
+ 'dtype': 'torch.float32',
+ 'device': 'cpu',
+ 'requires_grad': False}</code></pre>
+</div>
 </div>
 <p><code>numel()</code> cuenta escalares. Aquí debe coincidir con <span class="math inline">\(4\times1\times4\times5=80\)</span>. Esta igualdad es útil para auditar operaciones de reorganización.</p>
 </section>
 <section id="numpy-y-memoria-compartida" class="level3" data-number="1.3.2">
 <h3 data-number="1.3.2" class="anchored" data-anchor-id="numpy-y-memoria-compartida"><span class="header-section-number">1.3.2</span> NumPy y memoria compartida</h3>
 <p><code>torch.from_numpy()</code> puede compartir memoria con un arreglo de NumPy en CPU. Modificar uno puede modificar el otro, una propiedad eficiente pero fácil de pasar por alto.</p>
-<div id="1539142e" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>numpy_array <span class="op">=</span> np.array([<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>], dtype<span class="op">=</span>np.float32)</span>
-<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>shared_tensor <span class="op">=</span> torch.from_numpy(numpy_array)</span>
-<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>numpy_array[<span class="dv">0</span>] <span class="op">=</span> <span class="fl">99.0</span></span>
-<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(shared_tensor)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="d261f2af" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>numpy_array <span class="op">=</span> np.array([<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>], dtype<span class="op">=</span>np.float32)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>shared_tensor <span class="op">=</span> torch.from_numpy(numpy_array)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>numpy_array[<span class="dv">0</span>] <span class="op">=</span> <span class="fl">99.0</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(shared_tensor)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([99.,  2.,  3.])</code></pre>
+</div>
 </div>
 <p>Cuando se necesita independencia explícita se utiliza una copia:</p>
-<div id="511e4dc9" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>independent_tensor <span class="op">=</span> torch.tensor(numpy_array)</span>
-<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>numpy_array[<span class="dv">1</span>] <span class="op">=</span> <span class="op">-</span><span class="fl">10.0</span></span>
-<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"NumPy:"</span>, numpy_array)</span>
-<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tensor independiente:"</span>, independent_tensor)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="6d7e2a14" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>independent_tensor <span class="op">=</span> torch.tensor(numpy_array)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>numpy_array[<span class="dv">1</span>] <span class="op">=</span> <span class="op">-</span><span class="fl">10.0</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"NumPy:"</span>, numpy_array)</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tensor independiente:"</span>, independent_tensor)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>NumPy: [ 99. -10.   3.]
+Tensor independiente: tensor([99.,  2.,  3.])</code></pre>
+</div>
 </div>
 </section>
 </section>
 <section id="seleccionar-observaciones-y-regiones" class="level2" data-number="1.4">
 <h2 data-number="1.4" class="anchored" data-anchor-id="seleccionar-observaciones-y-regiones"><span class="header-section-number">1.4</span> Seleccionar observaciones y regiones</h2>
 <p>La indexación conserva la lógica de NumPy. El siguiente acceso selecciona la primera imagen, su único canal y todas las posiciones espaciales.</p>
-<div id="26642ff8" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>first_image <span class="op">=</span> images[<span class="dv">0</span>, <span class="dv">0</span>, :, :]</span>
-<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(first_image)</span>
-<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(first_image.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="ee96b232" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>first_image <span class="op">=</span> images[<span class="dv">0</span>, <span class="dv">0</span>, :, :]</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(first_image)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(first_image.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[12., 14., 15., 13., 11.],
+        [13., 16., 18., 17., 12.],
+        [11., 15., 19., 16., 10.],
+        [10., 12., 14., 13.,  9.]])
+torch.Size([4, 5])</code></pre>
+</div>
 </div>
 <p>Eliminar el eje de canal produce una matriz <span class="math inline">\((H,W)\)</span>. En cambio, el corte <code>images[0:1]</code> conserva el eje del lote:</p>
-<div id="ea31fad1" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>one_image_batch <span class="op">=</span> images[<span class="dv">0</span>:<span class="dv">1</span>]</span>
-<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Imagen sin ejes de lote y canal:"</span>, first_image.shape)</span>
-<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Lote de una imagen:"</span>, one_image_batch.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="cba14b96" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>one_image_batch <span class="op">=</span> images[<span class="dv">0</span>:<span class="dv">1</span>]</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Imagen sin ejes de lote y canal:"</span>, first_image.shape)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Lote de una imagen:"</span>, one_image_batch.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Imagen sin ejes de lote y canal: torch.Size([4, 5])
+Lote de una imagen: torch.Size([1, 1, 4, 5])</code></pre>
+</div>
 </div>
 <p>Esta diferencia importa porque una capa convolucional normalmente espera cuatro dimensiones. Una selección que elimina accidentalmente el eje del lote puede romper el modelo.</p>
 <p>Podemos extraer una región central de todas las imágenes sin iterar:</p>
-<div id="152f3dac" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>central_regions <span class="op">=</span> images[:, :, <span class="dv">1</span>:<span class="dv">3</span>, <span class="dv">1</span>:<span class="dv">4</span>]</span>
-<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(central_regions.shape)</span>
-<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(central_regions)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="799a5b72" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>central_regions <span class="op">=</span> images[:, :, <span class="dv">1</span>:<span class="dv">3</span>, <span class="dv">1</span>:<span class="dv">4</span>]</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(central_regions.shape)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(central_regions)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([4, 1, 2, 3])
+tensor([[[[16., 18., 17.],
+          [15., 19., 16.]]],
+
+
+        [[[35., 37., 34.],
+          [36., 42., 35.]]],
+
+
+        [[[11., 12., 11.],
+          [10., 13., 10.]]],
+
+
+        [[[25., 28., 24.],
+          [26., 32., 25.]]]])</code></pre>
+</div>
 </div>
 </section>
 <section id="cambiar-la-forma-sin-cambiar-los-datos" class="level2" data-number="1.5">
 <h2 data-number="1.5" class="anchored" data-anchor-id="cambiar-la-forma-sin-cambiar-los-datos"><span class="header-section-number">1.5</span> Cambiar la forma sin cambiar los datos</h2>
 <p>Una red densa recibe una matriz con una fila por observación. Para convertir cada imagen de <span class="math inline">\(1\times4\times5\)</span> en 20 características usamos <code>flatten</code>:</p>
-<div id="b9399b52" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>flat_images <span class="op">=</span> images.flatten(start_dim<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(flat_images.shape)</span>
-<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> flat_images.shape <span class="op">==</span> (<span class="dv">4</span>, <span class="dv">20</span>)</span>
-<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> flat_images.numel() <span class="op">==</span> images.numel()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="46ec6d3a" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>flat_images <span class="op">=</span> images.flatten(start_dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(flat_images.shape)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> flat_images.shape <span class="op">==</span> (<span class="dv">4</span>, <span class="dv">20</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> flat_images.numel() <span class="op">==</span> images.numel()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>torch.Size([4, 20])</code></pre>
+</div>
 </div>
 <p><code>reshape</code> permite expresar la misma intención cuando conocemos la forma de destino. El valor <code>-1</code> pide a PyTorch inferir una dimensión.</p>
-<div id="dbcdfb34" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>flat_with_reshape <span class="op">=</span> images.reshape(images.shape[<span class="dv">0</span>], <span class="op">-</span><span class="dv">1</span>)</span>
-<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.equal(flat_images, flat_with_reshape))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="7f742501" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>flat_with_reshape <span class="op">=</span> images.reshape(images.shape[<span class="dv">0</span>], <span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.equal(flat_images, flat_with_reshape))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>True</code></pre>
+</div>
 </div>
 <p><code>permute</code> no aplana: cambia el orden de los ejes. Esto es necesario al intercambiar datos entre bibliotecas que usan <span class="math inline">\((N,H,W,C)\)</span> y PyTorch, que usa <span class="math inline">\((N,C,H,W)\)</span>.</p>
-<div id="9a6a4fc5" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>channels_last <span class="op">=</span> images.permute(<span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
-<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"PyTorch NCHW:"</span>, images.shape)</span>
-<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Canales al final NHWC:"</span>, channels_last.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="848a69e9" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>channels_last <span class="op">=</span> images.permute(<span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"PyTorch NCHW:"</span>, images.shape)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Canales al final NHWC:"</span>, channels_last.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PyTorch NCHW: torch.Size([4, 1, 4, 5])
+Canales al final NHWC: torch.Size([4, 4, 5, 1])</code></pre>
+</div>
 </div>
 <div class="callout callout-style-simple callout-warning callout-titled" title="No intercambiar reshape y permute">
 <div class="callout-header d-flex align-content-center">
@@ -673,21 +739,28 @@ window.Quarto = {
 <section id="operaciones-vectorizadas" class="level2" data-number="1.6">
 <h2 data-number="1.6" class="anchored" data-anchor-id="operaciones-vectorizadas"><span class="header-section-number">1.6</span> Operaciones vectorizadas</h2>
 <p>La media de intensidad por imagen puede obtenerse en una operación. Debemos reducir canal, altura y anchura, pero conservar el eje del lote.</p>
-<div id="8d32e533" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mean_per_image <span class="op">=</span> images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
-<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>max_per_image <span class="op">=</span> images.amax(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
-<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>summary <span class="op">=</span> torch.stack([mean_per_image, max_per_image], dim<span class="op">=</span><span class="dv">1</span>)</span>
-<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(summary)</span>
-<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma del resumen:"</span>, summary.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="4309a758" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>mean_per_image <span class="op">=</span> images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>max_per_image <span class="op">=</span> images.amax(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>summary <span class="op">=</span> torch.stack([mean_per_image, max_per_image], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(summary)</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma del resumen:"</span>, summary.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[13.5000, 19.0000],
+        [31.3500, 42.0000],
+        [ 9.0500, 13.0000],
+        [21.6500, 32.0000]])
+Forma del resumen: torch.Size([4, 2])</code></pre>
+</div>
 </div>
 <p>La reducción produce dos características por imagen. <code>stack</code> crea un eje nuevo; <code>cat</code> concatena sobre un eje existente.</p>
-<div id="63665c2f" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>first_half <span class="op">=</span> images[:<span class="dv">2</span>]</span>
-<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>second_half <span class="op">=</span> images[<span class="dv">2</span>:]</span>
-<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>reconstructed_batch <span class="op">=</span> torch.cat([first_half, second_half], dim<span class="op">=</span><span class="dv">0</span>)</span>
-<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.equal(images, reconstructed_batch)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="f0a08c32" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>first_half <span class="op">=</span> images[:<span class="dv">2</span>]</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>second_half <span class="op">=</span> images[<span class="dv">2</span>:]</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>reconstructed_batch <span class="op">=</span> torch.cat([first_half, second_half], dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.equal(images, reconstructed_batch)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <section id="broadcasting" class="level3" data-number="1.6.1">
 <h3 data-number="1.6.1" class="anchored" data-anchor-id="broadcasting"><span class="header-section-number">1.6.1</span> Broadcasting</h3>
@@ -696,15 +769,21 @@ window.Quarto = {
 z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 \]</span></p>
 <p>Las estadísticas deben conservar dimensiones unitarias para que PyTorch pueda expandirlas virtualmente sobre canal, altura y anchura.</p>
-<div id="0acc5b7c" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>means <span class="op">=</span> images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>stds <span class="op">=</span> images.std(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>normalized_images <span class="op">=</span> (images <span class="op">-</span> means) <span class="op">/</span> (stds <span class="op">+</span> <span class="fl">1e-6</span>)</span>
-<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Imágenes:"</span>, images.shape)</span>
-<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medias:"</span>, means.shape)</span>
-<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Normalizadas:"</span>, normalized_images.shape)</span>
-<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medias después de normalizar:"</span>, normalized_images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="72a2c173" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>means <span class="op">=</span> images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>stds <span class="op">=</span> images.std(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>normalized_images <span class="op">=</span> (images <span class="op">-</span> means) <span class="op">/</span> (stds <span class="op">+</span> <span class="fl">1e-6</span>)</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Imágenes:"</span>, images.shape)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medias:"</span>, means.shape)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Normalizadas:"</span>, normalized_images.shape)</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medias después de normalizar:"</span>, normalized_images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Imágenes: torch.Size([4, 1, 4, 5])
+Medias: torch.Size([4, 1, 1, 1])
+Normalizadas: torch.Size([4, 1, 4, 5])
+Medias después de normalizar: tensor([-5.9605e-09, -1.0133e-07, -1.3113e-07,  9.5367e-08])</code></pre>
+</div>
 </div>
 <p>Broadcasting no copia físicamente la media 20 veces. PyTorch alinea las dimensiones desde la derecha y permite combinar tamaños iguales o tamaños uno.</p>
 <div class="callout callout-style-simple callout-tip callout-titled" title="Auditar broadcasting">
@@ -724,22 +803,29 @@ z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 <section id="producto-elemento-a-elemento-y-producto-matricial" class="level3" data-number="1.6.2">
 <h3 data-number="1.6.2" class="anchored" data-anchor-id="producto-elemento-a-elemento-y-producto-matricial"><span class="header-section-number">1.6.2</span> Producto elemento a elemento y producto matricial</h3>
 <p>El operador <code>*</code> combina posiciones correspondientes. El operador <code>@</code> realiza producto matricial.</p>
-<div id="68a473ed" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> torch.tensor([</span>
-<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.2</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span>],</span>
-<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.7</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>],</span>
-<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
-<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.tensor([</span>
-<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.4</span>, <span class="op">-</span><span class="fl">0.2</span>],</span>
-<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.1</span>, <span class="fl">0.8</span>],</span>
-<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">0.6</span>, <span class="fl">0.3</span>],</span>
-<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
-<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> features <span class="op">@</span> weights</span>
-<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Características:"</span>, features.shape)</span>
-<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pesos:"</span>, weights.shape)</span>
-<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Scores:"</span>, scores.shape)</span>
-<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scores)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="ef61cd8c" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> torch.tensor([</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.2</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span>],</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.7</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>],</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.tensor([</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.4</span>, <span class="op">-</span><span class="fl">0.2</span>],</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.1</span>, <span class="fl">0.8</span>],</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">0.6</span>, <span class="fl">0.3</span>],</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> features <span class="op">@</span> weights</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Características:"</span>, features.shape)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pesos:"</span>, weights.shape)</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Scores:"</span>, scores.shape)</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scores)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Características: torch.Size([2, 3])
+Pesos: torch.Size([3, 2])
+Scores: torch.Size([2, 2])
+tensor([[0.4800, 0.6100],
+        [0.2500, 0.1300]])</code></pre>
+</div>
 </div>
 <p>La regla dimensional es</p>
 <p><span class="math display">\[
@@ -751,17 +837,24 @@ z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 <section id="mover-datos-al-dispositivo" class="level2" data-number="1.7">
 <h2 data-number="1.7" class="anchored" data-anchor-id="mover-datos-al-dispositivo"><span class="header-section-number">1.7</span> Mover datos al dispositivo</h2>
 <p>Mover el lote es explícito. La variable original permanece en CPU; <code>to()</code> devuelve un tensor en el dispositivo solicitado.</p>
-<div id="38bf2a1c" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>images_device <span class="op">=</span> images.to(device)</span>
-<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>labels_device <span class="op">=</span> labels.to(device)</span>
-<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(images_device.device)</span>
-<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(labels_device.device)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="66c1fa57" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>images_device <span class="op">=</span> images.to(device)</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>labels_device <span class="op">=</span> labels.to(device)</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(images_device.device)</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(labels_device.device)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>mps:0
+mps:0</code></pre>
+</div>
 </div>
 <p>Para volver a NumPy se requiere CPU y un tensor desconectado del grafo:</p>
-<div id="ee93fb4d" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>images_numpy <span class="op">=</span> images_device.detach().cpu().numpy()</span>
-<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(images_numpy.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="7456056a" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>images_numpy <span class="op">=</span> images_device.detach().cpu().numpy()</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(images_numpy.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>(4, 1, 4, 5)</code></pre>
+</div>
 </div>
 <p>Copiar datos entre CPU y GPU tiene costo. En un ciclo de entrenamiento se mueven mini-batches completos, no escalares individuales.</p>
 </section>
@@ -771,20 +864,25 @@ z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 <p><span class="math display">\[
 \widehat{y}_i = \mathbf{x}_i^\mathsf{T}\mathbf{w}+b.
 \]</span></p>
-<div id="a29fc78a" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> summary</span>
-<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> labels.to(torch.float32)</span>
-<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(<span class="dv">2</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> torch.zeros(<span class="dv">1</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> X <span class="op">@</span> w <span class="op">+</span> b</span>
-<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> ((predictions <span class="op">-</span> y) <span class="op">**</span> <span class="dv">2</span>).mean()</span>
-<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>loss.backward()</span>
-<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pérdida:"</span>, loss.item())</span>
-<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de w:"</span>, w.grad)</span>
-<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de b:"</span>, b.grad)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="6f5383e3" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> summary</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> labels.to(torch.float32)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(<span class="dv">2</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> torch.zeros(<span class="dv">1</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> X <span class="op">@</span> w <span class="op">+</span> b</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> ((predictions <span class="op">-</span> y) <span class="op">**</span> <span class="dv">2</span>).mean()</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>loss.backward()</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pérdida:"</span>, loss.item())</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de w:"</span>, w.grad)</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de b:"</span>, b.grad)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Pérdida: 0.5
+Gradiente de w: tensor([-26.5000, -37.0000])
+Gradiente de b: tensor([-1.])</code></pre>
+</div>
 </div>
 <p><code>requires_grad=True</code> indica que las operaciones sobre esos tensores deben registrarse. <code>backward()</code> aplica la regla de la cadena desde la pérdida escalar hasta cada parámetro hoja.</p>
 <p>Para el error cuadrático medio,</p>
@@ -794,20 +892,27 @@ z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 (\mathbf{X}\mathbf{w}+b-\mathbf{y}).
 \]</span></p>
 <p>Podemos comprobar que el gradiente automático coincide con la expresión:</p>
-<div id="49af94c9" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>manual_gradient <span class="op">=</span> <span class="dv">2</span> <span class="op">/</span> <span class="bu">len</span>(X) <span class="op">*</span> X.T <span class="op">@</span> (X <span class="op">@</span> w.detach() <span class="op">+</span> b.detach() <span class="op">-</span> y)</span>
-<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente manual:"</span>, manual_gradient)</span>
-<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Coinciden:"</span>, torch.allclose(w.grad, manual_gradient))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="8dd9fad2" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb39"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a>manual_gradient <span class="op">=</span> <span class="dv">2</span> <span class="op">/</span> <span class="bu">len</span>(X) <span class="op">*</span> X.T <span class="op">@</span> (X <span class="op">@</span> w.detach() <span class="op">+</span> b.detach() <span class="op">-</span> y)</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente manual:"</span>, manual_gradient)</span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Coinciden:"</span>, torch.allclose(w.grad, manual_gradient))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Gradiente manual: tensor([-26.5000, -37.0000])
+Coinciden: True</code></pre>
+</div>
 </div>
 <p>Los gradientes se acumulan. Antes de calcular un nuevo gradiente debemos reiniciarlos. Los optimizadores realizan este paso mediante <code>optimizer.zero_grad()</code>.</p>
-<div id="9f86dea9" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
-<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    learning_rate <span class="op">=</span> <span class="fl">0.001</span></span>
-<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    w <span class="op">-=</span> learning_rate <span class="op">*</span> w.grad</span>
-<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    b <span class="op">-=</span> learning_rate <span class="op">*</span> b.grad</span>
-<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>w.grad.zero_()</span>
-<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>b.grad.zero_()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="daeba479" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb41"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a>    learning_rate <span class="op">=</span> <span class="fl">0.001</span></span>
+<span id="cb41-3"><a href="#cb41-3" aria-hidden="true" tabindex="-1"></a>    w <span class="op">-=</span> learning_rate <span class="op">*</span> w.grad</span>
+<span id="cb41-4"><a href="#cb41-4" aria-hidden="true" tabindex="-1"></a>    b <span class="op">-=</span> learning_rate <span class="op">*</span> b.grad</span>
+<span id="cb41-5"><a href="#cb41-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb41-6"><a href="#cb41-6" aria-hidden="true" tabindex="-1"></a>w.grad.zero_()</span>
+<span id="cb41-7"><a href="#cb41-7" aria-hidden="true" tabindex="-1"></a>b.grad.zero_()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<pre><code>tensor([0.])</code></pre>
+</div>
 </div>
 <p><code>torch.no_grad()</code> evita registrar la actualización como parte del grafo. En los capítulos siguientes un optimizador reemplazará esta actualización manual.</p>
 </section>
@@ -819,35 +924,39 @@ z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 <li><code>DataLoader</code> agrupa, mezcla y entrega mini-batches.</li>
 </ul>
 <p>Para tensores que ya caben en memoria podemos usar <code>TensorDataset</code>.</p>
-<div id="892f614d" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
-<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> TensorDataset(normalized_images, labels)</span>
-<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> DataLoader(</span>
-<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
-<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">2</span>,</span>
-<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    shuffle<span class="op">=</span><span class="va">True</span>,</span>
-<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    generator<span class="op">=</span>torch.Generator().manual_seed(SEED),</span>
-<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch_id, (batch_images, batch_labels) <span class="kw">in</span> <span class="bu">enumerate</span>(loader):</span>
-<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(</span>
-<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Batch </span><span class="sc">{</span>batch_id<span class="sc">}</span><span class="ss">: "</span>,</span>
-<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"X=</span><span class="sc">{</span><span class="bu">tuple</span>(batch_images.shape)<span class="sc">}</span><span class="ss">, "</span>,</span>
-<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"y=</span><span class="sc">{</span><span class="bu">tuple</span>(batch_labels.shape)<span class="sc">}</span><span class="ss">"</span>,</span>
-<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="65e1d597" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> TensorDataset(normalized_images, labels)</span>
+<span id="cb43-4"><a href="#cb43-4" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> DataLoader(</span>
+<span id="cb43-5"><a href="#cb43-5" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
+<span id="cb43-6"><a href="#cb43-6" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb43-7"><a href="#cb43-7" aria-hidden="true" tabindex="-1"></a>    shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb43-8"><a href="#cb43-8" aria-hidden="true" tabindex="-1"></a>    generator<span class="op">=</span>torch.Generator().manual_seed(SEED),</span>
+<span id="cb43-9"><a href="#cb43-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb43-10"><a href="#cb43-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb43-11"><a href="#cb43-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch_id, (batch_images, batch_labels) <span class="kw">in</span> <span class="bu">enumerate</span>(loader):</span>
+<span id="cb43-12"><a href="#cb43-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(</span>
+<span id="cb43-13"><a href="#cb43-13" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Batch </span><span class="sc">{</span>batch_id<span class="sc">}</span><span class="ss">: "</span>,</span>
+<span id="cb43-14"><a href="#cb43-14" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"X=</span><span class="sc">{</span><span class="bu">tuple</span>(batch_images.shape)<span class="sc">}</span><span class="ss">, "</span>,</span>
+<span id="cb43-15"><a href="#cb43-15" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"y=</span><span class="sc">{</span><span class="bu">tuple</span>(batch_labels.shape)<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb43-16"><a href="#cb43-16" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Batch 0:  X=(2, 1, 4, 5),  y=(2,)
+Batch 1:  X=(2, 1, 4, 5),  y=(2,)</code></pre>
+</div>
 </div>
 <p><code>shuffle=True</code> altera el orden al comienzo de cada época. La semilla del generador hace reproducible este ejemplo, aunque en un entrenamiento completo también deben controlarse otras fuentes de aleatoriedad.</p>
 <section id="un-ciclo-mínimo-de-preparación" class="level3" data-number="1.9.1">
 <h3 data-number="1.9.1" class="anchored" data-anchor-id="un-ciclo-mínimo-de-preparación"><span class="header-section-number">1.9.1</span> Un ciclo mínimo de preparación</h3>
 <p>El patrón que reutilizaremos es:</p>
-<div id="25d916fc" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch_images, batch_labels <span class="kw">in</span> loader:</span>
-<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    batch_images <span class="op">=</span> batch_images.to(device)</span>
-<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    batch_labels <span class="op">=</span> batch_labels.to(device)</span>
-<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> batch_images.ndim <span class="op">==</span> <span class="dv">4</span></span>
-<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> batch_images.shape[<span class="dv">0</span>] <span class="op">==</span> batch_labels.shape[<span class="dv">0</span>]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="4eef14d1" class="cell" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch_images, batch_labels <span class="kw">in</span> loader:</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a>    batch_images <span class="op">=</span> batch_images.to(device)</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a>    batch_labels <span class="op">=</span> batch_labels.to(device)</span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> batch_images.ndim <span class="op">==</span> <span class="dv">4</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> batch_images.shape[<span class="dv">0</span>] <span class="op">==</span> batch_labels.shape[<span class="dv">0</span>]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
 <p>Las aserciones convierten supuestos silenciosos en errores cercanos a su causa. En proyectos posteriores también validaremos rangos, valores faltantes y correspondencia de clases.</p>
 </section>
@@ -878,35 +987,38 @@ z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
 <section id="solución-integrada-del-problema" class="level2" data-number="1.11">
 <h2 data-number="1.11" class="anchored" data-anchor-id="solución-integrada-del-problema"><span class="header-section-number">1.11</span> Solución integrada del problema</h2>
 <p>Ya podemos construir una función que recibe un lote, valida su estructura, normaliza cada imagen y lo mueve al dispositivo.</p>
-<div id="5310fc94" class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prepare_image_batch(batch, target_device):</span>
-<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> batch.ndim <span class="op">!=</span> <span class="dv">4</span>:</span>
-<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
-<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Se esperaba un tensor (N, C, H, W); "</span></span>
-<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"se recibió </span><span class="sc">{</span><span class="bu">tuple</span>(batch.shape)<span class="sc">}</span><span class="ss">"</span></span>
-<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        )</span>
-<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> batch.is_floating_point():</span>
-<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        batch <span class="op">=</span> batch.to(torch.float32)</span>
-<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> torch.isfinite(batch).<span class="bu">all</span>():</span>
-<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El lote contiene valores no finitos"</span>)</span>
-<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    means <span class="op">=</span> batch.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    stds <span class="op">=</span> batch.std(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
-<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    normalized <span class="op">=</span> (batch <span class="op">-</span> means) <span class="op">/</span> stds.clamp_min(<span class="fl">1e-6</span>)</span>
-<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> normalized.to(target_device)</span>
-<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>prepared_images <span class="op">=</span> prepare_image_batch(images, device)</span>
-<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prepared_images.shape <span class="op">==</span> images.shape</span>
-<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prepared_images.device.<span class="bu">type</span> <span class="op">==</span> device.<span class="bu">type</span></span>
-<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.allclose(</span>
-<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    prepared_images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)).cpu(),</span>
-<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    torch.zeros(<span class="bu">len</span>(images)),</span>
-<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>    atol<span class="op">=</span><span class="fl">1e-5</span>,</span>
-<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>)</span>
-<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a></span>
-<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Lote preparado:"</span>, prepared_images.shape, prepared_images.device)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div id="595c60a9" class="cell" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb46"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prepare_image_batch(batch, target_device):</span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> batch.ndim <span class="op">!=</span> <span class="dv">4</span>:</span>
+<span id="cb46-3"><a href="#cb46-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
+<span id="cb46-4"><a href="#cb46-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Se esperaba un tensor (N, C, H, W); "</span></span>
+<span id="cb46-5"><a href="#cb46-5" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"se recibió </span><span class="sc">{</span><span class="bu">tuple</span>(batch.shape)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb46-6"><a href="#cb46-6" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb46-7"><a href="#cb46-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> batch.is_floating_point():</span>
+<span id="cb46-8"><a href="#cb46-8" aria-hidden="true" tabindex="-1"></a>        batch <span class="op">=</span> batch.to(torch.float32)</span>
+<span id="cb46-9"><a href="#cb46-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> torch.isfinite(batch).<span class="bu">all</span>():</span>
+<span id="cb46-10"><a href="#cb46-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El lote contiene valores no finitos"</span>)</span>
+<span id="cb46-11"><a href="#cb46-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-12"><a href="#cb46-12" aria-hidden="true" tabindex="-1"></a>    means <span class="op">=</span> batch.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb46-13"><a href="#cb46-13" aria-hidden="true" tabindex="-1"></a>    stds <span class="op">=</span> batch.std(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb46-14"><a href="#cb46-14" aria-hidden="true" tabindex="-1"></a>    normalized <span class="op">=</span> (batch <span class="op">-</span> means) <span class="op">/</span> stds.clamp_min(<span class="fl">1e-6</span>)</span>
+<span id="cb46-15"><a href="#cb46-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> normalized.to(target_device)</span>
+<span id="cb46-16"><a href="#cb46-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-17"><a href="#cb46-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-18"><a href="#cb46-18" aria-hidden="true" tabindex="-1"></a>prepared_images <span class="op">=</span> prepare_image_batch(images, device)</span>
+<span id="cb46-19"><a href="#cb46-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-20"><a href="#cb46-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prepared_images.shape <span class="op">==</span> images.shape</span>
+<span id="cb46-21"><a href="#cb46-21" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prepared_images.device.<span class="bu">type</span> <span class="op">==</span> device.<span class="bu">type</span></span>
+<span id="cb46-22"><a href="#cb46-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.allclose(</span>
+<span id="cb46-23"><a href="#cb46-23" aria-hidden="true" tabindex="-1"></a>    prepared_images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)).cpu(),</span>
+<span id="cb46-24"><a href="#cb46-24" aria-hidden="true" tabindex="-1"></a>    torch.zeros(<span class="bu">len</span>(images)),</span>
+<span id="cb46-25"><a href="#cb46-25" aria-hidden="true" tabindex="-1"></a>    atol<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb46-26"><a href="#cb46-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb46-27"><a href="#cb46-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb46-28"><a href="#cb46-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Lote preparado:"</span>, prepared_images.shape, prepared_images.device)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Lote preparado: torch.Size([4, 1, 4, 5]) mps:0</code></pre>
+</div>
 </div>
 <p>La función no entrena todavía un clasificador. Resuelve una etapa previa y crítica: entrega al modelo un lote con contrato explícito, tipo apropiado, valores finitos, normalización por observación y dispositivo coherente.</p>
 </section>
