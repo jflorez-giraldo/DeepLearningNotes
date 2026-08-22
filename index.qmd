@@ -47,18 +47,20 @@ explicar qué aporta la arquitectura y dónde puede fallar.
 
 ## Estado de la edición
 
-Esta edición contiene la arquitectura completa del libro, el [capítulo sobre
-tensores y PyTorch](chapters/chapter01.qmd) y el [primer proyecto de aprendizaje
-con regresión y consumo energético](chapters/chapter02.qmd). Los capítulos
-restantes presentan el problema articulador, los objetivos y la ruta de
-desarrollo para hacer visible la progresión del curso.
+Esta edición contiene la arquitectura completa del libro y tres capítulos
+desarrollados: [tensores y PyTorch](chapters/chapter01.qmd), [regresión y consumo
+energético](chapters/chapter02.qmd), y [clasificación no lineal con
+MLP](chapters/chapter03.qmd). Los capítulos restantes presentan el problema
+articulador, los objetivos y la ruta de desarrollo para hacer visible la
+progresión del curso.
 
 ## Recursos
 
 El HTML permite navegar, buscar y copiar código. Los capítulos desarrollados
 incluyen un notebook descargable y un enlace para ejecutarlo en Google Colab.
-El código detecta CPU, CUDA o Apple Silicon y explicita las dimensiones de los
-tensores en las operaciones importantes.
+El código explicita las dimensiones de los tensores en las operaciones
+importantes. Algunos capítulos detectan aceleradores disponibles y otros fijan
+CPU cuando la reproducibilidad del experimento lo justifica.
 
 El contenido toma como referencia conceptual *Dive into Deep Learning*
 [@zhang2023dive], la documentación oficial de PyTorch [@pytorch] y literatura

@@ -1,38 +1,1018 @@
 ---
 title: "¿Cómo aprender relaciones no lineales?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> clasificar prendas de
-Fashion-MNIST cuando una frontera lineal no captura las diferencias entre
-clases visualmente similares.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-La especificación guía la futura implementación y sus pruebas.
+<div class="problem-banner">
+<strong>Problema:</strong> clasificar siete variedades registradas de fríjol
+seco a partir de medidas geométricas extraídas por un sistema de visión. Las
+variedades comparten rangos de tamaño y forma; estudiaremos qué cambia cuando
+una capa oculta introduce una representación no lineal.
+</div>
+
+## Del clasificador afín a una red
+
+En el capítulo anterior, `nn.Linear` aprendió una transformación afín. Cambiar
+el algoritmo de optimización puede encontrar otros parámetros, pero no cambia
+la familia de funciones que el modelo puede representar. Si las clases ocupan
+regiones curvas o dependen de interacciones entre variables, una única frontera
+lineal puede ser insuficiente.
+
+El dataset *Dry Bean* parte de fotografías de granos ya segmentados. El sistema
+de visión calculó 16 medidas de tamaño y forma; nuestro modelo recibe esas
+medidas, no los píxeles originales. Por tanto, construiremos un clasificador de
+la etapa final de una tubería de visión, no un reconocedor de imágenes completo.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- demostrar por qué componer transformaciones afines no crea no linealidad;
+- explicar el papel de una capa oculta y de una función de activación;
+- distinguir logits, probabilidades, predicciones y entropía cruzada;
+- seguir las dimensiones del forward y del backward de una MLP;
+- verificar gradientes analíticos mediante autograd;
+- construir una red con tensores, `nn.Module` y `nn.Sequential`;
+- comparar una línea base mayoritaria, un clasificador lineal y una MLP bajo el
+  mismo protocolo; y
+- diagnosticar errores multiclase mediante macro-F1 y matrices de confusión.
 :::
 
-## Objetivos
+## Preparar el entorno
 
-- explicar por qué apilar funciones lineales no crea no linealidad;
-- construir un perceptrón multicapa desde tensores;
-- interpretar ReLU, sigmoid y softmax;
-- seguir forward, pérdida y backpropagation;
-- comparar regresión softmax y MLP; y
-- analizar errores mediante matriz de confusión y ejemplos concretos.
+```{python}
+from hashlib import sha256
+from pathlib import Path
+from time import perf_counter
+from urllib.request import urlretrieve
+from zipfile import ZipFile
 
-## Ruta de desarrollo
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import sklearn
+import torch
+from sklearn.metrics import confusion_matrix, f1_score
+from sklearn.model_selection import train_test_split
+from torch import nn
+from torch.nn import functional as F
+from torch.utils.data import DataLoader, TensorDataset
 
-1. Línea base mayoritaria y regresión softmax.
-2. Capa oculta y función de activación.
-3. Grafo computacional y regla de la cadena.
-4. MLP desde cero y con `nn.Sequential`.
-5. Selección de capacidad con validación.
-6. Diagnóstico de pares de clases difíciles.
+SEED = 42
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+torch.set_num_threads(1)
+torch.use_deterministic_algorithms(True)
 
-## Experimento central
+device = torch.device("cpu")
+print(
+    f"PyTorch {torch.__version__} | NumPy {np.__version__} | "
+    f"pandas {pd.__version__} | scikit-learn {sklearn.__version__}"
+)
+print(f"Dispositivo: {device}")
+```
 
-Variar profundidad, ancho y activación manteniendo fijo el protocolo de datos y
-el presupuesto de entrenamiento.
+El entrenamiento se realizará en CPU. El dataset es pequeño y esta decisión
+reduce diferencias entre CUDA, MPS y CPU. En problemas mayores, el mismo ciclo
+puede mover modelos y mini-batches a otro dispositivo.
 
-## Referencia conceptual
+## Obtener y validar los datos
 
-Clasificación lineal, MLP y backpropagation en [@zhang2023dive].
+*Dry Bean* contiene 13.611 granos de siete variedades. Sus 16 variables fueron
+obtenidas después de segmentar imágenes con una cámara de alta resolución
+[@koklu2020dataset; @koklu2020beans]. El repositorio UCI distribuye los datos
+con licencia CC BY 4.0.
+
+La descarga se guarda en caché y se valida mediante SHA-256. Leemos el archivo
+ARFF incluido en el ZIP sin añadir una dependencia para archivos de Excel.
+
+```{python}
+DATA_URL = (
+    "https://archive.ics.uci.edu/static/public/602/"
+    "dry+bean+dataset.zip"
+)
+DATA_DIR = Path(".cache/chapter03")
+ARCHIVE_PATH = DATA_DIR / "dry-bean-dataset.zip"
+ARFF_NAME = "DryBeanDataset/Dry_Bean_Dataset.arff"
+EXPECTED_SHA256 = (
+    "0a64eff5be87f48c3dbbfc0a12a56c5"
+    "d5b5167ef8e61cd45d69b3e7c7130c06f"
+)
+
+FEATURE_NAMES = [
+    "Area",
+    "Perimeter",
+    "MajorAxisLength",
+    "MinorAxisLength",
+    "AspectRatio",
+    "Eccentricity",
+    "ConvexArea",
+    "EquivDiameter",
+    "Extent",
+    "Solidity",
+    "Roundness",
+    "Compactness",
+    "ShapeFactor1",
+    "ShapeFactor2",
+    "ShapeFactor3",
+    "ShapeFactor4",
+]
+CLASS_NAMES = [
+    "BARBUNYA",
+    "BOMBAY",
+    "CALI",
+    "DERMASON",
+    "HOROZ",
+    "SEKER",
+    "SIRA",
+]
+
+
+def load_dry_beans():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not ARCHIVE_PATH.exists():
+        temporary_path = ARCHIVE_PATH.with_suffix(".download")
+        urlretrieve(DATA_URL, temporary_path)
+        temporary_path.replace(ARCHIVE_PATH)
+
+    archive_hash = sha256(ARCHIVE_PATH.read_bytes()).hexdigest()
+    if archive_hash != EXPECTED_SHA256:
+        raise ValueError(f"SHA-256 inesperado: {archive_hash}")
+
+    with ZipFile(ARCHIVE_PATH) as archive:
+        if ARFF_NAME not in archive.namelist():
+            raise ValueError(f"No se encontró {ARFF_NAME}")
+        if archive.testzip() is not None:
+            raise ValueError("El archivo descargado está corrupto")
+        with archive.open(ARFF_NAME) as arff_file:
+            frame = pd.read_csv(
+                arff_file,
+                skiprows=25,
+                names=FEATURE_NAMES + ["Class"],
+            )
+
+    if frame.shape != (13_611, 17):
+        raise ValueError(f"Dimensiones inesperadas: {frame.shape}")
+    if sorted(frame["Class"].unique()) != CLASS_NAMES:
+        raise ValueError("Las etiquetas no coinciden con las siete esperadas")
+    if frame.isna().any().any():
+        raise ValueError("El dataset contiene valores faltantes inesperados")
+    if not np.isfinite(frame[FEATURE_NAMES].to_numpy()).all():
+        raise ValueError("Las características contienen valores no finitos")
+    return frame
+
+
+beans = load_dry_beans()
+beans.head()
+```
+
+Cada fila representa un grano. `Area` y `ConvexArea` se expresan en píxeles;
+las demás variables incluyen longitudes, razones y factores de forma. El
+objetivo `Class` identifica una variedad registrada.
+
+```{python}
+data_audit = pd.Series({
+    "observaciones": len(beans),
+    "características": len(FEATURE_NAMES),
+    "clases": beans["Class"].nunique(),
+    "faltantes": int(beans.isna().sum().sum()),
+    "filas duplicadas": int(beans.duplicated().sum()),
+})
+data_audit
+```
+
+Existen 68 filas exactamente duplicadas. Si copias idénticas quedan en
+particiones diferentes, la evaluación puede premiar memorización. Conservamos
+una sola copia de cada perfil antes de dividir y documentamos que el análisis
+usa 13.543 perfiles únicos.
+
+```{python}
+beans_unique = beans.drop_duplicates().reset_index(drop=True)
+
+assert len(beans_unique) == 13_543
+assert not beans_unique.duplicated().any()
+print(f"Perfiles únicos para modelar: {len(beans_unique):,}")
+```
+
+## Crear y bloquear las particiones
+
+No hay un orden temporal ni grupos de captura declarados. Usaremos una división
+aleatoria estratificada: 70% para entrenamiento, 15% para validación y 15% para
+test. La estratificación conserva aproximadamente la proporción de cada clase.
+
+```{python}
+train_frame, remaining_frame = train_test_split(
+    beans_unique,
+    test_size=0.30,
+    stratify=beans_unique["Class"],
+    random_state=SEED,
+)
+validation_frame, test_frame = train_test_split(
+    remaining_frame,
+    test_size=0.50,
+    stratify=remaining_frame["Class"],
+    random_state=SEED,
+)
+
+train_frame = train_frame.reset_index(drop=True)
+validation_frame = validation_frame.reset_index(drop=True)
+test_frame = test_frame.reset_index(drop=True)
+
+split_summary = pd.DataFrame({
+    "partición": ["entrenamiento", "validación", "test bloqueado"],
+    "filas": [len(train_frame), len(validation_frame), len(test_frame)],
+    "porcentaje": [
+        100 * len(train_frame) / len(beans_unique),
+        100 * len(validation_frame) / len(beans_unique),
+        100 * len(test_frame) / len(beans_unique),
+    ],
+})
+split_summary
+```
+
+```{python}
+split_counts = pd.DataFrame({
+    "entrenamiento": train_frame["Class"].value_counts(),
+    "validación": validation_frame["Class"].value_counts(),
+    "test": test_frame["Class"].value_counts(),
+}).loc[CLASS_NAMES]
+
+assert (split_counts > 0).all().all()
+split_counts
+```
+
+Desde este punto, `test_frame` permanecerá bloqueado hasta fijar la
+arquitectura, el presupuesto de entrenamiento y la comparación en validación.
+
+## Explorar únicamente entrenamiento
+
+La clase mayoritaria es `DERMASON`; `BOMBAY` tiene muchas menos observaciones.
+Por eso reportaremos macro-F1 además de accuracy. Macro-F1 calcula F1 por clase
+y después asigna el mismo peso a cada variedad.
+
+```{python}
+#| label: fig-bean-training
+#| fig-cap: "Frecuencia de clases y solapamiento de dos características en entrenamiento."
+#| fig-alt: "Barras con siete frecuencias y dispersión de área frente a redondez por variedad."
+#| fig-width: 10
+#| fig-height: 4
+
+class_counts = train_frame["Class"].value_counts().reindex(CLASS_NAMES)
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+axes[0].bar(class_counts.index, class_counts.values, color="#6042a6")
+axes[0].set_ylabel("Granos")
+axes[0].set_title("Distribución de clases")
+axes[0].tick_params(axis="x", rotation=55)
+
+colors = plt.cm.tab10(np.linspace(0, 1, len(CLASS_NAMES)))
+for class_name, color in zip(CLASS_NAMES, colors):
+    class_rows = train_frame[train_frame["Class"] == class_name]
+    axes[1].scatter(
+        class_rows["Area"],
+        class_rows["Roundness"],
+        s=7,
+        alpha=0.35,
+        color=color,
+        label=class_name,
+    )
+axes[1].set_xlabel("Área (píxeles)")
+axes[1].set_ylabel("Redondez")
+axes[1].set_title("Dos variables no separan todas las clases")
+axes[1].legend(fontsize=7, ncol=2, frameon=False)
+
+fig.tight_layout()
+plt.show()
+```
+
+La proyección bidimensional no demuestra qué ocurre en las 16 dimensiones,
+pero hace visible el solapamiento. Además, las variables tienen escalas muy
+diferentes: `Area` puede tomar decenas de miles, mientras varios factores de
+forma están cerca de cero o uno.
+
+## Preparar tensores sin fuga de información
+
+Ajustamos media y desviación exclusivamente con entrenamiento. El orden de las
+clases también queda fijado antes de modelar.
+
+```{python}
+class_to_index = {
+    class_name: index for index, class_name in enumerate(CLASS_NAMES)
+}
+
+train_mean = train_frame[FEATURE_NAMES].mean().to_numpy(dtype=np.float32)
+train_std = train_frame[FEATURE_NAMES].std(ddof=0).to_numpy(dtype=np.float32)
+
+if np.any(train_std == 0):
+    raise ValueError("Existe una característica constante en entrenamiento")
+
+
+def frame_to_tensors(frame):
+    features = frame[FEATURE_NAMES].to_numpy(dtype=np.float32)
+    standardized = (features - train_mean) / train_std
+    labels = frame["Class"].map(class_to_index).to_numpy(dtype=np.int64)
+    return torch.from_numpy(standardized), torch.from_numpy(labels)
+
+
+X_train, y_train = frame_to_tensors(train_frame)
+X_validation, y_validation = frame_to_tensors(validation_frame)
+X_test, y_test = frame_to_tensors(test_frame)
+
+assert X_train.shape == (len(train_frame), 16)
+assert y_train.shape == (len(train_frame),)
+assert X_train.dtype == torch.float32
+assert y_train.dtype == torch.int64
+assert torch.isfinite(X_train).all()
+assert y_train.min() == 0 and y_train.max() == 6
+
+print("Entradas de entrenamiento:", X_train.shape, X_train.dtype)
+print("Etiquetas de entrenamiento:", y_train.shape, y_train.dtype)
+```
+
+## Por qué dos capas lineales no son una red no lineal
+
+Para un lote $\mathbf{X}$, consideremos dos transformaciones afines sin una
+activación entre ellas:
+
+$$
+\mathbf{H}=\mathbf{X}\mathbf{W}_1+\mathbf{b}_1,
+\qquad
+\mathbf{Z}=\mathbf{H}\mathbf{W}_2+\mathbf{b}_2.
+$$
+
+Al sustituir $\mathbf{H}$,
+
+$$
+\mathbf{Z}
+=\mathbf{X}(\mathbf{W}_1\mathbf{W}_2)
++(\mathbf{b}_1\mathbf{W}_2+\mathbf{b}_2).
+$$
+
+El producto de pesos y la combinación de sesgos forman otra transformación
+afín. La profundidad, por sí sola, no amplía esta familia funcional.
+
+```{python}
+torch.manual_seed(SEED)
+X_demo = torch.randn(5, 3)
+W1 = torch.randn(3, 4)
+b1 = torch.randn(4)
+W2 = torch.randn(4, 2)
+b2 = torch.randn(2)
+
+two_layer_logits = (X_demo @ W1 + b1) @ W2 + b2
+equivalent_W = W1 @ W2
+equivalent_b = b1 @ W2 + b2
+one_layer_logits = X_demo @ equivalent_W + equivalent_b
+
+print("Máxima diferencia:", (two_layer_logits - one_layer_logits).abs().max().item())
+print("Son equivalentes:", torch.allclose(two_layer_logits, one_layer_logits))
+```
+
+## ReLU crea nuevas regiones
+
+Una función de activación rompe ese colapso. Para ReLU,
+
+$$
+\operatorname{ReLU}(z)=\max(0,z).
+$$
+
+Cada unidad puede activar una región y anular otra. Como ejemplo mínimo,
+ninguna recta separa XOR, pero dos activaciones ReLU construyen exactamente su
+patrón. Si $s=x_1+x_2$,
+
+$$
+f(\mathbf{x})=\operatorname{ReLU}(s)
+-2\operatorname{ReLU}(s-1).
+$$
+
+```{python}
+xor_X = torch.tensor([
+    [0.0, 0.0],
+    [0.0, 1.0],
+    [1.0, 0.0],
+    [1.0, 1.0],
+])
+xor_y = torch.tensor([0, 1, 1, 0])
+
+xor_sum = xor_X.sum(dim=1)
+xor_hidden = torch.stack([
+    torch.relu(xor_sum),
+    torch.relu(xor_sum - 1),
+], dim=1)
+xor_score = xor_hidden @ torch.tensor([1.0, -2.0])
+xor_prediction = (xor_score > 0.5).to(torch.int64)
+
+xor_table = pd.DataFrame({
+    "x1": xor_X[:, 0],
+    "x2": xor_X[:, 1],
+    "clase": xor_y,
+    "score ReLU": xor_score,
+    "predicción": xor_prediction,
+})
+xor_table
+```
+
+```{python}
+#| label: fig-xor-relu
+#| fig-cap: "XOR no es separable por una recta, pero una combinación de ReLU reproduce sus etiquetas."
+#| fig-alt: "Cuatro puntos de XOR con clases alternadas en las esquinas de un cuadrado."
+#| fig-width: 5
+#| fig-height: 4
+
+fig, ax = plt.subplots(figsize=(5, 4))
+for class_index, marker, color in [(0, "o", "#6042a6"), (1, "s", "#327c78")]:
+    mask = xor_y == class_index
+    ax.scatter(
+        xor_X[mask, 0],
+        xor_X[mask, 1],
+        s=110,
+        marker=marker,
+        color=color,
+        label=f"Clase {class_index}",
+    )
+for row, score in zip(xor_X, xor_score):
+    ax.annotate(f"f={score.item():.0f}", row.numpy() + np.array([0.04, 0.04]))
+ax.set(xlim=(-0.2, 1.3), ylim=(-0.2, 1.3), xlabel="$x_1$", ylabel="$x_2$")
+ax.legend(frameon=False)
+ax.set_title("Relación XOR")
+fig.tight_layout()
+plt.show()
+```
+
+Sigmoid, $\sigma(z)=1/(1+e^{-z})$, también introduce no linealidad, pero se
+satura para valores de gran magnitud. Usaremos ReLU en la capa oculta. El
+capítulo siguiente estudiará cómo las activaciones afectan la estabilidad del
+entrenamiento.
+
+## Del vector de entrada a los logits
+
+Nuestra MLP tendrá una capa oculta de 64 unidades:
+
+$$
+\begin{aligned}
+\mathbf{Z}_1 &= \mathbf{X}\mathbf{W}_1+\mathbf{b}_1,\\
+\mathbf{H} &= \operatorname{ReLU}(\mathbf{Z}_1),\\
+\mathbf{Z}_2 &= \mathbf{H}\mathbf{W}_2+\mathbf{b}_2.
+\end{aligned}
+$$
+
+Para un mini-batch de tamaño $B$, las dimensiones son:
+
+| Tensor | Dimensión | Significado |
+|---|---:|---|
+| $\mathbf{X}$ | $B\times16$ | características estandarizadas |
+| $\mathbf{W}_1$ | $16\times64$ | pesos de entrada a capa oculta |
+| $\mathbf{H}$ | $B\times64$ | representación no lineal |
+| $\mathbf{W}_2$ | $64\times7$ | pesos de capa oculta a clases |
+| $\mathbf{Z}_2$ | $B\times7$ | logits por clase |
+
+Los logits son scores sin normalizar. Softmax los convierte en probabilidades:
+
+$$
+p_{ik}=\frac{\exp(z_{ik})}{\sum_{j=1}^{7}\exp(z_{ij})}.
+$$
+
+```{python}
+example_logits = torch.tensor([[2.1, -0.3, 0.4, 1.2, -1.0, 0.7, 0.0]])
+example_probabilities = torch.softmax(example_logits, dim=1)
+
+print("Suma de probabilidades:", example_probabilities.sum(dim=1).item())
+print("Argmax de logits:", example_logits.argmax(dim=1).item())
+print("Argmax de probabilidades:", example_probabilities.argmax(dim=1).item())
+```
+
+Softmax preserva el orden de los logits. Solo lo necesitaremos para interpretar
+predicciones; `CrossEntropyLoss` recibe logits directamente y aplica una forma
+numéricamente estable de log-softmax.
+
+Para una observación cuya clase real es $y_i$, la pérdida es
+
+$$
+\ell_i=-\log p_{i,y_i}
+=-z_{i,y_i}+\log\sum_k\exp(z_{ik}).
+$$
+
+Etiquetas con forma `(B,)` y tipo `int64` seleccionan la clase correcta sin
+crear vectores one-hot en la interfaz de PyTorch.
+
+## Hacer visible la retropropagación
+
+Para un lote de tamaño $B$, sea $\mathbf{P}$ la matriz de probabilidades y
+$\mathbf{Y}$ la codificación one-hot usada solo en la derivación. La combinación
+softmax-entropía cruzada produce
+
+$$
+\mathbf{G}_2=\frac{\mathbf{P}-\mathbf{Y}}{B}.
+$$
+
+La regla de la cadena continúa hacia atrás:
+
+$$
+\begin{aligned}
+\nabla_{\mathbf{W}_2}\mathcal{L} &= \mathbf{H}^{\mathsf T}\mathbf{G}_2,\\
+\nabla_{\mathbf{b}_2}\mathcal{L} &= \sum_i \mathbf{G}_{2i},\\
+\mathbf{G}_1 &= (\mathbf{G}_2\mathbf{W}_2^{\mathsf T})
+\odot \mathbb{1}[\mathbf{Z}_1>0],\\
+\nabla_{\mathbf{W}_1}\mathcal{L} &= \mathbf{X}^{\mathsf T}\mathbf{G}_1,\\
+\nabla_{\mathbf{b}_1}\mathcal{L} &= \sum_i \mathbf{G}_{1i}.
+\end{aligned}
+$$
+
+El producto $\odot$ es elemento a elemento: la derivada local de ReLU bloquea
+el gradiente donde la preactivación fue negativa. Verificaremos estas
+expresiones con un mini-batch en `float64`.
+
+```{python}
+torch.manual_seed(SEED)
+X_check = X_train[:8].to(torch.float64)
+y_check = y_train[:8]
+
+W1_check = (0.1 * torch.randn(16, 5, dtype=torch.float64)).requires_grad_()
+b1_check = torch.zeros(5, dtype=torch.float64, requires_grad=True)
+W2_check = (0.1 * torch.randn(5, 7, dtype=torch.float64)).requires_grad_()
+b2_check = torch.zeros(7, dtype=torch.float64, requires_grad=True)
+
+Z1_check = X_check @ W1_check + b1_check
+H_check = torch.relu(Z1_check)
+logits_check = H_check @ W2_check + b2_check
+loss_check = F.cross_entropy(logits_check, y_check)
+loss_check.backward()
+
+Y_check = F.one_hot(y_check, num_classes=7).to(torch.float64)
+G2_check = (torch.softmax(logits_check.detach(), dim=1) - Y_check) / len(X_check)
+manual_W2 = H_check.detach().T @ G2_check
+manual_b2 = G2_check.sum(dim=0)
+G1_check = (G2_check @ W2_check.detach().T) * (Z1_check.detach() > 0)
+manual_W1 = X_check.T @ G1_check
+manual_b1 = G1_check.sum(dim=0)
+
+gradient_check = pd.Series({
+    "W1": (W1_check.grad - manual_W1).abs().max().item(),
+    "b1": (b1_check.grad - manual_b1).abs().max().item(),
+    "W2": (W2_check.grad - manual_W2).abs().max().item(),
+    "b2": (b2_check.grad - manual_b2).abs().max().item(),
+}, name="máxima diferencia absoluta")
+
+assert gradient_check.max() < 1e-12
+gradient_check
+```
+
+Autograd no cambia la matemática: registra las operaciones del forward y aplica
+estas derivadas locales en orden inverso.
+
+## Tres formas de expresar la misma MLP
+
+Con tensores explícitos, el forward esencial es:
+
+```{python}
+def tensor_forward(X, W1, b1, W2, b2):
+    hidden = torch.relu(X @ W1 + b1)
+    return hidden @ W2 + b2
+```
+
+Una subclase de `nn.Module` registra parámetros y define cómo se conectan:
+
+```{python}
+class BeanMLP(nn.Module):
+    def __init__(self, input_features=16, hidden_features=64, classes=7):
+        super().__init__()
+        self.hidden = nn.Linear(input_features, hidden_features)
+        self.output = nn.Linear(hidden_features, classes)
+
+    def forward(self, X):
+        return self.output(torch.relu(self.hidden(X)))
+
+
+module_example = BeanMLP()
+print(module_example)
+print("Forma de logits:", module_example(X_train[:32]).shape)
+```
+
+Cuando el flujo es secuencial, `nn.Sequential` expresa la misma arquitectura
+con menos código:
+
+```{python}
+def make_mlp():
+    torch.manual_seed(SEED)
+    return nn.Sequential(
+        nn.Linear(16, 64),
+        nn.ReLU(),
+        nn.Linear(64, 7),
+    )
+
+
+mlp_example = make_mlp()
+parameter_count = sum(parameter.numel() for parameter in mlp_example.parameters())
+
+print("Parámetros registrados:", list(mlp_example.state_dict().keys()))
+print("Número de parámetros:", parameter_count)
+```
+
+El conteo es
+
+$$
+(16\times64+64)+(64\times7+7)=1.543.
+$$
+
+Un clasificador lineal tiene solo $16\times7+7=119$ parámetros. La MLP compra
+capacidad adicional con más parámetros y más operaciones.
+
+## Protocolo experimental
+
+Compararemos tres modelos:
+
+1. **Mayoría:** siempre predice la clase más frecuente de entrenamiento.
+2. **Lineal:** `Linear(16, 7)`, equivalente a regresión softmax.
+3. **MLP:** `Linear(16, 64)`, ReLU y `Linear(64, 7)`.
+
+Los dos modelos aprendidos usarán exactamente las mismas particiones,
+estandarización, mini-batches, entropía cruzada, SGD, tasa de aprendizaje 0,1,
+40 épocas y semilla. No buscaremos optimizadores, regularización ni arquitecturas
+alternativas: esas decisiones pertenecen al Capítulo 4.
+
+Esta es una comparación controlada con una sola semilla, no una estimación de
+variabilidad. Igualar tasa y número de actualizaciones controla el presupuesto,
+pero no demuestra que ambos modelos estén igualmente optimizados.
+
+```{python}
+BATCH_SIZE = 256
+LEARNING_RATE = 0.1
+EPOCHS = 40
+
+
+def classification_metrics(y_true, y_pred):
+    true_values = np.asarray(y_true)
+    predicted_values = np.asarray(y_pred)
+    return {
+        "Accuracy": (true_values == predicted_values).mean(),
+        "Macro-F1": f1_score(
+            true_values,
+            predicted_values,
+            labels=np.arange(len(CLASS_NAMES)),
+            average="macro",
+            zero_division=0,
+        ),
+    }
+
+
+def predict_logits(model, X):
+    model.eval()
+    with torch.no_grad():
+        return model(X.to(device)).cpu()
+
+
+def train_classifier(model):
+    model = model.to(device)
+    loader = DataLoader(
+        TensorDataset(X_train, y_train),
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        generator=torch.Generator().manual_seed(SEED),
+        num_workers=0,
+    )
+    criterion = nn.CrossEntropyLoss()
+    optimizer = torch.optim.SGD(model.parameters(), lr=LEARNING_RATE)
+    history_rows = []
+    started_at = perf_counter()
+
+    for epoch in range(1, EPOCHS + 1):
+        model.train()
+        training_loss_sum = 0.0
+
+        for batch_X, batch_y in loader:
+            batch_X = batch_X.to(device)
+            batch_y = batch_y.to(device)
+
+            optimizer.zero_grad()
+            logits = model(batch_X)
+            loss = criterion(logits, batch_y)
+            loss.backward()
+            optimizer.step()
+
+            training_loss_sum += loss.item() * len(batch_y)
+
+        validation_logits = predict_logits(model, X_validation)
+        validation_predictions = validation_logits.argmax(dim=1).numpy()
+        validation_metrics = classification_metrics(
+            y_validation.numpy(), validation_predictions
+        )
+        history_rows.append({
+            "epoch": epoch,
+            "training_loss": training_loss_sum / len(y_train),
+            "validation_loss": criterion(
+                validation_logits, y_validation
+            ).item(),
+            "validation_macro_f1": validation_metrics["Macro-F1"],
+        })
+
+    elapsed_seconds = perf_counter() - started_at
+    return model, pd.DataFrame(history_rows), elapsed_seconds
+```
+
+## Entrenar el modelo lineal y la MLP
+
+```{python}
+torch.manual_seed(SEED)
+linear_model = nn.Linear(16, 7)
+linear_model, linear_history, linear_seconds = train_classifier(linear_model)
+
+mlp_model = make_mlp()
+mlp_model, mlp_history, mlp_seconds = train_classifier(mlp_model)
+
+print(f"Modelo lineal: {linear_seconds:.2f} s")
+print(f"MLP: {mlp_seconds:.2f} s")
+```
+
+```{python}
+#| label: fig-bean-training-curves
+#| fig-cap: "Evolución de la pérdida y de macro-F1 bajo el mismo presupuesto de entrenamiento."
+#| fig-alt: "Curvas de pérdida de entrenamiento y macro-F1 de validación para modelos lineal y MLP."
+#| fig-width: 10
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+for name, history, color in [
+    ("Lineal", linear_history, "#6042a6"),
+    ("MLP", mlp_history, "#327c78"),
+]:
+    axes[0].plot(history["epoch"], history["training_loss"], label=name, color=color)
+    axes[1].plot(
+        history["epoch"],
+        history["validation_macro_f1"],
+        label=name,
+        color=color,
+    )
+
+axes[0].set(xlabel="Época", ylabel="Entropía cruzada", title="Entrenamiento")
+axes[1].set(xlabel="Época", ylabel="Macro-F1", title="Validación")
+axes[1].set_ylim(0.70, 0.96)
+for ax in axes:
+    ax.legend(frameon=False)
+    ax.grid(alpha=0.2)
+
+fig.tight_layout()
+plt.show()
+```
+
+Las curvas sirven para comprobar que ambos modelos aprenden bajo el protocolo
+fijado. No escogeremos una época observando el máximo de validación: comparamos
+el estado final de la época 40 definido antes de abrir test.
+
+## Comparar en validación
+
+```{python}
+majority_class = int(torch.bincount(y_train).argmax())
+majority_validation = np.full(len(y_validation), majority_class)
+
+validation_logits = {
+    "Lineal": predict_logits(linear_model, X_validation),
+    "MLP": predict_logits(mlp_model, X_validation),
+}
+validation_predictions = {
+    "Mayoría": majority_validation,
+    "Lineal": validation_logits["Lineal"].argmax(dim=1).numpy(),
+    "MLP": validation_logits["MLP"].argmax(dim=1).numpy(),
+}
+
+validation_results = pd.DataFrame({
+    name: classification_metrics(y_validation.numpy(), predictions)
+    for name, predictions in validation_predictions.items()
+}).T
+validation_results["Parámetros"] = [0, 119, 1_543]
+validation_results
+```
+
+La línea base mayoritaria acierta una fracción apreciable por el desbalance,
+pero su macro-F1 revela que abandona seis clases. El clasificador lineal ya
+resuelve gran parte del problema. La MLP obtiene una ventaja muy pequeña en
+validación: la capacidad adicional no transforma radicalmente el resultado.
+
+Identificamos en validación el par de variedades con mayor confusión mutua. Esta
+decisión se toma antes de consultar test.
+
+```{python}
+validation_confusion = confusion_matrix(
+    y_validation.numpy(),
+    validation_predictions["MLP"],
+    labels=np.arange(len(CLASS_NAMES)),
+)
+mutual_confusion = validation_confusion + validation_confusion.T
+mutual_confusion[np.diag_indices_from(mutual_confusion)] = 0
+upper_triangle = np.triu(mutual_confusion, k=1)
+pair_indices = np.unravel_index(upper_triangle.argmax(), upper_triangle.shape)
+confused_pair = (CLASS_NAMES[pair_indices[0]], CLASS_NAMES[pair_indices[1]])
+
+print("Par más confundido en validación:", confused_pair)
+print("Errores mutuos:", upper_triangle[pair_indices])
+```
+
+## Abrir test una sola vez
+
+Las decisiones están cerradas. Evaluamos los tres modelos en el test bloqueado.
+
+```{python}
+test_logits = {
+    "Lineal": predict_logits(linear_model, X_test),
+    "MLP": predict_logits(mlp_model, X_test),
+}
+test_predictions = {
+    "Mayoría": np.full(len(y_test), majority_class),
+    "Lineal": test_logits["Lineal"].argmax(dim=1).numpy(),
+    "MLP": test_logits["MLP"].argmax(dim=1).numpy(),
+}
+
+test_results = pd.DataFrame({
+    name: classification_metrics(y_test.numpy(), predictions)
+    for name, predictions in test_predictions.items()
+}).T
+test_results["Parámetros"] = [0, 119, 1_543]
+test_results
+```
+
+El test no confirma la pequeña ventaja observada en validación: el modelo lineal
+obtiene un macro-F1 ligeramente mayor. En esta ejecución no observamos una
+ventaja de generalización para la capacidad adicional, pese a que la MLP reduce
+más la pérdida de entrenamiento. No atribuimos una diferencia tan pequeña
+exclusivamente a la arquitectura; para ello necesitaríamos repetir semillas y
+particiones. El resultado también debe interpretarse junto con el aumento de
+119 a 1.543 parámetros.
+
+## Diagnosticar errores por clase
+
+Una métrica agregada no muestra qué variedades concentran los errores.
+Normalizamos cada fila de la matriz de confusión para leerla como proporción de
+la clase real.
+
+```{python}
+#| label: fig-bean-test-confusion
+#| fig-cap: "Matriz de confusión normalizada de la MLP en el test bloqueado."
+#| fig-alt: "Matriz de siete por siete con proporciones por clase real."
+#| fig-width: 7
+#| fig-height: 6
+
+test_confusion = confusion_matrix(
+    y_test.numpy(),
+    test_predictions["MLP"],
+    labels=np.arange(len(CLASS_NAMES)),
+)
+normalized_confusion = test_confusion / test_confusion.sum(axis=1, keepdims=True)
+
+fig, ax = plt.subplots(figsize=(7, 6))
+image = ax.imshow(normalized_confusion, cmap="Purples", vmin=0, vmax=1)
+ax.set_xticks(range(len(CLASS_NAMES)), CLASS_NAMES, rotation=45, ha="right")
+ax.set_yticks(range(len(CLASS_NAMES)), CLASS_NAMES)
+ax.set_xlabel("Clase predicha")
+ax.set_ylabel("Clase real")
+
+for row in range(len(CLASS_NAMES)):
+    for column in range(len(CLASS_NAMES)):
+        value = normalized_confusion[row, column]
+        if value >= 0.02 or row == column:
+            ax.text(
+                column,
+                row,
+                f"{value:.2f}",
+                ha="center",
+                va="center",
+                color="white" if value > 0.55 else "#242535",
+                fontsize=8,
+            )
+
+fig.colorbar(image, ax=ax, label="Proporción de la clase real")
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+per_class_recall = pd.Series(
+    np.diag(normalized_confusion),
+    index=CLASS_NAMES,
+    name="Recall en test",
+).sort_values()
+per_class_recall
+```
+
+Finalmente inspeccionamos errores del par fijado en validación. La confianza es
+la mayor probabilidad softmax y el margen es la diferencia entre las dos
+probabilidades principales. No interpretamos confianza como calibración: eso
+requeriría otro protocolo.
+
+```{python}
+mlp_test_probabilities = torch.softmax(test_logits["MLP"], dim=1)
+top_probabilities, top_indices = mlp_test_probabilities.topk(2, dim=1)
+
+pair_index_set = {class_to_index[name] for name in confused_pair}
+error_mask = np.array([
+    true_index in pair_index_set
+    and predicted_index in pair_index_set
+    and true_index != predicted_index
+    for true_index, predicted_index in zip(y_test.numpy(), test_predictions["MLP"])
+])
+error_positions = np.flatnonzero(error_mask)
+error_positions = error_positions[
+    np.argsort(top_probabilities[error_positions, 0].numpy())[::-1]
+][:8]
+
+error_examples = pd.DataFrame({
+    "clase real": [CLASS_NAMES[index] for index in y_test[error_positions]],
+    "predicción": [
+        CLASS_NAMES[index] for index in test_predictions["MLP"][error_positions]
+    ],
+    "confianza": top_probabilities[error_positions, 0].numpy(),
+    "margen": (
+        top_probabilities[error_positions, 0]
+        - top_probabilities[error_positions, 1]
+    ).numpy(),
+    "Area": test_frame.loc[error_positions, "Area"].to_numpy(),
+    "Roundness": test_frame.loc[error_positions, "Roundness"].to_numpy(),
+})
+error_examples
+```
+
+Los errores con margen alto son especialmente importantes: el modelo no solo se
+equivoca, sino que asigna una probabilidad softmax mucho mayor a la clase
+incorrecta. Este margen depende de la escala de los logits y no mide distancia
+geométrica a una frontera. Una revisión real debería recuperar las imágenes
+originales y auditar segmentación, iluminación y etiquetas; esas evidencias no
+están incluidas en este dataset tabular.
+
+Esta auditoría cierra el test para el experimento actual. Si sus errores motivan
+cambios en variables, arquitectura o entrenamiento, la siguiente iteración
+necesitará un nuevo holdout o un protocolo anidado; no sería válido presentar de
+nuevo este mismo test como una evaluación independiente.
+
+## Qué aporta y qué no aporta la no linealidad
+
+La capa oculta permite combinar variables en regiones lineales por partes. Esa
+capacidad explica por qué una MLP puede superar una frontera afín, pero no
+garantiza que:
+
+- el optimizador encuentre buenos parámetros;
+- más capas o unidades siempre mejoren;
+- las probabilidades estén calibradas;
+- el modelo generalice a otra cámara, iluminación, cosecha o país;
+- una de las siete clases sea adecuada para una variedad desconocida; ni
+- las asociaciones aprendidas tengan interpretación causal.
+
+La división aleatoria evalúa nuevas observaciones del mismo dominio. Además, el
+modelo depende de una segmentación y extracción de características previas. El
+Capítulo 5 retomará imágenes para estudiar qué aporta una arquitectura que
+conserva estructura espacial.
+
+::: {.callout-important title="Frontera con el próximo capítulo"}
+Aquí aislamos **qué puede representar** una MLP y cómo fluye su gradiente. El
+Capítulo 4 estudiará por qué una red puede divergir, aprender lentamente o
+sobreajustar, comparando inicialización, optimizadores, normalización,
+regularización y varias semillas.
+:::
+
+## Qué hemos aprendido
+
+- Una composición de transformaciones afines sigue siendo afín.
+- ReLU introduce regiones y permite representar relaciones como XOR.
+- Una MLP transforma entradas en representaciones ocultas y después en logits.
+- Softmax convierte logits en probabilidades, pero no debe aplicarse antes de
+  `CrossEntropyLoss`.
+- Backpropagation combina productos matriciales, derivadas locales y la regla de
+  la cadena.
+- Autograd coincide con los gradientes analíticos cuando el grafo representa la
+  misma función.
+- Accuracy debe acompañarse de métricas por clase cuando hay desbalance.
+- En *Dry Bean*, la ligera ventaja de la MLP en validación no se sostiene en
+  test; más capacidad no implica automáticamente mejor generalización.
+
+## Ejercicios
+
+1. Demuestra que tres capas afines sin activación equivalen a una sola y
+   compruébalo con tensores de dimensiones elegidas por ti.
+2. Implementa `BeanMLP` usando `nn.Parameter` y operaciones matriciales, sin
+   `nn.Linear`. Compara el número y las formas de sus parámetros.
+3. Cambia ReLU por sigmoid manteniendo fijo todo el protocolo. Describe el
+   resultado sin buscar una nueva tasa de aprendizaje.
+4. Implementa softmax estable restando el máximo logit de cada fila y comprueba
+   que coincide con `torch.softmax`.
+5. Calcula accuracy, precisión, recall y macro-F1 desde la matriz de confusión,
+   sin usar funciones de scikit-learn.
+6. Explica por qué la línea base mayoritaria puede tener accuracy mayor que cero
+   y recall cero en seis clases.
+7. Calcula el número de parámetros para anchos ocultos 8, 32, 128 y 512 sin
+   entrenarlos. ¿Cómo crece el costo respecto al ancho?
+8. Repite la comprobación de gradientes cuando todas las preactivaciones de una
+   unidad ReLU son negativas. Explica el resultado.
+9. Identifica en validación las observaciones con menor margen y formula una
+   hipótesis sobre su ambigüedad geométrica.
+10. Diseña validaciones para rechazar una entrada con valores faltantes,
+    infinitos o muy alejados de los rangos de entrenamiento.
+
+## Reto
+
+Una softmax cerrada siempre asigna una de las siete variedades, incluso si
+recibe un grano de una clase desconocida. Construye entradas fuera de los rangos
+observados, registra la clase y confianza asignadas por la MLP y explica por qué
+una confianza baja no constituye por sí sola un detector confiable de novedad.
+Propón datos, métricas y un protocolo que sí permitirían evaluar rechazo de
+clases desconocidas.

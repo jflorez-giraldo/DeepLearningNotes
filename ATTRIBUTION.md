@@ -11,3 +11,7 @@ identified in its chapter and in the bibliography.
 
 PyTorch is an open source project of the PyTorch Foundation. Its documentation
 is available at <https://pytorch.org/docs/stable/>.
+
+The *Dry Bean* dataset used in Chapter 3 was created by Murat Koklu and Ilker
+Ali Ozkan and is distributed by the UCI Machine Learning Repository under CC
+BY 4.0. Dataset DOI: <https://doi.org/10.24432/C50S4B>.
