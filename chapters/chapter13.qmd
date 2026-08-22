@@ -1,0 +1,42 @@
+---
+title: "¿Cómo construir un sistema reproducible?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> convertir un notebook
+experimental en un sistema evaluable, recuperable y documentado.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+Este será el proyecto integrador del libro, con rutas de visión, texto o series
+temporales.
+:::
+
+## Objetivos
+
+- definir objetivo, métrica y condiciones de uso;
+- versionar configuración, datos y semillas;
+- diseñar validación y búsqueda con presupuesto explícito;
+- guardar y recuperar checkpoints completos;
+- analizar errores, subgrupos, calibración y shift;
+- construir una función de inferencia validada; y
+- proponer monitoreo, reentrenamiento y rollback.
+
+## Flujo del proyecto
+
+1. Formulación y auditoría de datos.
+2. Particiones y línea base.
+3. Arquitectura y presupuesto.
+4. Entrenamiento trazable.
+5. Selección sin consultar test.
+6. Diagnóstico y evaluación final.
+7. Persistencia e inferencia.
+8. Model card y plan operacional.
+
+## Entregables
+
+Notebook reproducible, configuración, checkpoint, reporte de evaluación,
+análisis de errores, model card y demostración de inferencia.
+
+## Referencia conceptual
+
+Rendimiento computacional e hiperparámetros en [@zhang2023dive], integrados
+con el protocolo metodológico del curso.

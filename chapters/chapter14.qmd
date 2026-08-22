@@ -1,0 +1,41 @@
+---
+title: "¿Cómo aprender a tomar decisiones secuenciales?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> elegir acciones cuando
+cada decisión modifica los estados, recompensas y opciones futuras.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+El alcance es introductorio: MDP, métodos tabulares y una demostración compacta
+de Deep Q-Learning.
+:::
+
+## Objetivos
+
+- distinguir predicción supervisada y decisión secuencial;
+- formular estados, acciones, transiciones y recompensas;
+- interpretar retorno y descuento;
+- aplicar ecuaciones de Bellman y value iteration;
+- aprender sin conocer la dinámica mediante Q-learning;
+- explicar exploración frente a explotación; y
+- conectar una tabla Q con una aproximación neuronal.
+
+## Ruta de desarrollo
+
+1. Gridworld como proceso de decisión de Markov.
+2. Política, valor y retorno.
+3. Value iteration con dinámica conocida.
+4. Q-learning tabular en FrozenLake.
+5. Exploración $\varepsilon$-greedy.
+6. Introducción a DQN con CartPole.
+7. Variabilidad, seguridad y límites de simulación.
+
+## Experimento central
+
+Comparar una política aleatoria, una política obtenida por value iteration y
+Q-learning bajo varias semillas. La demostración DQN enfatizará replay buffer,
+red objetivo y estabilidad, no una competencia de puntaje.
+
+## Referencia conceptual
+
+MDP, value iteration y Q-learning en [@zhang2023dive].

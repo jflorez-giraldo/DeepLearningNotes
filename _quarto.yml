@@ -1,0 +1,103 @@
+project:
+  type: book
+  output-dir: _book
+  execute-dir: project
+  resources:
+    - notebooks/**
+
+book:
+  title: "Deep Learning: de los problemas a las redes neuronales"
+  subtitle: "Notas, fundamentos matemáticos y proyectos reproducibles con PyTorch"
+  author: "Jonathan Florez Giraldo"
+  output-file: deep-learning-notes
+  description: >
+    Libro abierto de deep learning orientado a problemas, con fundamentos
+    matemáticos, experimentos reproducibles y aplicaciones en PyTorch.
+  repo-url: https://github.com/jflorez-giraldo/DeepLearningNotes
+  repo-actions: [edit, issue]
+  page-navigation: true
+  search:
+    location: sidebar
+    type: textbox
+    limit: 20
+  sidebar:
+    style: docked
+    search: true
+    collapse-level: 1
+  chapters:
+    - index.qmd
+    - preface.qmd
+    - part: "Parte I - Aprender representaciones"
+      chapters:
+        - chapters/chapter01.qmd
+        - chapters/chapter02.qmd
+        - chapters/chapter03.qmd
+        - chapters/chapter04.qmd
+    - part: "Parte II - Aprender de imágenes"
+      chapters:
+        - chapters/chapter05.qmd
+        - chapters/chapter06.qmd
+        - chapters/chapter07.qmd
+    - part: "Parte III - Aprender de secuencias y lenguaje"
+      chapters:
+        - chapters/chapter08.qmd
+        - chapters/chapter09.qmd
+        - chapters/chapter10.qmd
+        - chapters/chapter11.qmd
+    - part: "Parte IV - Sistemas, generación y decisiones"
+      chapters:
+        - chapters/chapter12.qmd
+        - chapters/chapter13.qmd
+        - chapters/chapter14.qmd
+    - part: "Material adicional"
+      chapters:
+        - appendix.qmd
+        - references.qmd
+  page-footer:
+    left: "Deep Learning Notes"
+    right: "Jonathan Florez Giraldo"
+    border: true
+
+bibliography: references.bib
+lang: es
+
+format:
+  html:
+    theme:
+      - cosmo
+      - styles/custom.scss
+    toc: true
+    toc-title: "Contenido"
+    toc-depth: 3
+    number-sections: true
+    number-depth: 3
+    anchor-sections: true
+    code-copy: true
+    code-overflow: wrap
+    code-line-numbers: false
+    highlight-style: github
+    callout-appearance: simple
+    callout-icon: true
+    fig-align: center
+    fig-cap-location: bottom
+    tbl-cap-location: top
+    smooth-scroll: true
+    link-external-newwindow: true
+  pdf:
+    documentclass: scrreprt
+    papersize: letter
+    toc: true
+    toc-depth: 3
+    number-sections: true
+    number-depth: 3
+    colorlinks: true
+    fig-align: center
+    fig-cap-location: bottom
+    tbl-cap-location: top
+
+execute:
+  enabled: false
+  freeze: auto
+  warning: true
+  message: false
+  echo: true

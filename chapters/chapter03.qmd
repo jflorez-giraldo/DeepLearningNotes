@@ -1,0 +1,38 @@
+---
+title: "¿Cómo aprender relaciones no lineales?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> clasificar prendas de
+Fashion-MNIST cuando una frontera lineal no captura las diferencias entre
+clases visualmente similares.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+La especificación guía la futura implementación y sus pruebas.
+:::
+
+## Objetivos
+
+- explicar por qué apilar funciones lineales no crea no linealidad;
+- construir un perceptrón multicapa desde tensores;
+- interpretar ReLU, sigmoid y softmax;
+- seguir forward, pérdida y backpropagation;
+- comparar regresión softmax y MLP; y
+- analizar errores mediante matriz de confusión y ejemplos concretos.
+
+## Ruta de desarrollo
+
+1. Línea base mayoritaria y regresión softmax.
+2. Capa oculta y función de activación.
+3. Grafo computacional y regla de la cadena.
+4. MLP desde cero y con `nn.Sequential`.
+5. Selección de capacidad con validación.
+6. Diagnóstico de pares de clases difíciles.
+
+## Experimento central
+
+Variar profundidad, ancho y activación manteniendo fijo el protocolo de datos y
+el presupuesto de entrenamiento.
+
+## Referencia conceptual
+
+Clasificación lineal, MLP y backpropagation en [@zhang2023dive].

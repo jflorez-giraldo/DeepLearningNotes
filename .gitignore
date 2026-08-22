@@ -1,0 +1,16 @@
+_book/
+.quarto/
+_freeze/
+.jupyter_cache/
+.ipynb_checkpoints/
+__pycache__/
+*.pyc
+*.log
+.DS_Store
+.venv/
+.python/
+*_files/
+*.quarto_ipynb*
+
+/.quarto/
+**/*.quarto_ipynb

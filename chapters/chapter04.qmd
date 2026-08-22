@@ -1,0 +1,40 @@
+---
+title: "¿Por qué una red entrena mal o no generaliza?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> diagnosticar un modelo
+cuyas curvas oscilan, divergen o muestran una brecha persistente entre
+entrenamiento y validación.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+Se desarrollará como laboratorio diagnóstico, no como catálogo de
+optimizadores.
+:::
+
+## Objetivos
+
+- reconocer gradientes que desaparecen o explotan;
+- relacionar inicialización, activaciones y profundidad;
+- comparar SGD, momentum y Adam bajo controles comunes;
+- usar weight decay, dropout, normalización y early stopping;
+- diseñar schedules de tasa de aprendizaje; y
+- separar variación aleatoria de mejoras reproducibles.
+
+## Ruta de desarrollo
+
+1. Caso deliberadamente inestable.
+2. Inspección de activaciones y normas de gradiente.
+3. Inicialización y normalización.
+4. Optimización y schedules.
+5. Regularización y early stopping.
+6. Ablación y comparación con varias semillas.
+
+## Experimento central
+
+Una matriz de ablación cambia una decisión por vez y registra precisión,
+brecha de generalización, tiempo y estabilidad.
+
+## Referencia conceptual
+
+Estabilidad numérica, dropout, generalización y optimización en
+[@zhang2023dive].

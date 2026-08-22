@@ -1,0 +1,38 @@
+---
+title: "¿Cómo entrenar redes visuales profundas?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> aumentar capacidad sin
+volver frágil el entrenamiento ni perder control sobre memoria y tiempo.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+Las arquitecturas históricas se estudiarán por la idea que introducen, no para
+reproducir competencias de escala completa.
+:::
+
+## Objetivos
+
+- construir redes mediante bloques reutilizables;
+- explicar la función de conexiones residuales;
+- relacionar profundidad, campo receptivo y resolución;
+- usar augmentación y normalización correctamente;
+- comparar modelos por desempeño y recursos; y
+- justificar una arquitectura para una restricción concreta.
+
+## Ruta de desarrollo
+
+1. Limitaciones de una CNN pequeña.
+2. Bloques VGG y diseño modular.
+3. Batch normalization.
+4. Bloques residuales y flujo de gradiente.
+5. Augmentación solo en entrenamiento.
+6. Frontera precisión-costo.
+
+## Experimento central
+
+Comparar una CNN pequeña y una ResNet compacta con y sin augmentación, usando
+curvas, número de parámetros y tiempo por época.
+
+## Referencia conceptual
+
+CNN modernas y diseño de arquitecturas en [@zhang2023dive].

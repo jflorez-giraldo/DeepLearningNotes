@@ -1,0 +1,33 @@
+---
+title: "¿Cómo transferir representaciones del lenguaje?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> clasificar texto en
+español sin preentrenar un modelo de lenguaje desde cero.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+Se utilizará un transformer compacto y un dataset abierto en español para
+mantener el laboratorio compatible con Colab.
+:::
+
+## Objetivos
+
+- explicar tokenización, embeddings y posición;
+- construir un bloque transformer pequeño;
+- distinguir encoder, decoder y máscaras;
+- entender preentrenamiento y fine-tuning;
+- comparar una línea base léxica y un transformer; y
+- analizar truncamiento, sesgos y errores lingüísticos.
+
+## Ruta de desarrollo
+
+1. Línea base TF-IDF.
+2. Tokenización y secuencias.
+3. Self-attention y posición.
+4. Bloque transformer.
+5. Fine-tuning de un encoder preentrenado.
+6. Evaluación por clase, longitud y fenómeno lingüístico.
+
+## Referencia conceptual
+
+Transformers, preentrenamiento y aplicaciones NLP en [@zhang2023dive].

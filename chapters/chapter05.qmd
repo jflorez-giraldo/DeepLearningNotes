@@ -1,0 +1,37 @@
+---
+title: "¿Cómo reconocer patrones espaciales?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> clasificar imágenes sin
+tratar cada píxel como una característica independiente de su vecindad.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+El capítulo comenzará con una convolución observable antes de usar `nn.Conv2d`.
+:::
+
+## Objetivos
+
+- calcular una convolución bidimensional;
+- explicar conectividad local y pesos compartidos;
+- anticipar formas después de padding, stride y pooling;
+- construir una CNN pequeña;
+- comparar CNN y MLP con un presupuesto razonable; y
+- visualizar filtros, mapas de activación y errores.
+
+## Caso y línea base
+
+CIFAR-10 o Fashion-MNIST permitirá comparar una regresión softmax, un MLP y una
+CNN pequeña con las mismas particiones.
+
+## Ruta de desarrollo
+
+1. Filtros manuales sobre una imagen.
+2. Operación de correlación y dimensiones.
+3. Canales de entrada y salida.
+4. Pooling y campo receptivo.
+5. CNN inspirada en LeNet.
+6. Evaluación por clase y costo computacional.
+
+## Referencia conceptual
+
+Redes convolucionales en [@zhang2023dive].

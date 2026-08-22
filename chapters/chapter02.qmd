@@ -1,0 +1,46 @@
+---
+title: "¿Cómo aprende una máquina una relación desconocida?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> predecir consumo
+energético a partir de condiciones observadas y comprender qué significa
+aprender los parámetros de una función.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+Esta página define el contrato pedagógico del capítulo. El contenido ejecutable
+se incorporará en la siguiente fase editorial.
+:::
+
+## Objetivos
+
+- formular regresión como minimización de una pérdida;
+- implementar regresión lineal con tensores y autograd;
+- distinguir parámetros, hiperparámetros, pérdida y métrica;
+- construir el primer ciclo de entrenamiento con mini-batches;
+- comparar contra una predicción constante; y
+- evaluar sin utilizar test para seleccionar el modelo.
+
+## Caso y datos
+
+Se seleccionará un dataset abierto de consumo o demanda con licencia, fuente y
+diccionario documentados. La división respetará el mecanismo temporal cuando
+exista dependencia cronológica.
+
+## Ruta de desarrollo
+
+1. Línea base por media o último valor observado.
+2. Modelo lineal y error cuadrático.
+3. Derivación del gradiente.
+4. Implementación manual y con `nn.Linear`.
+5. `Dataset`, `DataLoader` y ciclo de entrenamiento.
+6. Curvas de pérdida, residuos y evaluación final.
+
+## Experimento central
+
+Comparar solución analítica, descenso por gradiente batch y mini-batch bajo
+distintas escalas y tasas de aprendizaje.
+
+## Referencia conceptual
+
+Redes lineales para regresión, generalización y weight decay en
+[@zhang2023dive].

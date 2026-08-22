@@ -1,0 +1,65 @@
+# Aprender resolviendo problemas {.unnumbered}
+
+Este libro es un recurso de nivel de posgrado para estudiar **deep learning a
+partir de problemas**. Conecta formulación, fundamentos matemáticos,
+experimentos computacionales y soluciones reproducibles con PyTorch.
+
+```{mermaid}
+%%| fig-cap: "Ruta de trabajo que organiza cada problema del libro."
+flowchart LR
+    A[Problema] --> B[Datos]
+    B --> C[Línea base]
+    C --> D[Representación]
+    D --> E[Entrenamiento]
+    E --> F[Diagnóstico]
+    F --> G[Decisión]
+    G -. nuevos errores .-> A
+```
+
+## Qué aprenderás
+
+El recorrido desarrolla la capacidad de:
+
+- representar datos tabulares, imágenes, secuencias y texto mediante tensores;
+- construir y entrenar modelos con la interfaz esencial de PyTorch;
+- derivar y explicar las operaciones que permiten aprender parámetros;
+- diseñar MLP, redes convolucionales, redes recurrentes y transformers;
+- diagnosticar problemas de optimización, generalización y estabilidad;
+- comparar modelos con protocolos de evaluación reproducibles;
+- aprovechar modelos preentrenados cuando las etiquetas o el cómputo son
+  limitados;
+- analizar errores, costo computacional, robustez y condiciones de uso; y
+- formular problemas introductorios de decisión secuencial mediante
+  reinforcement learning.
+
+## Ruta de aprendizaje
+
+La **Parte I** abre la caja de herramientas: tensores, diferenciación
+automática, redes multicapa y entrenamiento estable. La **Parte II** estudia
+cómo las convoluciones aprovechan la estructura espacial y cómo transferir
+representaciones visuales. La **Parte III** desarrolla modelos para secuencias,
+atención y lenguaje. La **Parte IV** conecta aprendizaje generativo, sistemas
+reproducibles y decisiones secuenciales.
+
+Los algoritmos no se presentan como recetas aisladas. Cada capítulo parte de
+una necesidad observable, establece una línea base y utiliza experimentos para
+explicar qué aporta la arquitectura y dónde puede fallar.
+
+## Estado de la edición
+
+Esta primera versión publicable contiene la arquitectura completa del libro y
+el [capítulo piloto sobre tensores y PyTorch](chapters/chapter01.qmd). Los demás
+capítulos presentan el problema articulador, los objetivos y la ruta de
+desarrollo para hacer visible la progresión del curso.
+
+## Recursos
+
+El HTML permite navegar, buscar y copiar código. Los capítulos desarrollados
+incluyen un notebook descargable y un enlace para ejecutarlo en Google Colab.
+El código detecta CPU, CUDA o Apple Silicon y explicita las dimensiones de los
+tensores en las operaciones importantes.
+
+El contenido toma como referencia conceptual *Dive into Deep Learning*
+[@zhang2023dive], la documentación oficial de PyTorch [@pytorch] y literatura
+especializada citada en cada capítulo. Consulte el [Prefacio](preface.qmd) para
+conocer las convenciones metodológicas y de reproducibilidad.

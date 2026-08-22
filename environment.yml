@@ -1,0 +1,16 @@
+name: deep-learning-notes
+channels:
+  - pytorch
+  - conda-forge
+dependencies:
+  - python=3.12
+  - pip
+  - jupyter
+  - matplotlib
+  - numpy
+  - pandas
+  - scikit-learn
+  - pytorch
+  - torchvision
+  - pip:
+      - torchmetrics>=1.4,<2.0

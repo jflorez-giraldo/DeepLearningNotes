@@ -1,0 +1,137 @@
+/*-- scss:defaults --*/
+$primary: #6042a6;
+$secondary: #327c78;
+$body-color: #242535;
+$body-bg: #fffefd;
+$link-color: #523595;
+$link-hover-color: #352060;
+$headings-color: #33235f;
+$font-family-sans-serif: "Aptos", "Segoe UI", Inter, Helvetica, Arial, sans-serif;
+$font-family-monospace: "SFMono-Regular", Menlo, Monaco, Consolas, monospace;
+$border-radius: 0.55rem;
+
+/*-- scss:rules --*/
+body {
+  font-size: 1rem;
+  line-height: 1.68;
+}
+
+h1, h2, h3, h4 {
+  letter-spacing: -0.015em;
+  line-height: 1.25;
+}
+
+h1 {
+  font-weight: 700;
+}
+
+h2 {
+  margin-top: 2.6rem;
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid rgba($primary, 0.18);
+}
+
+h3 {
+  margin-top: 2rem;
+}
+
+blockquote {
+  margin: 1.4rem 0;
+  padding: 0.9rem 1.15rem;
+  color: #4f5365;
+  background: #f5f1fc;
+  border-left: 4px solid #9f86d9;
+  border-radius: 0 0.5rem 0.5rem 0;
+}
+
+div.sourceCode,
+pre:not(.sourceCode) {
+  background: #f6f4fa;
+  border: 1px solid #ddd5ed;
+  border-radius: 0.55rem;
+}
+
+code:not(.sourceCode) {
+  color: #3f2a71;
+  background: #f0ebf8;
+  padding: 0.08rem 0.3rem;
+  border-radius: 0.25rem;
+}
+
+.sidebar-title {
+  color: #33235f;
+  font-weight: 700;
+}
+
+.sidebar-item-container .active,
+#TOC .active {
+  color: $primary;
+  font-weight: 650;
+}
+
+.problem-banner {
+  margin: 1.2rem 0 1.6rem;
+  padding: 1.1rem 1.25rem;
+  background: linear-gradient(120deg, #f4effd, #eef8f6);
+  border: 1px solid #d8ccec;
+  border-radius: 0.75rem;
+}
+
+.problem-banner strong {
+  color: #443079;
+}
+
+.chapter-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.65rem;
+  margin: 1rem 0 1.6rem;
+}
+
+.chapter-action {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.55rem 0.85rem;
+  color: #fff;
+  background: #6042a6;
+  border-radius: 0.45rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.chapter-action:hover {
+  color: #fff;
+  background: #443079;
+}
+
+.chapter-action-colab {
+  background: #327c78;
+}
+
+.chapter-action-colab:hover {
+  background: #245d5a;
+}
+
+table {
+  font-size: 0.94rem;
+}
+
+thead {
+  color: #33235f;
+  background: #f0ebf8;
+}
+
+.nav-footer {
+  color: #666a78;
+  border-top: 1px solid rgba($primary, 0.14);
+}
+
+@media (max-width: 768px) {
+  body { font-size: 0.97rem; }
+  h1 { font-size: 1.9rem; }
+  h2 { font-size: 1.45rem; }
+  pre code { font-size: 0.82rem; }
+  table { font-size: 0.86rem; }
+}

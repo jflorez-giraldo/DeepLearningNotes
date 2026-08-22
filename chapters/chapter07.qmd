@@ -1,0 +1,34 @@
+---
+title: "¿Cómo aprender visión con pocas etiquetas?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> resolver una tarea
+ambiental o científica con un conjunto etiquetado insuficiente para entrenar
+una red profunda desde cero.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+El dataset definitivo se elegirá después de verificar licencia, estabilidad de
+descarga, tamaño y pertinencia del análisis de errores.
+:::
+
+## Objetivos
+
+- explicar qué se transfiere desde un modelo preentrenado;
+- sustituir y entrenar una cabeza de clasificación;
+- comparar extracción de características y fine-tuning;
+- tratar desbalance y augmentación sin contaminar evaluación;
+- interpretar errores y sensibilidad al dominio; y
+- documentar límites de uso.
+
+## Ruta de desarrollo
+
+1. Auditoría y línea base.
+2. Modelo entrenado desde cero.
+3. Backbone congelado.
+4. Fine-tuning gradual con tasas diferenciadas.
+5. Métricas por clase y calibración.
+6. Shift y ejemplos fuera del dominio.
+
+## Referencia conceptual
+
+Fine-tuning y visión aplicada en [@zhang2023dive].

@@ -1,0 +1,107 @@
+# Prefacio {.unnumbered}
+
+## Propósito
+
+Una red neuronal puede implementarse en pocas líneas y aun así resolver el
+problema equivocado, aprender una señal espuria o producir una evaluación
+optimista. Este libro fue creado para que la arquitectura aparezca como una
+respuesta razonada a un problema y no como el punto de partida del análisis.
+
+El texto combina cuatro perspectivas:
+
+- **aplicada:** qué decisión o predicción se necesita y bajo qué condiciones;
+- **matemática:** qué función representa el modelo y qué objetivo optimiza;
+- **computacional:** cómo se organizan tensores, módulos y ciclos de
+  entrenamiento;
+- **estadística:** qué evidencia permite sostener que el resultado generaliza.
+
+## Audiencia y prerrequisitos
+
+La audiencia principal son estudiantes de maestría en Estadística Aplicada,
+Ciencia de Datos, Machine Learning y áreas cuantitativas relacionadas. Se
+espera familiaridad con Python, NumPy, análisis de datos, probabilidad,
+vectores, matrices y derivadas básicas.
+
+No se presupone experiencia con PyTorch. El primer capítulo introduce sus
+objetos fundamentales antes de construir redes neuronales.
+
+## Principios de aprendizaje
+
+### Comenzar con el problema
+
+Cada capítulo identifica la unidad de análisis, el resultado esperado, la
+información disponible, los errores relevantes y las condiciones de uso antes
+de seleccionar una arquitectura.
+
+### Comparar con una línea base
+
+Una red compleja debe justificar su costo. Las mejoras se interpretan respecto
+a una regla simple, un modelo lineal o una arquitectura más pequeña.
+
+### Conectar matemáticas y código
+
+Las dimensiones, operaciones, funciones de pérdida y gradientes se muestran en
+notación y se inspeccionan con tensores. La implementación concisa aparece
+después de hacer visible el mecanismo central.
+
+### Separar entrenamiento, selección y evaluación
+
+Los parámetros se aprenden con entrenamiento; los hiperparámetros y decisiones
+de parada se seleccionan con validación; el conjunto de test se reserva para
+una evaluación final. Consultar repetidamente test invalida su independencia.
+
+### Diagnosticar, no solo puntuar
+
+Las curvas de aprendizaje, errores por clase, ejemplos concretos,
+calibración, sensibilidad a semillas y desempeño por grupos complementan las
+métricas promedio.
+
+### Hacer visible el costo
+
+Cada experimento debe registrar tamaño del modelo, tiempo aproximado,
+dispositivo y compromisos entre precisión y recursos. Una mejora marginal no
+siempre justifica un modelo mucho más costoso.
+
+## Convenciones de los capítulos
+
+Los capítulos completos siguen, cuando el problema lo permite, esta secuencia:
+
+1. situación y pregunta aplicada;
+2. datos, particiones y criterio de éxito;
+3. línea base;
+4. intuición y formulación matemática;
+5. mecanismo implementado con tensores;
+6. implementación idiomática con PyTorch;
+7. experimentos controlados;
+8. evaluación y análisis de errores;
+9. costo, riesgos y limitaciones;
+10. ejercicios y reto de extensión.
+
+## Reproducibilidad
+
+Los ejemplos fijan semillas cuando la aleatoriedad no es el objeto de estudio,
+pero una semilla fija no demuestra estabilidad. Los resultados importantes
+deben comprobarse con varias inicializaciones o particiones.
+
+Los notebooks detectan el dispositivo disponible y se diseñan para Google
+Colab. El libro no ejecuta modelos costosos durante cada render: los resultados
+aprobados se congelan y la integración continua comprueba la construcción del
+HTML sin reentrenar.
+
+## Alcance
+
+La primera edición cubre PyTorch, MLP, optimización, CNN, transferencia,
+RNN, LSTM, GRU, atención, transformers, aprendizaje generativo, desarrollo de
+sistemas y una introducción a reinforcement learning. Detección, segmentación,
+recomendadores, procesos gaussianos y entrenamiento distribuido avanzado
+quedan como posibles extensiones.
+
+## Fuentes y licencia
+
+La selección conceptual está informada por *Dive into Deep Learning*
+[@zhang2023dive]. Las explicaciones, problemas y experimentos se desarrollan
+para este curso. Toda adaptación directa debe marcarse en su lugar de uso.
+
+El libro se distribuye bajo [CC BY-SA
+4.0](https://creativecommons.org/licenses/by-sa/4.0/), compatible con la
+licencia de D2L. Los detalles de atribución están en `ATTRIBUTION.md`.

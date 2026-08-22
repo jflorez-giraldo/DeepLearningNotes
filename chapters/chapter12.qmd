@@ -1,0 +1,34 @@
+---
+title: "¿Cómo aprender sin etiquetas y generar nuevos datos?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> aprender una
+representación compacta de imágenes y explorar qué significa producir muestras
+nuevas similares a las observadas.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+El objetivo es una introducción crítica: calidad visual no equivale a utilidad
+ni a cobertura de la distribución.
+:::
+
+## Objetivos
+
+- construir un autoencoder y analizar su espacio latente;
+- distinguir reconstrucción, compresión y generación;
+- formular el juego generador-discriminador de una GAN;
+- reconocer inestabilidad y mode collapse;
+- evaluar más allá de ejemplos seleccionados; y
+- discutir privacidad, sesgo y procedencia de datos.
+
+## Ruta de desarrollo
+
+1. PCA como línea base de reconstrucción.
+2. Autoencoder denso y convolucional.
+3. Interpolación en espacio latente.
+4. Objetivo adversarial.
+5. DCGAN compacta.
+6. Diagnósticos y límites de evaluación.
+
+## Referencia conceptual
+
+Redes generativas adversariales en [@zhang2023dive].

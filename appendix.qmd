@@ -1,0 +1,32 @@
+# Apéndices {.unnumbered}
+
+## Notación mínima
+
+| Símbolo | Significado |
+|---|---|
+| $x$ | escalar |
+| $\mathbf{x}$ | vector |
+| $\mathbf{X}$ | matriz o lote de observaciones |
+| $\mathsf{X}$ | tensor de orden mayor que dos |
+| $\theta$ | parámetros aprendidos |
+| $\eta$ | tasa de aprendizaje |
+| $\mathcal{L}$ | función de pérdida |
+| $B$ | tamaño del mini-batch |
+
+## Convención de dimensiones
+
+El libro explicita las dimensiones en el orden utilizado por PyTorch. Por
+ejemplo, un lote de imágenes suele tener forma
+`(batch, channels, height, width)`, abreviada como $(N,C,H,W)$.
+
+## Dispositivos
+
+Los notebooks seleccionan CUDA cuando está disponible, después MPS en equipos
+Apple compatibles y finalmente CPU. Los datos y el modelo deben residir en el
+mismo dispositivo.
+
+## Glosario en construcción
+
+El glosario se ampliará junto con los capítulos. Se conservarán algunos
+términos técnicos en inglés cuando sean la forma dominante en documentación y
+APIs, acompañados por su interpretación en español.

@@ -1,0 +1,32 @@
+---
+title: "¿Cómo seleccionar qué información atender?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> producir una secuencia de
+salida sin comprimir toda la entrada en un único estado de tamaño fijo.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+La atención se visualizará primero en un problema pequeño de alineación.
+:::
+
+## Objetivos
+
+- interpretar queries, keys y values;
+- calcular atención por producto punto;
+- aplicar máscaras de padding y causalidad;
+- explicar atención multi-head;
+- integrar atención en encoder-decoder; y
+- inspeccionar alineaciones sin confundirlas con explicaciones causales.
+
+## Ruta de desarrollo
+
+1. Límite del estado fijo.
+2. Similitud y promedio ponderado.
+3. Atención de Bahdanau.
+4. Producto punto escalado.
+5. Multi-head attention.
+6. Traducción pequeña y visualización.
+
+## Referencia conceptual
+
+Atención y encoder-decoder en [@zhang2023dive].

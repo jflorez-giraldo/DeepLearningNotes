@@ -1,0 +1,34 @@
+---
+title: "¿Cómo predecir el siguiente valor de una secuencia?"
+---
+
+<div class="problem-banner"><strong>Problema:</strong> pronosticar una variable
+ambiental o de demanda cuando el orden temporal contiene información y una
+partición aleatoria sería optimista.</div>
+
+::: {.callout-warning title="Capítulo en desarrollo"}
+La evaluación preservará el tiempo y comparará contra baselines de persistencia
+y estacionalidad.
+:::
+
+## Objetivos
+
+- construir ventanas sin usar información futura;
+- formular un estado recurrente;
+- implementar una RNN y backpropagation through time;
+- distinguir pronóstico de un paso y multihorizonte;
+- evaluar con backtesting temporal; y
+- diagnosticar error por horizonte y periodo.
+
+## Ruta de desarrollo
+
+1. Línea base de persistencia.
+2. Ventanas y partición temporal.
+3. RNN desde tensores.
+4. Implementación con `nn.RNN`.
+5. Teacher forcing y horizontes.
+6. Evaluación temporal y residuos.
+
+## Referencia conceptual
+
+Secuencias, modelos de lenguaje y RNN en [@zhang2023dive].
