@@ -295,9 +295,9 @@ assert torch.equal(images, reconstructed_batch)
 
 Queremos normalizar cada imagen con su propia media y desviación estándar:
 
-\[
+$$
 z_{nchw}=\frac{x_{nchw}-\mu_n}{\sigma_n+\varepsilon}.
-\]
+$$
 
 Las estadísticas deben conservar dimensiones unitarias para que PyTorch pueda
 expandirlas virtualmente sobre canal, altura y anchura.
@@ -346,9 +346,9 @@ print(scores)
 
 La regla dimensional es
 
-\[
+$$
 (B,D)@(D,K)=(B,K),
-\]
+$$
 
 donde $B$ es el lote, $D$ el número de características y $K$ el número de
 salidas.
@@ -382,9 +382,9 @@ Supongamos un modelo lineal muy pequeño para estimar un score a partir de las
 dos características del resumen. Sus parámetros son un vector $\mathbf{w}$ y
 un intercepto $b$:
 
-\[
+$$
 \widehat{y}_i = \mathbf{x}_i^\mathsf{T}\mathbf{w}+b.
-\]
+$$
 
 ```{python}
 X = summary
@@ -408,11 +408,11 @@ hasta cada parámetro hoja.
 
 Para el error cuadrático medio,
 
-\[
+$$
 \nabla_{\mathbf{w}}\mathcal{L}
 =\frac{2}{N}\mathbf{X}^\mathsf{T}
 (\mathbf{X}\mathbf{w}+b-\mathbf{y}).
-\]
+$$
 
 Podemos comprobar que el gradiente automático coincide con la expresión:
 
