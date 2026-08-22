@@ -1,46 +1,898 @@
 ---
 title: "¿Cómo aprende una máquina una relación desconocida?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> predecir consumo
-energético a partir de condiciones observadas y comprender qué significa
-aprender los parámetros de una función.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-Esta página define el contrato pedagógico del capítulo. El contenido ejecutable
-se incorporará en la siguiente fase editorial.
+<div class="problem-banner">
+<strong>Problema:</strong> estimar el consumo energético de los
+electrodomésticos durante un intervalo de diez minutos a partir de sensores de
+temperatura, humedad, clima y calendario. El propósito no es solo obtener una
+predicción: abriremos el proceso para observar cómo una pérdida modifica los
+parámetros de un modelo.
+</div>
+
+## Del problema aplicado al problema de aprendizaje
+
+Una vivienda de bajo consumo contiene sensores ambientales, pero medir por
+separado la energía de los electrodomésticos puede requerir instrumentación
+adicional. Construiremos un **sensor virtual** que estime el consumo del
+intervalo actual a partir de la información ambiental y temporal disponible al
+final de ese intervalo.
+
+Esta formulación es importante. No afirmaremos que el modelo pronostica el
+consumo futuro: varias entradas se observan durante el mismo periodo que el
+objetivo. Tampoco interpretaremos los coeficientes como efectos causales. El
+sistema resuelve una regresión supervisada contemporánea.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- traducir un problema aplicado a entradas, objetivo, unidad de análisis y
+  criterio de éxito;
+- crear particiones temporales de entrenamiento, validación y test;
+- establecer líneas base antes de entrenar un modelo;
+- expresar regresión lineal y error cuadrático en forma matricial;
+- obtener una solución de mínimos cuadrados con `torch.linalg.lstsq`;
+- derivar e implementar el gradiente del error cuadrático;
+- verificar un gradiente manual mediante autograd;
+- entrenar `nn.Linear` con mini-batches, `Dataset` y `DataLoader`;
+- distinguir parámetros, hiperparámetros, pérdida y métricas; y
+- evaluar una vez en test, analizar residuos y declarar limitaciones.
 :::
 
-## Objetivos
+## Preparar el entorno
 
-- formular regresión como minimización de una pérdida;
-- implementar regresión lineal con tensores y autograd;
-- distinguir parámetros, hiperparámetros, pérdida y métrica;
-- construir el primer ciclo de entrenamiento con mini-batches;
-- comparar contra una predicción constante; y
-- evaluar sin utilizar test para seleccionar el modelo.
+```{python}
+from copy import deepcopy
+from pathlib import Path
+from urllib.request import urlretrieve
+from zipfile import ZipFile
 
-## Caso y datos
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
 
-Se seleccionará un dataset abierto de consumo o demanda con licencia, fuente y
-diccionario documentados. La división respetará el mecanismo temporal cuando
-exista dependencia cronológica.
+SEED = 42
+torch.manual_seed(SEED)
+np.random.seed(SEED)
 
-## Ruta de desarrollo
 
-1. Línea base por media o último valor observado.
-2. Modelo lineal y error cuadrático.
-3. Derivación del gradiente.
-4. Implementación manual y con `nn.Linear`.
-5. `Dataset`, `DataLoader` y ciclo de entrenamiento.
-6. Curvas de pérdida, residuos y evaluación final.
+def select_device():
+    if torch.cuda.is_available():
+        return torch.device("cuda")
+    if torch.backends.mps.is_available():
+        return torch.device("mps")
+    return torch.device("cpu")
 
-## Experimento central
 
-Comparar solución analítica, descenso por gradiente batch y mini-batch bajo
-distintas escalas y tasas de aprendizaje.
+device = select_device()
+print(f"PyTorch {torch.__version__} | dispositivo: {device}")
+```
 
-## Referencia conceptual
+Los cálculos de mínimos cuadrados y gradiente batch permanecerán en CPU para
+que sean reproducibles y fáciles de inspeccionar. El entrenamiento con
+mini-batches utilizará el dispositivo disponible.
 
-Redes lineales para regresión, generalización y weight decay en
-[@zhang2023dive].
+## Obtener y validar los datos
+
+El dataset *Appliances Energy Prediction* registra 19.735 intervalos
+consecutivos de diez minutos entre enero y mayo de 2016. Incluye consumo en Wh,
+temperatura y humedad en nueve espacios, mediciones exteriores y clima de una
+estación cercana [@candanedo2017dataset; @candanedo2017data]. Se distribuye con
+licencia CC BY 4.0.
+
+La descarga se guarda en caché. Leemos el CSV directamente desde el ZIP y
+verificamos nombre, columnas y número de observaciones antes de modelar.
+
+```{python}
+DATA_URL = (
+    "https://archive.ics.uci.edu/static/public/374/"
+    "appliances+energy+prediction.zip"
+)
+DATA_DIR = Path(".cache/chapter02")
+ARCHIVE_PATH = DATA_DIR / "appliances-energy.zip"
+CSV_NAME = "energydata_complete.csv"
+
+EXPECTED_COLUMNS = {
+    "date",
+    "Appliances",
+    "lights",
+    "T1",
+    "RH_1",
+    "T_out",
+    "Press_mm_hg",
+    "RH_out",
+    "Windspeed",
+    "Visibility",
+    "Tdewpoint",
+    "rv1",
+    "rv2",
+}
+
+
+def load_energy_data():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not ARCHIVE_PATH.exists():
+        temporary_path = ARCHIVE_PATH.with_suffix(".download")
+        urlretrieve(DATA_URL, temporary_path)
+        temporary_path.replace(ARCHIVE_PATH)
+
+    with ZipFile(ARCHIVE_PATH) as archive:
+        if archive.namelist() != [CSV_NAME]:
+            raise ValueError(f"Contenido inesperado: {archive.namelist()}")
+        if archive.testzip() is not None:
+            raise ValueError("El archivo descargado está corrupto")
+        with archive.open(CSV_NAME) as csv_file:
+            frame = pd.read_csv(csv_file)
+
+    missing_columns = EXPECTED_COLUMNS.difference(frame.columns)
+    if missing_columns:
+        raise ValueError(f"Faltan columnas: {sorted(missing_columns)}")
+    if len(frame) != 19_735:
+        raise ValueError(f"Se esperaban 19.735 filas; se obtuvieron {len(frame)}")
+
+    frame["date"] = pd.to_datetime(frame["date"], errors="raise")
+    if not frame["date"].is_monotonic_increasing:
+        raise ValueError("Las observaciones no están ordenadas por tiempo")
+    if frame.isna().any().any():
+        raise ValueError("El dataset contiene valores faltantes inesperados")
+    return frame
+
+
+energy = load_energy_data()
+energy[["date", "Appliances", "lights", "T1", "RH_1"]].head()
+```
+
+Cada fila representa un intervalo de diez minutos. `Appliances` es la energía
+consumida por los electrodomésticos durante el intervalo, en Wh.
+
+```{python}
+energy_audit = pd.Series({
+    "observaciones": len(energy),
+    "variables": energy.shape[1],
+    "inicio": energy["date"].min(),
+    "fin": energy["date"].max(),
+    "intervalo_modal": energy["date"].diff().mode().iloc[0],
+    "faltantes": int(energy.isna().sum().sum()),
+})
+energy_audit
+```
+
+Dos columnas, `rv1` y `rv2`, son variables aleatorias añadidas por los autores
+para comprobar si un método asigna importancia a ruido. Las excluiremos de las
+entradas. Esta decisión usa el diccionario de datos, no una correlación
+calculada sobre test.
+
+## Crear y bloquear las particiones temporales
+
+Una división aleatoria mezclaría enero y mayo en entrenamiento y test. El
+protocolo debe representar el uso propuesto: ajustar con el pasado y aplicar el
+modelo a periodos posteriores.
+
+Usaremos:
+
+- 70% inicial para estimar parámetros y transformaciones;
+- 15% siguiente para comparar tasas de aprendizaje y estados del modelo;
+- 15% final como test bloqueado.
+
+```{python}
+n_total = len(energy)
+train_end = int(0.70 * n_total)
+validation_end = int(0.85 * n_total)
+
+train_frame = energy.iloc[:train_end].copy()
+validation_frame = energy.iloc[train_end:validation_end].copy()
+test_frame = energy.iloc[validation_end:].copy()
+
+split_summary = pd.DataFrame({
+    "partición": ["entrenamiento", "validación", "test bloqueado"],
+    "filas": [len(train_frame), len(validation_frame), len(test_frame)],
+    "inicio": [
+        train_frame["date"].min(),
+        validation_frame["date"].min(),
+        test_frame["date"].min(),
+    ],
+    "fin": [
+        train_frame["date"].max(),
+        validation_frame["date"].max(),
+        test_frame["date"].max(),
+    ],
+})
+split_summary
+```
+
+```{python}
+assert train_frame["date"].max() < validation_frame["date"].min()
+assert validation_frame["date"].max() < test_frame["date"].min()
+```
+
+Desde este punto no utilizaremos `test_frame` hasta fijar transformaciones,
+hiperparámetros y estados de los modelos.
+
+## Explorar únicamente entrenamiento
+
+El consumo tiene una distribución asimétrica: muchos intervalos de consumo
+bajo y pocos picos de gran magnitud.
+
+```{python}
+train_frame["Appliances"].describe(percentiles=[0.5, 0.75, 0.9, 0.99]).round(1)
+```
+
+```{python}
+#| label: fig-energy-training
+#| fig-cap: "Consumo en la partición de entrenamiento: serie inicial y distribución completa."
+#| fig-alt: "Serie temporal de consumo y un histograma con una cola derecha pronunciada."
+#| fig-align: center
+
+fig, axes = plt.subplots(1, 2, figsize=(11, 4))
+
+initial_window = train_frame.iloc[: 7 * 24 * 6]
+axes[0].plot(
+    initial_window["date"],
+    initial_window["Appliances"],
+    color="#6042a6",
+    linewidth=0.9,
+)
+axes[0].set_title("Primera semana de entrenamiento")
+axes[0].set_ylabel("Energía de electrodomésticos (Wh)")
+axes[0].tick_params(axis="x", rotation=25)
+
+axes[1].hist(
+    train_frame["Appliances"],
+    bins=50,
+    color="#327c78",
+    edgecolor="white",
+)
+axes[1].set_title("Distribución de entrenamiento")
+axes[1].set_xlabel("Energía de electrodomésticos (Wh)")
+axes[1].set_ylabel("Intervalos")
+
+plt.tight_layout()
+plt.show()
+```
+
+Esta forma afecta la evaluación. El **RMSE** penaliza fuertemente los errores
+en picos; el **MAE** describe un error absoluto típico con menor influencia de
+esos picos. Reportaremos ambos y evitaremos llamar a cualquiera de ellos un
+“score” genérico.
+
+## Definir entradas y transformaciones
+
+Usaremos temperaturas y humedades interiores, clima exterior, consumo de
+luces y calendario. La hora y el día semanal son cíclicos: las 23:50 y las
+00:00 deben estar cerca. Para una variable periódica $t$ de periodo $P$:
+
+$$
+s(t)=\sin\left(2\pi\frac{t}{P}\right),\qquad
+c(t)=\cos\left(2\pi\frac{t}{P}\right).
+$$
+
+```{python}
+SENSOR_COLUMNS = [
+    "lights",
+    *[name for room in range(1, 10) for name in (f"T{room}", f"RH_{room}")],
+    "T_out",
+    "Press_mm_hg",
+    "RH_out",
+    "Windspeed",
+    "Visibility",
+    "Tdewpoint",
+]
+CALENDAR_COLUMNS = ["hour_sin", "hour_cos", "dow_sin", "dow_cos"]
+FEATURE_COLUMNS = SENSOR_COLUMNS + CALENDAR_COLUMNS
+TARGET = "Appliances"
+
+
+def add_calendar_features(frame):
+    result = frame.copy()
+    hour = result["date"].dt.hour + result["date"].dt.minute / 60
+    day_of_week = result["date"].dt.dayofweek
+    result["hour_sin"] = np.sin(2 * np.pi * hour / 24)
+    result["hour_cos"] = np.cos(2 * np.pi * hour / 24)
+    result["dow_sin"] = np.sin(2 * np.pi * day_of_week / 7)
+    result["dow_cos"] = np.cos(2 * np.pi * day_of_week / 7)
+    return result
+
+
+train_model = add_calendar_features(train_frame)
+validation_model = add_calendar_features(validation_frame)
+
+X_train_raw = torch.tensor(
+    train_model[FEATURE_COLUMNS].to_numpy(), dtype=torch.float32
+)
+X_validation_raw = torch.tensor(
+    validation_model[FEATURE_COLUMNS].to_numpy(), dtype=torch.float32
+)
+y_train_raw = torch.tensor(train_model[TARGET].to_numpy(), dtype=torch.float32)
+y_validation_raw = torch.tensor(
+    validation_model[TARGET].to_numpy(), dtype=torch.float32
+)
+
+print("X entrenamiento:", X_train_raw.shape)
+print("y entrenamiento:", y_train_raw.shape)
+```
+
+Las escalas se estiman **solo con entrenamiento**. Estandarizamos también el
+objetivo para que las tasas de aprendizaje sean interpretables.
+
+```{python}
+x_mean = X_train_raw.mean(dim=0)
+x_std = X_train_raw.std(dim=0, unbiased=False).clamp_min(1e-6)
+y_mean = y_train_raw.mean()
+y_std = y_train_raw.std(unbiased=False).clamp_min(1e-6)
+
+
+def standardize_features(values):
+    return (values - x_mean) / x_std
+
+
+def standardize_target(values):
+    return (values - y_mean) / y_std
+
+
+def restore_target(values):
+    return values * y_std + y_mean
+
+
+X_train = standardize_features(X_train_raw)
+X_validation = standardize_features(X_validation_raw)
+y_train = standardize_target(y_train_raw)
+y_validation = standardize_target(y_validation_raw)
+
+assert torch.isfinite(X_train).all()
+assert torch.isfinite(y_train).all()
+assert torch.allclose(X_train.mean(dim=0), torch.zeros(X_train.shape[1]), atol=1e-4)
+```
+
+Aplicar medias o desviaciones calculadas con validación o test permitiría que
+información futura influyera en el desarrollo del modelo.
+
+## Establecer líneas base
+
+Antes de optimizar pesos necesitamos saber si aprender características aporta
+algo. Compararemos dos predictores constantes estimados con entrenamiento:
+
+- la media minimiza el error cuadrático sobre entrenamiento;
+- la mediana minimiza el error absoluto sobre entrenamiento.
+
+```{python}
+def regression_metrics(y_true, y_pred):
+    errors = y_pred - y_true
+    return {
+        "MAE": errors.abs().mean().item(),
+        "RMSE": errors.square().mean().sqrt().item(),
+    }
+
+
+train_mean = y_train_raw.mean()
+train_median = y_train_raw.median()
+
+baseline_validation = pd.DataFrame({
+    "Media de entrenamiento": regression_metrics(
+        y_validation_raw,
+        torch.full_like(y_validation_raw, train_mean),
+    ),
+    "Mediana de entrenamiento": regression_metrics(
+        y_validation_raw,
+        torch.full_like(y_validation_raw, train_median),
+    ),
+}).T
+baseline_validation.round(1)
+```
+
+Es posible que una línea base sea mejor en MAE y otra en RMSE. Esto no es una
+contradicción: optimizan aspectos distintos de la distribución de errores.
+
+## Formular la regresión lineal
+
+Para una observación estandarizada $\mathbf{x}_i\in\mathbb{R}^d$, el modelo
+calcula
+
+$$
+\widehat{y}_i=\mathbf{x}_i^\mathsf{T}\mathbf{w}+b,
+$$
+
+donde $\mathbf{w}\in\mathbb{R}^d$ y $b\in\mathbb{R}$ son parámetros aprendidos.
+Con $N$ observaciones, matriz $\mathbf{X}\in\mathbb{R}^{N\times d}$ y una
+columna de unos para el intercepto:
+
+$$
+\widetilde{\mathbf{X}}=
+\begin{bmatrix}\mathbf{1}&\mathbf{X}\end{bmatrix},\qquad
+\boldsymbol{\theta}=\begin{bmatrix}b\\\mathbf{w}\end{bmatrix},\qquad
+\widehat{\mathbf{y}}=\widetilde{\mathbf{X}}\boldsymbol{\theta}.
+$$
+
+Estimaremos los parámetros minimizando el error cuadrático medio estandarizado:
+
+$$
+\mathcal{L}(\boldsymbol{\theta})=
+\frac{1}{N}\left\|
+\widetilde{\mathbf{X}}\boldsymbol{\theta}-\mathbf{y}
+\right\|_2^2.
+$$
+
+La pérdida guía la estimación de parámetros. RMSE y MAE se reportan en Wh para
+evaluar el modelo; no deben confundirse con el objetivo estandarizado de
+entrenamiento.
+
+## Una solución de mínimos cuadrados
+
+La expresión conocida como ecuación normal involucra
+$(\widetilde{\mathbf{X}}^\mathsf{T}\widetilde{\mathbf{X}})^{-1}$, pero formar
+esa inversa explícitamente es innecesario e inestable cuando hay variables
+correlacionadas. `torch.linalg.lstsq` utiliza una solución numérica de mínimos
+cuadrados.
+
+```{python}
+X_train_bias = torch.cat(
+    [torch.ones((len(X_train), 1)), X_train], dim=1
+)
+X_validation_bias = torch.cat(
+    [torch.ones((len(X_validation), 1)), X_validation], dim=1
+)
+
+theta_lstsq = torch.linalg.lstsq(X_train_bias, y_train[:, None]).solution[:, 0]
+
+validation_lstsq_std = X_validation_bias @ theta_lstsq
+validation_lstsq = restore_target(validation_lstsq_std)
+
+pd.Series(
+    regression_metrics(y_validation_raw, validation_lstsq),
+    name="Mínimos cuadrados en validación",
+).round(1)
+```
+
+Esta solución establece una referencia para comprobar los métodos iterativos.
+En modelos profundos no existe una solución cerrada equivalente; por eso el
+descenso por gradiente es central.
+
+## Derivar el gradiente
+
+El gradiente del MSE respecto a todos los parámetros es
+
+$$
+\nabla_{\boldsymbol{\theta}}\mathcal{L}
+=\frac{2}{N}\widetilde{\mathbf{X}}^\mathsf{T}
+\left(
+\widetilde{\mathbf{X}}\boldsymbol{\theta}-\mathbf{y}
+\right).
+$$
+
+Descenso por gradiente actualiza
+
+$$
+\boldsymbol{\theta}^{(t+1)}=
+\boldsymbol{\theta}^{(t)}-
+\eta\nabla_{\boldsymbol{\theta}}\mathcal{L}
+(\boldsymbol{\theta}^{(t)}),
+$$
+
+donde $\eta$ es la tasa de aprendizaje. `theta` es un parámetro; `learning_rate`
+y `epochs` son hiperparámetros porque no se estiman por diferenciación.
+
+```{python}
+def train_batch_gradient_descent(learning_rate, epochs=200):
+    theta = torch.zeros(X_train_bias.shape[1])
+    training_losses = []
+    validation_losses = []
+
+    for _ in range(epochs):
+        training_errors = X_train_bias @ theta - y_train
+        training_loss = training_errors.square().mean()
+        gradient = 2 / len(X_train_bias) * X_train_bias.T @ training_errors
+        theta -= learning_rate * gradient
+
+        validation_errors = X_validation_bias @ theta - y_validation
+        validation_loss = validation_errors.square().mean()
+        training_losses.append(training_loss.item())
+        validation_losses.append(validation_loss.item())
+
+    return {
+        "theta": theta,
+        "training_loss": np.asarray(training_losses),
+        "validation_loss": np.asarray(validation_losses),
+    }
+
+
+learning_rates = [0.001, 0.01, 0.05]
+batch_runs = {
+    rate: train_batch_gradient_descent(rate)
+    for rate in learning_rates
+}
+```
+
+La validación, no test, selecciona la tasa. Primero observamos las trayectorias.
+
+```{python}
+#| label: fig-learning-rates-energy
+#| fig-cap: "La tasa de aprendizaje controla la rapidez de convergencia del mismo modelo lineal."
+#| fig-alt: "Curvas de error cuadrático de validación para tres tasas de aprendizaje."
+#| fig-align: center
+
+fig, ax = plt.subplots(figsize=(8, 4.5))
+for rate, run in batch_runs.items():
+    ax.plot(run["validation_loss"], label=fr"$\eta={rate}$")
+
+ax.axhline(
+    torch.mean((validation_lstsq_std - y_validation) ** 2).item(),
+    color="black",
+    linestyle="--",
+    label="Mínimos cuadrados",
+)
+ax.set_xlabel("Época")
+ax.set_ylabel("MSE estandarizado de validación")
+ax.set_yscale("log")
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+learning_rate_results = pd.DataFrame({
+    "tasa": learning_rates,
+    "MSE entrenamiento final": [
+        batch_runs[rate]["training_loss"][-1] for rate in learning_rates
+    ],
+    "MSE validación final": [
+        batch_runs[rate]["validation_loss"][-1] for rate in learning_rates
+    ],
+}).sort_values("MSE validación final")
+
+selected_learning_rate = float(learning_rate_results.iloc[0]["tasa"])
+theta_batch = batch_runs[selected_learning_rate]["theta"]
+
+learning_rate_results.round(4)
+```
+
+Una tasa demasiado pequeña avanza lentamente. Una tasa mayor puede converger
+antes, pero eventualmente valores aún mayores producirían oscilación o
+divergencia. La escala de las variables cambia esta geometría; esa es una razón
+computacional para estandarizar.
+
+## Verificar el gradiente con autograd
+
+Repetiremos exactamente el entrenamiento batch, pero pediremos a PyTorch que
+calcule el gradiente. La estructura del algoritmo permanece visible.
+
+```{python}
+theta_autograd = torch.zeros(X_train_bias.shape[1], requires_grad=True)
+autograd_losses = []
+
+for _ in range(200):
+    predictions = X_train_bias @ theta_autograd
+    loss = (predictions - y_train).square().mean()
+    loss.backward()
+
+    with torch.no_grad():
+        theta_autograd -= selected_learning_rate * theta_autograd.grad
+
+    theta_autograd.grad.zero_()
+    autograd_losses.append(loss.item())
+
+print("Gradiente manual y autograd coinciden:", torch.allclose(
+    theta_batch,
+    theta_autograd.detach(),
+    atol=1e-5,
+))
+```
+
+Autograd no elige la pérdida, la tasa, las variables ni el protocolo de
+evaluación. Solo automatiza la regla de la cadena una vez que definimos el
+cálculo.
+
+## Entrenar con nn.Linear y mini-batches
+
+`nn.Linear(d, 1)` encapsula $\mathbf{w}$ y $b$. El optimizador actualiza esos
+parámetros, mientras `DataLoader` entrega subconjuntos aleatorios del periodo de
+entrenamiento.
+
+Usaremos una tasa menor que en batch porque ahora una época contiene muchas
+actualizaciones ruidosas. El número de épocas y la tasa se fijan antes de abrir
+test; validación conservará el mejor estado observado.
+
+```{python}
+train_dataset = TensorDataset(X_train, y_train[:, None])
+train_loader = DataLoader(
+    train_dataset,
+    batch_size=256,
+    shuffle=True,
+    generator=torch.Generator().manual_seed(SEED),
+)
+
+torch.manual_seed(SEED)
+linear_model = nn.Linear(X_train.shape[1], 1).to(device)
+optimizer = torch.optim.SGD(linear_model.parameters(), lr=0.01)
+criterion = nn.MSELoss()
+
+mini_batch_history = []
+best_validation_loss = np.inf
+best_epoch = None
+best_state = None
+
+for epoch in range(60):
+    linear_model.train()
+    training_loss_sum = 0.0
+
+    for batch_X, batch_y in train_loader:
+        batch_X = batch_X.to(device)
+        batch_y = batch_y.to(device)
+
+        optimizer.zero_grad()
+        batch_predictions = linear_model(batch_X)
+        batch_loss = criterion(batch_predictions, batch_y)
+        batch_loss.backward()
+        optimizer.step()
+
+        training_loss_sum += batch_loss.item() * len(batch_X)
+
+    linear_model.eval()
+    with torch.no_grad():
+        validation_predictions = linear_model(X_validation.to(device))[:, 0]
+        validation_loss = criterion(
+            validation_predictions,
+            y_validation.to(device),
+        ).item()
+
+    training_loss = training_loss_sum / len(train_dataset)
+    mini_batch_history.append({
+        "epoch": epoch + 1,
+        "training_loss": training_loss,
+        "validation_loss": validation_loss,
+    })
+
+    if validation_loss < best_validation_loss:
+        best_validation_loss = validation_loss
+        best_epoch = epoch + 1
+        best_state = deepcopy(linear_model.state_dict())
+
+linear_model.load_state_dict(best_state)
+history = pd.DataFrame(mini_batch_history)
+
+pd.Series({
+    "mejor época según validación": best_epoch,
+    "mejor MSE estandarizado": best_validation_loss,
+})
+```
+
+Guardar el mejor estado es una decisión de selección. La pérdida de validación
+no es una estimación independiente del desempeño final porque participó en esa
+decisión.
+
+```{python}
+#| label: fig-minibatch-training
+#| fig-cap: "Pérdida de entrenamiento y validación durante el aprendizaje con mini-batches."
+#| fig-alt: "Dos curvas de pérdida que disminuyen y luego se estabilizan."
+#| fig-align: center
+
+fig, ax = plt.subplots(figsize=(8, 4.5))
+ax.plot(history["epoch"], history["training_loss"], label="Entrenamiento")
+ax.plot(history["epoch"], history["validation_loss"], label="Validación")
+ax.axvline(best_epoch, color="black", linestyle="--", label="Estado conservado")
+ax.set_xlabel("Época")
+ax.set_ylabel("MSE estandarizado")
+ax.legend()
+plt.tight_layout()
+plt.show()
+```
+
+## Comparar los modelos en validación
+
+```{python}
+def predict_linear_module(model, X):
+    model.eval()
+    with torch.no_grad():
+        predictions_std = model(X.to(device))[:, 0].cpu()
+    return restore_target(predictions_std)
+
+
+validation_predictions = {
+    "Media": torch.full_like(y_validation_raw, train_mean),
+    "Mediana": torch.full_like(y_validation_raw, train_median),
+    "Mínimos cuadrados": validation_lstsq,
+    "Gradiente batch": restore_target(X_validation_bias @ theta_batch),
+    "SGD mini-batch": predict_linear_module(linear_model, X_validation),
+}
+
+validation_comparison = pd.DataFrame({
+    name: regression_metrics(y_validation_raw, predictions)
+    for name, predictions in validation_predictions.items()
+}).T.sort_values("RMSE")
+
+validation_comparison.round(1)
+```
+
+Los tres procedimientos lineales producen resultados cercanos, pero no
+idénticos. Mínimos cuadrados minimiza MSE de entrenamiento, mientras el estado
+de SGD se selecciona por validación antes de converger al óptimo de
+entrenamiento; esa parada actúa como regularización implícita. Las diferencias
+no provienen de una familia funcional distinta.
+
+## Evaluar una vez en test
+
+Las decisiones están cerradas. Ahora transformamos test con estadísticas de
+entrenamiento y calculamos predicciones una sola vez.
+
+```{python}
+test_model = add_calendar_features(test_frame)
+X_test_raw = torch.tensor(
+    test_model[FEATURE_COLUMNS].to_numpy(), dtype=torch.float32
+)
+y_test_raw = torch.tensor(test_model[TARGET].to_numpy(), dtype=torch.float32)
+X_test = standardize_features(X_test_raw)
+X_test_bias = torch.cat([torch.ones((len(X_test), 1)), X_test], dim=1)
+
+test_predictions = {
+    "Media": torch.full_like(y_test_raw, train_mean),
+    "Mediana": torch.full_like(y_test_raw, train_median),
+    "Mínimos cuadrados": restore_target(X_test_bias @ theta_lstsq),
+    "Gradiente batch": restore_target(X_test_bias @ theta_batch),
+    "SGD mini-batch": predict_linear_module(linear_model, X_test),
+}
+
+test_comparison = pd.DataFrame({
+    name: regression_metrics(y_test_raw, predictions)
+    for name, predictions in test_predictions.items()
+}).T.sort_values("RMSE")
+
+test_comparison.round(1)
+```
+
+La regresión lineal puede mejorar RMSE al representar parte de los picos y, al
+mismo tiempo, perder frente a la mediana en MAE. El resultado muestra por qué
+la elección de métrica forma parte del problema y no debe decidirse después de
+ver test.
+
+## Diagnosticar predicciones y residuos
+
+Usaremos el modelo de mínimos cuadrados para el diagnóstico porque representa
+el óptimo numérico de la pérdida lineal estudiada. El residuo se define como
+$e_i=y_i-\widehat{y}_i$.
+
+```{python}
+selected_test_predictions = test_predictions["Mínimos cuadrados"]
+test_residuals = y_test_raw - selected_test_predictions
+```
+
+```{python}
+#| label: fig-energy-test-diagnostics
+#| fig-cap: "Diagnóstico final del modelo lineal en el periodo de test."
+#| fig-alt: "Dispersión de valores reales y estimados junto a un histograma de residuos."
+#| fig-align: center
+
+fig, axes = plt.subplots(1, 2, figsize=(10.5, 4.2))
+
+axes[0].scatter(
+    y_test_raw.numpy(),
+    selected_test_predictions.numpy(),
+    s=12,
+    alpha=0.25,
+    color="#6042a6",
+)
+limits = [0, max(y_test_raw.max().item(), selected_test_predictions.max().item())]
+axes[0].plot(limits, limits, "--", color="black")
+axes[0].set_xlabel("Consumo observado (Wh)")
+axes[0].set_ylabel("Consumo estimado (Wh)")
+axes[0].set_title("Observado frente a estimado")
+
+axes[1].hist(test_residuals.numpy(), bins=50, color="#327c78", edgecolor="white")
+axes[1].axvline(0, color="black", linestyle="--")
+axes[1].set_xlabel("Residuo: observado - estimado (Wh)")
+axes[1].set_ylabel("Intervalos")
+axes[1].set_title("Distribución de residuos")
+
+plt.tight_layout()
+plt.show()
+```
+
+```{python}
+test_diagnostics = pd.Series({
+    "residuo medio": test_residuals.mean().item(),
+    "MAE en consumo bajo (<= mediana de test)": test_residuals[
+        y_test_raw <= y_test_raw.median()
+    ].abs().mean().item(),
+    "MAE en consumo alto (> mediana de test)": test_residuals[
+        y_test_raw > y_test_raw.median()
+    ].abs().mean().item(),
+    "correlación residuo-predicción": torch.corrcoef(torch.stack([
+        test_residuals,
+        selected_test_predictions,
+    ]))[0, 1].item(),
+})
+test_diagnostics.round(1)
+```
+
+Una nube comprimida alrededor de la media y errores mayores en consumos altos
+son señales de capacidad limitada. El modelo lineal no representa con facilidad
+interacciones, umbrales ni dinámicas temporales complejas. Estas observaciones
+motivan las redes no lineales del próximo capítulo; no autorizan a regresar a
+selección después de consultar test.
+
+## Interpretar parámetros con cautela
+
+Como las entradas y el objetivo están estandarizados, la magnitud absoluta de
+un coeficiente permite una comparación descriptiva dentro del modelo.
+
+```{python}
+standardized_coefficients = pd.Series(
+    theta_lstsq[1:].numpy(),
+    index=FEATURE_COLUMNS,
+    name="coeficiente estandarizado",
+)
+
+standardized_coefficients.reindex(
+    standardized_coefficients.abs().sort_values(ascending=False).index
+).head(10).round(3).to_frame()
+```
+
+Un coeficiente no es un efecto causal. Temperaturas y humedades de distintas
+habitaciones están correlacionadas; el valor asignado a una variable depende de
+cuáles otras están en el modelo. La importancia tampoco demuestra que el sensor
+estará disponible o medirá lo mismo en producción.
+
+## Qué hemos aprendido
+
+- La formulación determina si el sistema estima el presente o pronostica el
+  futuro.
+- Una partición temporal evalúa aplicación a periodos posteriores y evita
+  mezclar indiscriminadamente el tiempo.
+- Las transformaciones se estiman solo con entrenamiento.
+- Media y mediana son líneas base asociadas a pérdidas distintas.
+- La regresión lineal aprende parámetros minimizando una función de pérdida.
+- `torch.linalg.lstsq`, gradiente manual, autograd y `nn.Linear` pueden estimar
+  la misma familia funcional por rutas computacionales diferentes.
+- Autograd calcula derivadas; no selecciona variables, métricas ni protocolos.
+- Validación permite seleccionar hiperparámetros y estados; test se abre una
+  sola vez.
+- RMSE y MAE pueden preferir modelos diferentes cuando el objetivo es
+  asimétrico.
+- Los residuos muestran fallos que una métrica promedio oculta.
+
+## Limitaciones del caso
+
+El dataset corresponde a una sola vivienda y aproximadamente cuatro meses. No
+permite afirmar generalización a otros hogares, climas, ocupaciones o equipos.
+Las variables ambientales contemporáneas tampoco convierten este análisis en
+un pronóstico. Antes de desplegar se necesitarían validación externa, auditoría
+de sensores, definición de latencia, manejo de valores faltantes y monitoreo de
+cambio de distribución.
+
+## Ejercicios
+
+1. Recalcula las líneas base con entrenamiento y explica por qué la media y la
+   mediana minimizan pérdidas diferentes.
+2. Sustituye la partición temporal por una aleatoria. Compara resultados y
+   argumenta por qué el valor obtenido responde a otra pregunta de evaluación.
+3. Implementa MAE como pérdida de entrenamiento. Compara su gradiente y su
+   desempeño con el MSE, sin modificar decisiones después de consultar test.
+4. Elimina la estandarización de entradas y repite las curvas de tasas de
+   aprendizaje. Explica el resultado mediante la geometría de la pérdida.
+5. Implementa descenso por gradiente estocástico sin `torch.optim` y comprueba
+   cómo cambia la trayectoria de la pérdida.
+6. Añade weight decay a `nn.Linear`. Selecciona su intensidad en validación y
+   compara coeficientes y RMSE.
+7. Construye una validación temporal con ventanas expansivas en lugar de una
+   sola partición. Reporta variación entre periodos.
+8. Ajusta un modelo lineal para `log1p(Appliances)` y transforma las
+   predicciones de regreso a Wh. Discute qué métrica y qué regiones del objetivo
+   cambian.
+9. Analiza MAE por hora del día y día de la semana. Identifica periodos donde el
+   sensor virtual falla sistemáticamente.
+10. Redacta un contrato de entrada que especifique columnas, unidades, rangos,
+    frecuencia y estrategia ante sensores ausentes.
+
+## Reto
+
+Construye una versión de **pronóstico a diez minutos**. Desplaza el objetivo un
+intervalo hacia el futuro, elimina cualquier entrada que no estaría disponible
+al emitir la predicción y crea características rezagadas usando solo el pasado.
+Compara contra persistencia y documenta exactamente por qué este nuevo sistema
+responde a una pregunta diferente del capítulo.

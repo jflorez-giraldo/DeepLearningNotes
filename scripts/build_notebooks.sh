@@ -12,11 +12,18 @@ for chapter in "$PROJECT_DIR"/chapters/chapter*.qmd; do
   if command -v jq >/dev/null 2>&1; then
     cleaned_notebook="$(mktemp)"
     jq '
+      def strip_front_matter:
+        if .[0] == "---\n" then
+          (.[1:] | index("---\n")) as $end
+          | if $end == null then . else .[($end + 2):] end
+          | if .[0] == "\n" then .[1:] else . end
+        else . end;
+
       .cells |= map(
         if .cell_type == "markdown" then
           .source |= (
             map(select(test("^\\{\\{< chapter-actions >\\}\\}\\s*$") | not))
-            | if .[0] == "---\n" then .[4:] else . end
+            | strip_front_matter
           )
         else . end
       )

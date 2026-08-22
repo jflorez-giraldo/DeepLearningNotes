@@ -23,9 +23,11 @@ bash scripts/build_notebooks.sh
 
 ## Estado
 
-La arquitectura completa del libro y el capitulo piloto sobre tensores y
-PyTorch forman la primera version publicable. Los capitulos restantes muestran
-el problema articulador, los resultados de aprendizaje y la ruta de desarrollo.
+La arquitectura completa del libro y los capitulos 1 y 2 forman la primera
+version desarrollada. El segundo capitulo incluye resultados congelados de un
+proyecto de regresion sobre consumo energetico. Los capitulos restantes
+muestran el problema articulador, los resultados de aprendizaje y la ruta de
+desarrollo.
 
 ## Licencia
 

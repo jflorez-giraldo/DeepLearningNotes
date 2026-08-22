@@ -22,8 +22,8 @@ jobs:
       - name: Set up Quarto
         uses: quarto-dev/quarto-actions/setup@v2
 
-      - name: Render HTML without executing notebooks
-        run: quarto render --profile ci --to html
+      - name: Render HTML using frozen results
+        run: quarto render --profile ci --to html --use-freezer
 
       - name: Publish to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4

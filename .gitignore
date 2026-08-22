@@ -1,7 +1,8 @@
 _book/
 .quarto/
-_freeze/
+_freeze/site_libs/
 .jupyter_cache/
+.cache/
 .ipynb_checkpoints/
 __pycache__/
 *.pyc
