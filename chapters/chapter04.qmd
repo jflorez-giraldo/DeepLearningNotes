@@ -1,40 +1,1136 @@
 ---
 title: "¿Por qué una red entrena mal o no generaliza?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> diagnosticar un modelo
-cuyas curvas oscilan, divergen o muestran una brecha persistente entre
-entrenamiento y validación.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-Se desarrollará como laboratorio diagnóstico, no como catálogo de
-optimizadores.
+<div class="problem-banner">
+<strong>Problema:</strong> un sistema de clasificación de semillas debe
+reentrenarse con un presupuesto limitado de perfiles verificados. Algunas
+ejecuciones casi no aprenden, otras mejoran entrenamiento mientras empeoran en
+validación y otras dependen demasiado de la semilla. Debemos construir una
+receta estable y justificar cada intervención con un diagnóstico.
+</div>
+
+## Del resultado bajo a una hipótesis comprobable
+
+Una red puede representar una relación y, aun así, no aprenderla. El Capítulo 3
+mostró cómo ReLU amplía la familia funcional de una MLP; ahora mantendremos fijo
+el problema para estudiar el proceso de entrenamiento.
+
+Una métrica final baja no identifica su propia causa. Al menos cuatro patrones
+pueden producirla:
+
+| Patrón | Entrenamiento | Validación | Primera hipótesis |
+|---|---|---|---|
+| No aprende | pérdida alta | pérdida alta | escala, gradientes, tasa o código |
+| Oscila o diverge | inestable o no finita | inestable | actualizaciones excesivas |
+| Sobreajusta | mejora continuamente | se estanca o empeora | varianza y entrenamiento excesivo |
+| Inestable entre semillas | cambia mucho | cambia mucho | sensibilidad algorítmica |
+
+La secuencia importa: **primero hacemos que la red optimice de forma sana y
+después tratamos la generalización**. Aplicar dropout a una red cuyos gradientes
+desaparecen no corrige la causa del fallo.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- interpretar conjuntamente pérdida de entrenamiento y validación;
+- medir escalas de activaciones y gradientes por capa;
+- relacionar profundidad, activación e inicialización;
+- explicar SGD, momentum y AdamW como recetas de actualización diferentes;
+- distinguir un schedule de una nueva familia de optimizadores;
+- aplicar Batch Normalization, weight decay, dropout y early stopping con
+  `train()` y `eval()` correctamente;
+- restaurar el mejor checkpoint seleccionado por validación; y
+- comparar configuraciones mediante semillas pareadas, costo y variabilidad.
 :::
 
-## Objetivos
+## Preparar un laboratorio reproducible
 
-- reconocer gradientes que desaparecen o explotan;
-- relacionar inicialización, activaciones y profundidad;
-- comparar SGD, momentum y Adam bajo controles comunes;
-- usar weight decay, dropout, normalización y early stopping;
-- diseñar schedules de tasa de aprendizaje; y
-- separar variación aleatoria de mejoras reproducibles.
+```{python}
+from copy import deepcopy
+from hashlib import sha256
+from pathlib import Path
+from time import perf_counter
+from urllib.request import urlretrieve
+from zipfile import ZipFile
 
-## Ruta de desarrollo
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import sklearn
+import torch
+from sklearn.metrics import f1_score
+from sklearn.model_selection import train_test_split
+from torch import nn
+from torch.utils.data import DataLoader, TensorDataset
 
-1. Caso deliberadamente inestable.
-2. Inspección de activaciones y normas de gradiente.
-3. Inicialización y normalización.
-4. Optimización y schedules.
-5. Regularización y early stopping.
-6. Ablación y comparación con varias semillas.
+SEED = 17
+PAIR_SEEDS = [7, 19, 42, 73, 101]
 
-## Experimento central
+torch.manual_seed(SEED)
+np.random.seed(SEED)
+torch.set_num_threads(1)
+torch.use_deterministic_algorithms(True)
+device = torch.device("cpu")
 
-Una matriz de ablación cambia una decisión por vez y registra precisión,
-brecha de generalización, tiempo y estabilidad.
+print(
+    f"PyTorch {torch.__version__} | NumPy {np.__version__} | "
+    f"pandas {pd.__version__} | scikit-learn {sklearn.__version__}"
+)
+print(f"Dispositivo: {device} | hilos de PyTorch: {torch.get_num_threads()}")
+```
 
-## Referencia conceptual
+CPU, un solo hilo y algoritmos deterministas facilitan comparaciones pareadas.
+Los tiempos siguen dependiendo del equipo y de su carga; por eso reportaremos
+también épocas y parámetros.
 
-Estabilidad numérica, dropout, generalización y optimización en
-[@zhang2023dive].
+## Reutilizar los datos sin reutilizar el test
+
+Continuamos con *Dry Bean*, cuyas 16 medidas geométricas y siete variedades se
+describieron en el capítulo anterior [@koklu2020dataset; @koklu2020beans]. El
+notebook sigue siendo autónomo: descarga, valida y prepara los datos.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar carga y validación de Dry Bean"
+
+DATA_URL = (
+    "https://archive.ics.uci.edu/static/public/602/"
+    "dry+bean+dataset.zip"
+)
+DATA_DIR = Path(".cache/chapter04")
+ARCHIVE_PATH = DATA_DIR / "dry-bean-dataset.zip"
+ARFF_NAME = "DryBeanDataset/Dry_Bean_Dataset.arff"
+EXPECTED_SHA256 = (
+    "0a64eff5be87f48c3dbbfc0a12a56c5"
+    "d5b5167ef8e61cd45d69b3e7c7130c06f"
+)
+
+FEATURE_NAMES = [
+    "Area", "Perimeter", "MajorAxisLength", "MinorAxisLength",
+    "AspectRatio", "Eccentricity", "ConvexArea", "EquivDiameter",
+    "Extent", "Solidity", "Roundness", "Compactness",
+    "ShapeFactor1", "ShapeFactor2", "ShapeFactor3", "ShapeFactor4",
+]
+CLASS_NAMES = [
+    "BARBUNYA", "BOMBAY", "CALI", "DERMASON", "HOROZ", "SEKER", "SIRA",
+]
+
+
+def load_dry_beans():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if not ARCHIVE_PATH.exists():
+        temporary_path = ARCHIVE_PATH.with_suffix(".download")
+        urlretrieve(DATA_URL, temporary_path)
+        temporary_path.replace(ARCHIVE_PATH)
+
+    archive_hash = sha256(ARCHIVE_PATH.read_bytes()).hexdigest()
+    if archive_hash != EXPECTED_SHA256:
+        raise ValueError(f"SHA-256 inesperado: {archive_hash}")
+
+    with ZipFile(ARCHIVE_PATH) as archive:
+        if ARFF_NAME not in archive.namelist() or archive.testzip() is not None:
+            raise ValueError("El ZIP no cumple el contrato esperado")
+        with archive.open(ARFF_NAME) as source:
+            frame = pd.read_csv(
+                source,
+                skiprows=25,
+                names=FEATURE_NAMES + ["Class"],
+            )
+
+    if frame.shape != (13_611, 17):
+        raise ValueError(f"Dimensiones inesperadas: {frame.shape}")
+    if sorted(frame["Class"].unique()) != CLASS_NAMES:
+        raise ValueError("Clases inesperadas")
+    if frame.isna().any().any():
+        raise ValueError("Se encontraron valores faltantes")
+    return frame
+
+
+beans = load_dry_beans().drop_duplicates().reset_index(drop=True)
+assert len(beans) == 13_543
+```
+
+El test del Capítulo 3 ya fue consultado. No volveremos a presentarlo como
+evidencia independiente. Reconstruimos la partición original y usamos solo su
+70% de entrenamiento. Dentro de ella simulamos un presupuesto fijo de 2.100
+observaciones para ajuste; las 7.380 etiquetas restantes forman una validación
+de laboratorio reutilizada para decisiones exploratorias.
+
+```{python}
+original_train_frame, _previous_holdout = train_test_split(
+    beans,
+    test_size=0.30,
+    stratify=beans["Class"],
+    random_state=42,
+)
+fit_frame, lab_validation_frame = train_test_split(
+    original_train_frame,
+    train_size=2_100,
+    stratify=original_train_frame["Class"],
+    random_state=31_415,
+)
+
+fit_frame = fit_frame.reset_index(drop=True)
+lab_validation_frame = lab_validation_frame.reset_index(drop=True)
+
+protocol_summary = pd.DataFrame({
+    "uso": ["ajuste", "validación de laboratorio", "no reutilizado"],
+    "filas": [len(fit_frame), len(lab_validation_frame), len(_previous_holdout)],
+    "decide parámetros": [True, False, False],
+    "decide hiperparámetros": [False, True, False],
+})
+protocol_summary
+```
+
+La simulación no afirma que solo existan 2.100 etiquetas: el protocolo requiere
+9.480 etiquetas en total. Restringe deliberadamente las observaciones que
+actualizan gradientes para hacer observable el sobreajuste y abaratar las
+repeticiones.
+
+```{python}
+class_to_index = {name: index for index, name in enumerate(CLASS_NAMES)}
+fit_mean = fit_frame[FEATURE_NAMES].mean().to_numpy(dtype=np.float32)
+fit_std = fit_frame[FEATURE_NAMES].std(ddof=0).to_numpy(dtype=np.float32)
+
+if np.any(fit_std == 0):
+    raise ValueError("Existe una característica constante en el conjunto de ajuste")
+
+
+def frame_to_tensors(frame):
+    values = frame[FEATURE_NAMES].to_numpy(dtype=np.float32)
+    standardized = (values - fit_mean) / fit_std
+    labels = frame["Class"].map(class_to_index).to_numpy(dtype=np.int64)
+    return torch.from_numpy(standardized), torch.from_numpy(labels)
+
+
+X_fit, y_fit = frame_to_tensors(fit_frame)
+X_lab, y_lab = frame_to_tensors(lab_validation_frame)
+
+assert X_fit.shape == (2_100, 16)
+assert torch.isfinite(X_fit).all() and torch.isfinite(X_lab).all()
+print("Ajuste:", X_fit.shape, y_fit.shape)
+print("Validación de laboratorio:", X_lab.shape, y_lab.shape)
+```
+
+## Fijar la arquitectura antes de intervenir
+
+Usaremos cinco capas ocultas de 128 unidades. Es deliberadamente más profunda y
+grande que la MLP del capítulo anterior: tiene capacidad suficiente para hacer
+visibles problemas de propagación y sobreajuste, pero sigue entrenando en CPU en
+segundos.
+
+```{python}
+class DiagnosticMLP(nn.Module):
+    def __init__(self, activation="relu", dropout=0.0, width=128, depth=5):
+        super().__init__()
+        self.activation_name = activation
+        self.hidden_layers = nn.ModuleList()
+        input_width = 16
+        for _ in range(depth):
+            self.hidden_layers.append(nn.Linear(input_width, width))
+            input_width = width
+        self.output = nn.Linear(input_width, 7)
+        self.dropout = nn.Dropout(dropout)
+
+    def activate(self, values):
+        if self.activation_name == "sigmoid":
+            return torch.sigmoid(values)
+        return torch.relu(values)
+
+    def forward(self, X):
+        hidden = X
+        for layer in self.hidden_layers:
+            hidden = self.dropout(self.activate(layer(hidden)))
+        return self.output(hidden)
+
+
+model_example = DiagnosticMLP()
+parameter_count = sum(parameter.numel() for parameter in model_example.parameters())
+print(model_example)
+print(f"Parámetros: {parameter_count:,}")
+```
+
+La arquitectura tiene 69.127 parámetros frente a 2.100 observaciones de ajuste.
+No variaremos profundidad ni ancho: el objeto de estudio es el entrenamiento.
+
+## La escala se propaga capa por capa
+
+Para una preactivación
+
+$$
+z_j=\sum_{i=1}^{n_{\mathrm{in}}}w_{ij}h_i,
+$$
+
+y bajo supuestos aproximados de independencia y media cero,
+
+$$
+\operatorname{Var}(z_j)
+\approx n_{\mathrm{in}}\operatorname{Var}(w_{ij})
+\operatorname{Var}(h_i).
+$$
+
+Si la varianza de los pesos no considera el *fan-in*, la señal puede crecer o
+contraerse repetidamente. Xavier busca preservar escala en activaciones
+simétricas [@glorot2010understanding]; para ReLU, la inicialización de Kaiming
+compensa que aproximadamente la mitad de las entradas se anula
+[@he2015delving]:
+
+$$
+\operatorname{Var}(w_{ij})\approx\frac{2}{n_{\mathrm{in}}}.
+$$
+
+```{python}
+def initialize_model(model, strategy):
+    hidden_layers = list(model.hidden_layers)
+    all_layers = hidden_layers + [model.output]
+
+    for layer in all_layers:
+        nn.init.zeros_(layer.bias)
+
+    if strategy == "large-normal":
+        for layer in hidden_layers:
+            nn.init.normal_(layer.weight, mean=0.0, std=3.0)
+        nn.init.xavier_uniform_(model.output.weight)
+    elif strategy == "xavier":
+        for layer in all_layers:
+            nn.init.xavier_uniform_(layer.weight)
+    elif strategy == "kaiming":
+        for layer in hidden_layers:
+            nn.init.kaiming_normal_(layer.weight, nonlinearity="relu")
+        nn.init.xavier_uniform_(model.output.weight)
+    else:
+        raise ValueError(f"Inicialización desconocida: {strategy}")
+```
+
+## Los gradientes también se multiplican
+
+En una red de profundidad $L$, la regla de la cadena contiene un producto de
+Jacobianos:
+
+$$
+\frac{\partial\mathcal{L}}{\partial\mathbf{h}_{\ell}}
+=\frac{\partial\mathcal{L}}{\partial\mathbf{h}_L}
+\prod_{k=\ell+1}^{L}
+\frac{\partial\mathbf{h}_k}{\partial\mathbf{h}_{k-1}}.
+$$
+
+Factores repetidamente menores que uno hacen desaparecer el gradiente; factores
+grandes pueden hacerlo explotar. Compararemos capas mediante el gradiente
+relativo
+
+$$
+r_\ell=
+\frac{\|\nabla_{\mathbf{W}_\ell}\mathcal{L}\|_2}
+{\|\mathbf{W}_\ell\|_2+\varepsilon},
+$$
+
+que contextualiza la norma del gradiente por la escala de sus pesos.
+
+```{python}
+def inspect_signal(model, batch_X, batch_y, configuration):
+    model.train()
+    model.zero_grad(set_to_none=True)
+    hidden = batch_X
+    activations = []
+
+    for layer in model.hidden_layers:
+        hidden = model.activate(layer(hidden))
+        activations.append(hidden)
+
+    logits = model.output(hidden)
+    loss = nn.functional.cross_entropy(logits, batch_y)
+    loss.backward()
+
+    rows = []
+    for layer_index, (layer, activation) in enumerate(
+        zip(model.hidden_layers, activations), start=1
+    ):
+        if model.activation_name == "sigmoid":
+            inactive_fraction = (
+                (activation < 0.01) | (activation > 0.99)
+            ).to(torch.float32).mean().item()
+        else:
+            inactive_fraction = (activation == 0).to(torch.float32).mean().item()
+
+        rows.append({
+            "configuración": configuration,
+            "capa": layer_index,
+            "desviación activación": activation.std().item(),
+            "fracción extrema/cero en lote": inactive_fraction,
+            "gradiente relativo": (
+                layer.weight.grad.norm() / (layer.weight.norm() + 1e-12)
+            ).item(),
+        })
+    return rows
+```
+
+## Tres estados iniciales observables
+
+Comparamos un caso sigmoid con pesos grandes, sigmoid con Xavier y ReLU con
+Kaiming. Los dos primeros permiten observar saturación y gradientes
+decrecientes; el tercero empareja activación e inicialización.
+
+```{python}
+INITIALIZATION_CASES = {
+    "Sigmoid + Normal(0, 3)": ("sigmoid", "large-normal"),
+    "Sigmoid + Xavier": ("sigmoid", "xavier"),
+    "ReLU + Kaiming": ("relu", "kaiming"),
+}
+
+signal_rows = []
+for case_name, (activation, initialization) in INITIALIZATION_CASES.items():
+    torch.manual_seed(SEED)
+    case_model = DiagnosticMLP(activation=activation)
+    initialize_model(case_model, initialization)
+    signal_rows.extend(
+        inspect_signal(case_model, X_fit[:128], y_fit[:128], case_name)
+    )
+
+signal_diagnostics = pd.DataFrame(signal_rows)
+signal_diagnostics
+```
+
+```{python}
+#| label: fig-signal-propagation
+#| fig-cap: "Escala inicial de activaciones, unidades saturadas o nulas y gradientes relativos por profundidad."
+#| fig-alt: "Tres paneles comparan diagnósticos por capa para dos redes sigmoid y una red ReLU."
+#| fig-width: 11
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 3, figsize=(11, 4))
+diagnostics_to_plot = [
+    ("desviación activación", "Desviación de activación", False),
+    ("fracción extrema/cero en lote", "Fracción extrema/cero en lote", False),
+    ("gradiente relativo", "Gradiente relativo", True),
+]
+colors = ["#9c755f", "#6042a6", "#327c78"]
+
+for case_index, case_name in enumerate(INITIALIZATION_CASES):
+    case_rows = signal_diagnostics[
+        signal_diagnostics["configuración"] == case_name
+    ]
+    for axis, (column, title, logarithmic) in zip(axes, diagnostics_to_plot):
+        axis.plot(
+            case_rows["capa"],
+            case_rows[column],
+            marker="o",
+            color=colors[case_index],
+            label=case_name,
+        )
+        axis.set(xlabel="Capa oculta", title=title)
+        if logarithmic:
+            axis.set_yscale("log")
+        axis.grid(alpha=0.2)
+
+axes[0].legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+Los pesos grandes llevan muchas sigmoides cerca de 0 o 1. Xavier evita esa
+saturación inicial, pero no evita que las derivadas sigmoid menores que uno se
+multipliquen: el gradiente de la primera capa es mucho menor que el de la última.
+ReLU con Kaiming mantiene activaciones y gradientes en escalas más comparables.
+Que cerca de la mitad de sus activaciones sea cero en este lote es normal; no
+significa que la mitad de las unidades esté permanentemente muerta.
+
+## Un ciclo de entrenamiento instrumentado
+
+La misma función ejecutará todos los experimentos. Registra pérdida, macro-F1,
+tasa, tiempo, checkpoint y fallos no finitos. Cuando hay early stopping, restaura
+una copia profunda del mejor `state_dict`.
+
+```{python}
+def macro_f1(labels, predictions):
+    return f1_score(
+        labels.numpy(),
+        predictions.numpy(),
+        labels=np.arange(len(CLASS_NAMES)),
+        average="macro",
+        zero_division=0,
+    )
+
+
+def evaluate_model(model, X, y):
+    model.eval()
+    with torch.no_grad():
+        logits = model(X)
+        loss = nn.functional.cross_entropy(logits, y).item()
+        predictions = logits.argmax(dim=1)
+    return loss, macro_f1(y, predictions)
+
+
+def optimizer_for(model, name, learning_rate, weight_decay=0.0):
+    if name == "SGD":
+        return torch.optim.SGD(
+            model.parameters(), lr=learning_rate, weight_decay=weight_decay
+        )
+    if name == "Momentum":
+        return torch.optim.SGD(
+            model.parameters(),
+            lr=learning_rate,
+            momentum=0.9,
+            weight_decay=weight_decay,
+        )
+    if name == "AdamW":
+        decay_parameters = [
+            parameter for parameter in model.parameters() if parameter.ndim > 1
+        ]
+        no_decay_parameters = [
+            parameter for parameter in model.parameters() if parameter.ndim == 1
+        ]
+        return torch.optim.AdamW(
+            [
+                {"params": decay_parameters, "weight_decay": weight_decay},
+                {"params": no_decay_parameters, "weight_decay": 0.0},
+            ],
+            lr=learning_rate,
+        )
+    raise ValueError(f"Optimizador desconocido: {name}")
+
+
+def run_training(
+    seed,
+    activation="relu",
+    initialization="kaiming",
+    optimizer_name="AdamW",
+    learning_rate=0.001,
+    dropout=0.0,
+    weight_decay=0.0,
+    max_epochs=100,
+    patience=None,
+    cosine=False,
+):
+    torch.manual_seed(seed)
+    model = DiagnosticMLP(activation=activation, dropout=dropout).to(device)
+    initialize_model(model, initialization)
+
+    loader = DataLoader(
+        TensorDataset(X_fit, y_fit),
+        batch_size=128,
+        shuffle=True,
+        generator=torch.Generator().manual_seed(seed),
+        num_workers=0,
+    )
+    optimizer = optimizer_for(
+        model, optimizer_name, learning_rate, weight_decay
+    )
+    scheduler = None
+    if cosine:
+        scheduler = torch.optim.lr_scheduler.CosineAnnealingLR(
+            optimizer,
+            T_max=max(1, max_epochs - 1),
+            eta_min=learning_rate / 100,
+        )
+
+    best_loss = float("inf")
+    best_state = None
+    best_epoch = 0
+    epochs_without_improvement = 0
+    history_rows = []
+    failed = False
+    failure_reason = None
+    started_at = perf_counter()
+
+    for epoch in range(1, max_epochs + 1):
+        model.train()
+        for batch_X, batch_y in loader:
+            optimizer.zero_grad(set_to_none=True)
+            loss = nn.functional.cross_entropy(model(batch_X), batch_y)
+            if not torch.isfinite(loss):
+                failed = True
+                failure_reason = "pérdida no finita"
+                break
+            loss.backward()
+            finite_gradients = all(
+                parameter.grad is None or torch.isfinite(parameter.grad).all()
+                for parameter in model.parameters()
+            )
+            if not finite_gradients:
+                failed = True
+                failure_reason = "gradiente no finito"
+                break
+            optimizer.step()
+            finite_parameters = all(
+                torch.isfinite(parameter).all() for parameter in model.parameters()
+            )
+            if not finite_parameters:
+                failed = True
+                failure_reason = "parámetro no finito"
+                break
+
+        if failed:
+            break
+
+        fit_loss, fit_f1 = evaluate_model(model, X_fit, y_fit)
+        validation_loss, validation_f1 = evaluate_model(model, X_lab, y_lab)
+        history_rows.append({
+            "epoch": epoch,
+            "fit_loss": fit_loss,
+            "validation_loss": validation_loss,
+            "fit_macro_f1": fit_f1,
+            "validation_macro_f1": validation_f1,
+            "learning_rate": optimizer.param_groups[0]["lr"],
+        })
+
+        previous_best_loss = best_loss
+        if validation_loss < best_loss:
+            best_loss = validation_loss
+            best_epoch = epoch
+            best_state = deepcopy(model.state_dict())
+        if validation_loss < previous_best_loss - 1e-4:
+            epochs_without_improvement = 0
+        else:
+            epochs_without_improvement += 1
+
+        if scheduler is not None:
+            scheduler.step()
+        if patience is not None and epochs_without_improvement >= patience:
+            break
+
+    elapsed_seconds = perf_counter() - started_at
+    history = pd.DataFrame(history_rows)
+
+    if best_state is not None:
+        model.load_state_dict(best_state)
+
+    return {
+        "model": model,
+        "history": history,
+        "best_epoch": best_epoch,
+        "epochs_run": len(history),
+        "seconds": elapsed_seconds,
+        "failed": failed,
+        "failure_reason": failure_reason,
+    }
+```
+
+## Comprobar si el diagnóstico predice el entrenamiento
+
+Entrenamos los tres estados iniciales con SGD, tasa 0,05 y 25 épocas. No hay
+regularización ni parada anticipada.
+
+```{python}
+initialization_runs = {}
+for case_name, (activation, initialization) in INITIALIZATION_CASES.items():
+    initialization_runs[case_name] = run_training(
+        seed=SEED,
+        activation=activation,
+        initialization=initialization,
+        optimizer_name="SGD",
+        learning_rate=0.05,
+        max_epochs=25,
+    )
+
+initialization_results = []
+for case_name, run in initialization_runs.items():
+    if run["history"].empty:
+        final_row = pd.Series({
+            "fit_loss": np.nan,
+            "validation_loss": np.nan,
+            "fit_macro_f1": np.nan,
+            "validation_macro_f1": np.nan,
+        })
+    else:
+        final_row = run["history"].iloc[-1]
+    initialization_results.append({
+        "configuración": case_name,
+        "loss ajuste": final_row["fit_loss"],
+        "loss validación": final_row["validation_loss"],
+        "macro-F1 ajuste": final_row["fit_macro_f1"],
+        "macro-F1 validación": final_row["validation_macro_f1"],
+        "falló": run["failed"],
+        "motivo": run["failure_reason"],
+    })
+pd.DataFrame(initialization_results).set_index("configuración")
+```
+
+```{python}
+#| label: fig-initialization-training
+#| fig-cap: "Una inicialización y activación coherentes restauran el aprendizaje de la red profunda."
+#| fig-alt: "Curvas de pérdida de ajuste y validación para tres configuraciones iniciales."
+#| fig-width: 10
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+for color, (case_name, run) in zip(colors, initialization_runs.items()):
+    history = run["history"]
+    axes[0].plot(
+        history["epoch"], history["fit_loss"], color=color, label=case_name
+    )
+    axes[1].plot(
+        history["epoch"], history["validation_loss"], color=color, label=case_name
+    )
+
+axes[0].set(title="Ajuste", xlabel="Época", ylabel="Entropía cruzada")
+axes[1].set(title="Validación", xlabel="Época", ylabel="Entropía cruzada")
+for axis in axes:
+    axis.set_yscale("log")
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+Sigmoid con Xavier evita saturación, pero su gradiente temprano casi no llega a
+las primeras capas y permanece cerca de la línea base mayoritaria. Los pesos
+grandes permiten algún aprendizaje, aunque con saturación y desempeño bajo.
+ReLU con Kaiming hace descender ambas pérdidas y supera 0,93 de macro-F1 en
+validación. El diagnóstico interno anticipó el comportamiento externo.
+
+## Qué papel cumple Batch Normalization
+
+Batch Normalization estandariza preactivaciones por mini-batch y aprende escala
+$\gamma$ y desplazamiento $\beta$ [@ioffe2015batch]:
+
+$$
+\widehat{z}=\frac{z-\mu_B}{\sqrt{\sigma_B^2+\varepsilon}},
+\qquad y=\gamma\widehat{z}+\beta.
+$$
+
+```{python}
+torch.manual_seed(SEED)
+linear_for_bn = nn.Linear(16, 128)
+nn.init.kaiming_normal_(linear_for_bn.weight, nonlinearity="relu")
+batch_norm = nn.BatchNorm1d(128)
+
+raw_preactivations = linear_for_bn(X_fit[:128])
+normalized_preactivations = batch_norm(raw_preactivations)
+
+batch_norm_audit = pd.DataFrame({
+    "antes": [
+        raw_preactivations.mean(dim=0).abs().mean().item(),
+        raw_preactivations.std(dim=0).mean().item(),
+    ],
+    "después": [
+        normalized_preactivations.mean(dim=0).abs().mean().item(),
+        normalized_preactivations.std(dim=0).mean().item(),
+    ],
+}, index=["media absoluta promedio", "desviación promedio"])
+batch_norm_audit
+```
+
+Durante entrenamiento usa estadísticas del lote y actualiza promedios móviles;
+durante inferencia usa esos promedios. Olvidar `model.eval()` cambia el
+comportamiento. En este laboratorio, ReLU y Kaiming ya producen escalas sanas,
+así que no añadiremos normalización a la receta principal: una técnica no debe
+incorporarse sin una necesidad observada.
+
+## Comparar recetas de optimización
+
+Con la propagación estabilizada, comparamos actualizaciones. SGD usa
+
+$$
+\boldsymbol{\theta}_{t+1}
+=\boldsymbol{\theta}_t-\eta\mathbf{g}_t.
+$$
+
+Momentum acumula una dirección suavizada, mientras AdamW adapta la escala por
+parámetro y desacopla weight decay [@kingma2015adam; @loshchilov2019decoupled].
+No sería justo asignarles la misma tasa: comparamos recetas convencionales
+prefijadas, no superioridad universal de algoritmos. Antes de ejecutar,
+declaramos esta regla exploratoria: consideramos elegibles pérdidas separadas
+por menos de 0,01; preferimos alcanzar macro-F1 0,92 antes y luego menor pérdida.
+Si un schedule cambia la pérdida menos de 0,002, conservamos tasa constante.
+
+```{python}
+OPTIMIZER_CASES = {
+    "SGD 0.05": {"optimizer_name": "SGD", "learning_rate": 0.05},
+    "Momentum 0.03": {
+        "optimizer_name": "Momentum", "learning_rate": 0.03
+    },
+    "AdamW 0.001": {"optimizer_name": "AdamW", "learning_rate": 0.001},
+    "AdamW + coseno": {
+        "optimizer_name": "AdamW", "learning_rate": 0.001, "cosine": True
+    },
+}
+
+optimizer_runs = {
+    name: run_training(seed=SEED, max_epochs=60, **configuration)
+    for name, configuration in OPTIMIZER_CASES.items()
+}
+
+optimizer_rows = []
+for name, run in optimizer_runs.items():
+    history = run["history"]
+    if history.empty:
+        optimizer_rows.append({
+            "receta": name,
+            "mejor loss validación": np.nan,
+            "macro-F1 en esa época": np.nan,
+            "mejor época": np.nan,
+            "época hasta F1 0.92": np.nan,
+            "segundos": run["seconds"],
+        })
+        continue
+    best_row = history.loc[history["validation_loss"].idxmin()]
+    reached = history[history["validation_macro_f1"] >= 0.92]
+    optimizer_rows.append({
+        "receta": name,
+        "mejor loss validación": best_row["validation_loss"],
+        "macro-F1 en esa época": best_row["validation_macro_f1"],
+        "mejor época": int(best_row["epoch"]),
+        "época hasta F1 0.92": (
+            int(reached.iloc[0]["epoch"]) if len(reached) else np.nan
+        ),
+        "segundos": run["seconds"],
+    })
+
+optimizer_results = pd.DataFrame(optimizer_rows).set_index("receta")
+optimizer_results
+```
+
+```{python}
+#| label: fig-optimizer-comparison
+#| fig-cap: "Las recetas adaptativas o con momentum alcanzan pronto una solución competitiva, pero continuar entrenando puede degradar validación."
+#| fig-alt: "Curvas de pérdida de validación y tasa de aprendizaje para cuatro recetas."
+#| fig-width: 10
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+optimizer_colors = ["#6042a6", "#327c78", "#e07a5f", "#3d405b"]
+for color, (name, run) in zip(optimizer_colors, optimizer_runs.items()):
+    history = run["history"]
+    axes[0].plot(
+        history["epoch"], history["validation_loss"], label=name, color=color
+    )
+    axes[1].plot(
+        history["epoch"], history["learning_rate"], label=name, color=color
+    )
+
+axes[0].set(xlabel="Época", ylabel="Entropía cruzada", title="Validación")
+axes[1].set(xlabel="Época", ylabel="Tasa de aprendizaje", title="Schedule")
+axes[1].set_yscale("log")
+for axis in axes:
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+La regla declarada selecciona AdamW sin schedule para los experimentos
+siguientes, entre estas cuatro recetas y esta semilla. No establece que AdamW
+sea universalmente superior. Un schedule coseno reduce gradualmente
+
+$$
+\eta_t=\eta_{\min}
++\frac{\eta_{\max}-\eta_{\min}}{2}
+\left(1+\cos\frac{\pi t}{T}\right),
+$$
+
+pero aquí no produce una mejora suficientemente grande para justificar otro
+componente.
+
+## Optimizar bien no garantiza generalizar
+
+Las curvas de AdamW alcanzan pronto su mejor validación y luego la pérdida de
+ajuste continúa bajando. Esa divergencia es la señal para estudiar
+regularización.
+
+Weight decay contrae pesos; con AdamW la contracción está desacoplada del
+gradiente de la pérdida. Dropout aplica una máscara aleatoria durante
+entrenamiento [@srivastava2014dropout]:
+
+$$
+\widetilde{\mathbf{h}}
+=\frac{\mathbf{m}\odot\mathbf{h}}{1-p},
+\qquad m_j\sim\operatorname{Bernoulli}(1-p).
+$$
+
+`model.eval()` desactiva dropout. Early stopping no modifica el forward: usa
+validación para seleccionar un checkpoint antes de que la brecha siga creciendo
+[@prechelt1998early].
+
+Antes de ejecutar la ablación fijamos la regla: seleccionamos menor pérdida de
+validación y, si dos configuraciones difieren menos de 0,005, elegimos la que
+introduce menos intervenciones.
+
+```{python}
+REGULARIZATION_CASES = {
+    "Sin regularización": {"dropout": 0.0, "weight_decay": 0.0},
+    "Weight decay": {"dropout": 0.0, "weight_decay": 1e-4},
+    "Dropout": {"dropout": 0.20, "weight_decay": 0.0},
+    "Dropout + decay": {"dropout": 0.20, "weight_decay": 1e-4},
+}
+
+regularization_runs = {}
+for name, configuration in REGULARIZATION_CASES.items():
+    regularization_runs[name] = run_training(
+        seed=SEED,
+        optimizer_name="AdamW",
+        learning_rate=0.001,
+        max_epochs=150,
+        patience=15,
+        **configuration,
+    )
+
+regularization_rows = []
+for name, run in regularization_runs.items():
+    history = run["history"]
+    if history.empty:
+        regularization_rows.append({
+            "configuración": name,
+            "mejor época": np.nan,
+            "épocas ejecutadas": 0,
+            "loss ajuste": np.nan,
+            "loss validación": np.nan,
+            "brecha loss": np.nan,
+            "macro-F1 validación": np.nan,
+            "segundos": run["seconds"],
+        })
+        continue
+    best_row = history.loc[history["validation_loss"].idxmin()]
+    regularization_rows.append({
+        "configuración": name,
+        "mejor época": int(best_row["epoch"]),
+        "épocas ejecutadas": run["epochs_run"],
+        "loss ajuste": best_row["fit_loss"],
+        "loss validación": best_row["validation_loss"],
+        "brecha loss": best_row["validation_loss"] - best_row["fit_loss"],
+        "macro-F1 validación": best_row["validation_macro_f1"],
+        "segundos": run["seconds"],
+    })
+
+regularization_results = pd.DataFrame(regularization_rows).set_index(
+    "configuración"
+)
+regularization_results
+```
+
+Las diferencias entre las dos configuraciones con dropout son inferiores a
+0,005 de pérdida. La regla declarada conserva dropout sin weight decay. Weight
+decay no se incorpora solo porque esté disponible.
+
+```{python}
+#| label: fig-regularization-early-stopping
+#| fig-cap: "Dropout retrasa la brecha de generalización y early stopping selecciona un checkpoint por validación."
+#| fig-alt: "Pérdidas y brecha para redes sin regularización y con dropout."
+#| fig-width: 11
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 3, figsize=(11, 4))
+for name, color in [("Sin regularización", "#6042a6"), ("Dropout", "#327c78")]:
+    run = regularization_runs[name]
+    history = run["history"]
+    axes[0].plot(history["epoch"], history["fit_loss"], color=color, label=name)
+    axes[1].plot(
+        history["epoch"], history["validation_loss"], color=color, label=name
+    )
+    axes[2].plot(
+        history["epoch"],
+        history["validation_loss"] - history["fit_loss"],
+        color=color,
+        label=name,
+    )
+    axes[1].axvline(run["best_epoch"], color=color, linestyle="--", alpha=0.7)
+
+axes[0].set(title="Ajuste", xlabel="Época", ylabel="Pérdida")
+axes[1].set(title="Validación", xlabel="Época", ylabel="Pérdida")
+axes[2].set(title="Brecha", xlabel="Época", ylabel="Validación - ajuste")
+for axis in axes:
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+Early stopping usa pérdida de validación, `patience=15` y `min_delta=1e-4`.
+Detener no basta: el ciclo restaura el estado de la mejor época. Devolver el
+último estado después de agotar la paciencia perdería precisamente el
+checkpoint seleccionado.
+
+## Una semilla no demuestra estabilidad
+
+Comparamos la referencia y dropout con cinco semillas pareadas. La partición no
+cambia; cada semilla controla inicialización, orden de mini-batches y máscaras.
+No elegiremos la mejor ejecución. Antes de ejecutarlas definimos una mejora
+material como mediana del delta macro-F1 de al menos 0,01 y ventaja en cuatro de
+cinco semillas. Esta comparación sigue siendo exploratoria: los checkpoints y
+la comparación usan la misma validación de laboratorio.
+
+```{python}
+paired_rows = []
+paired_runs = {}
+
+for seed in PAIR_SEEDS:
+    for name, dropout in [("Referencia", 0.0), ("Dropout", 0.20)]:
+        run = run_training(
+            seed=seed,
+            optimizer_name="AdamW",
+            learning_rate=0.001,
+            dropout=dropout,
+            max_epochs=150,
+            patience=15,
+        )
+        paired_runs[(seed, name)] = run
+        validation_loss, validation_f1 = evaluate_model(
+            run["model"], X_lab, y_lab
+        )
+        fit_loss, fit_f1 = evaluate_model(run["model"], X_fit, y_fit)
+        paired_rows.append({
+            "semilla": seed,
+            "configuración": name,
+            "mejor época": run["best_epoch"],
+            "épocas ejecutadas": run["epochs_run"],
+            "loss validación": validation_loss,
+            "macro-F1 ajuste": fit_f1,
+            "macro-F1 validación": validation_f1,
+            "brecha F1": fit_f1 - validation_f1,
+            "segundos": run["seconds"],
+        })
+
+paired_results = pd.DataFrame(paired_rows)
+paired_results
+```
+
+```{python}
+paired_pivot = paired_results.pivot(
+    index="semilla", columns="configuración", values="macro-F1 validación"
+)
+paired_pivot["Delta dropout"] = (
+    paired_pivot["Dropout"] - paired_pivot["Referencia"]
+)
+paired_pivot
+```
+
+```{python}
+#| label: fig-seed-variability
+#| fig-cap: "Comparación pareada de macro-F1 y pérdida de validación en cinco semillas."
+#| fig-alt: "Líneas conectan referencia y dropout para cada semilla en dos métricas."
+#| fig-width: 9
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(9, 4))
+x_positions = {"Referencia": 0, "Dropout": 1}
+
+for seed in PAIR_SEEDS:
+    seed_rows = paired_results[paired_results["semilla"] == seed]
+    x = [x_positions[name] for name in seed_rows["configuración"]]
+    axes[0].plot(
+        x, seed_rows["macro-F1 validación"], marker="o", alpha=0.65
+    )
+    axes[1].plot(x, seed_rows["loss validación"], marker="o", alpha=0.65)
+
+axes[0].set(title="Macro-F1", ylabel="Validación")
+axes[1].set(title="Entropía cruzada", ylabel="Validación")
+for axis in axes:
+    axis.set_xticks([0, 1], ["Referencia", "Dropout"])
+    axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+stability_summary = paired_results.groupby("configuración").agg(
+    macro_f1_mediana=("macro-F1 validación", "median"),
+    macro_f1_mínimo=("macro-F1 validación", "min"),
+    macro_f1_máximo=("macro-F1 validación", "max"),
+    loss_mediana=("loss validación", "median"),
+    época_mediana=("mejor época", "median"),
+    segundos_mediana=("segundos", "median"),
+)
+stability_summary
+```
+
+Dropout reduce la pérdida de validación en las cinco parejas y mejora macro-F1
+en cuatro, pero las diferencias de macro-F1 son pequeñas. Solo se cumple la
+segunda condición del umbral declarado. La conclusión correcta es: en este
+laboratorio, dropout mejora consistentemente el objetivo probabilístico y
+retrasa el sobreajuste, pero no demuestra una mejora material de clasificación.
+
+## Qué receta exploratoria resulta
+
+El laboratorio produce una receta candidata razonable:
+
+| Decisión | Elección | Evidencia |
+|---|---|---|
+| Activación e inicialización | ReLU + Kaiming | señal y gradientes sanos |
+| Optimización | AdamW, tasa 0,001 | convergencia rápida y competitiva |
+| Schedule | constante | coseno no justificó su complejidad |
+| Normalización | sin BatchNorm | no había escala inestable tras Kaiming |
+| Regularización | dropout 0,20 | menor pérdida en cinco semillas |
+| Parada | paciencia 15 | restaura el mejor checkpoint |
+
+No evaluamos esta receta en el holdout anterior. Después de múltiples decisiones
+sobre la misma validación de laboratorio, estas cifras no son confirmatorias.
+Confirmarlas requeriría nuevos granos o un protocolo anidado diseñado antes de
+volver a experimentar.
+
+## Costo, riesgos y límites
+
+- La red tiene 69.127 parámetros, 2.100 perfiles de ajuste y 7.380 perfiles
+  etiquetados para validación exploratoria.
+- Dropout necesita más épocas y aproximadamente más tiempo para llegar a su
+  checkpoint; una menor pérdida no es gratuita.
+- Cinco semillas miden aleatoriedad algorítmica, no incertidumbre poblacional.
+- La partición aleatoria no evalúa otra cámara, cosecha, finca o país.
+- Los umbrales de paciencia, saturación y mejora material son decisiones del
+  laboratorio, no constantes universales.
+- Comparar muchas recetas puede sobreajustar la validación, aunque test permanezca
+  oculto.
+- Batch Normalization depende del tamaño del mini-batch; no extrapolamos la
+  demostración a batches pequeños.
+- Gradient clipping puede contener una actualización extrema, pero ocultaría el
+  diagnóstico inicial y no sustituye una escala coherente.
+
+::: {.callout-important title="Antes de cambiar el modelo"}
+Inspecciona primero datos y código; después activaciones y gradientes; luego tasa
+e inicialización; y solo cuando entrenamiento sea sano estudia regularización.
+Una técnica aplicada sin hipótesis puede mejorar una ejecución por accidente y
+fallar en la siguiente semilla.
+:::
+
+## Qué hemos aprendido
+
+- Las curvas distinguen fallos de optimización y de generalización.
+- La varianza de los pesos y la derivada de la activación se propagan con la
+  profundidad.
+- El gradiente relativo permite comparar capas de escalas distintas.
+- ReLU y Kaiming forman una pareja coherente para este caso.
+- Momentum, AdamW y schedules cambian la trayectoria, no la familia funcional.
+- Batch Normalization, dropout y `eval()` modifican el comportamiento del
+  modelo de formas diferentes.
+- Weight decay y dropout no deben añadirse automáticamente.
+- Early stopping selecciona y restaura un estado; no es solo interrumpir un
+  bucle.
+- Una mejora menor que la variabilidad entre semillas debe declararse como
+  pequeña o inconclusa.
+
+## Ejercicios
+
+1. Deriva la varianza aproximada de una preactivación y explica qué supuestos
+   permiten eliminar términos cruzados.
+2. Cambia la profundidad de 5 a 10 capas sin modificar otro elemento. Compara
+   gradientes relativos para sigmoid/Xavier y ReLU/Kaiming.
+3. Implementa la razón de actualización relativa
+   $\|\Delta W\|/(\|W\|+\varepsilon)$ y compárala entre SGD y AdamW.
+4. Añade Batch Normalization después de cada capa lineal. Mantén fijo el resto y
+   evalúa cinco semillas antes de concluir.
+5. Omite `model.eval()` durante validación con dropout y BatchNorm. Describe por
+   qué el resultado deja de representar inferencia.
+6. Compara weight decay aplicado a todos los parámetros frente a excluir sesgos
+   y parámetros de normalización.
+7. Cambia `patience` entre 5, 15 y 30. Reporta desempeño y costo, sin consultar
+   ningún holdout.
+8. Diseña una comparación justa de tasas para SGD, momentum y AdamW sin realizar
+   una búsqueda ilimitada.
+9. Calcula mediana, rango intercuartílico y peor semilla de macro-F1. Explica por
+   qué la mejor semilla no resume estabilidad.
+10. Propón un protocolo anidado que permita seguir desarrollando el modelo sin
+    reutilizar la misma validación indefinidamente.
+
+## Reto
+
+Construye un tablero diagnóstico que reciba el historial de una ejecución y
+clasifique automáticamente cuatro alarmas: pérdida no finita, gradiente
+explosivo, gradiente desaparecido y brecha creciente de generalización. Define
+los umbrales antes de mirar los resultados, prueba el tablero sobre los casos de
+este capítulo y documenta falsos positivos. El objetivo no es reemplazar el
+juicio técnico, sino convertir síntomas dispersos en hipótesis verificables.

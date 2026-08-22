@@ -47,12 +47,13 @@ explicar qué aporta la arquitectura y dónde puede fallar.
 
 ## Estado de la edición
 
-Esta edición contiene la arquitectura completa del libro y tres capítulos
+Esta edición contiene la arquitectura completa del libro y cuatro capítulos
 desarrollados: [tensores y PyTorch](chapters/chapter01.qmd), [regresión y consumo
-energético](chapters/chapter02.qmd), y [clasificación no lineal con
-MLP](chapters/chapter03.qmd). Los capítulos restantes presentan el problema
-articulador, los objetivos y la ruta de desarrollo para hacer visible la
-progresión del curso.
+energético](chapters/chapter02.qmd), [clasificación no lineal con
+MLP](chapters/chapter03.qmd), y [diagnóstico, optimización y
+generalización](chapters/chapter04.qmd). Los capítulos restantes presentan el
+problema articulador, los objetivos y la ruta de desarrollo para hacer visible
+la progresión del curso.
 
 ## Recursos
 
