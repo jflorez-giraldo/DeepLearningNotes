@@ -27,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 /* CSS for citations */
 div.csl-bib-body { }
 div.csl-entry {
@@ -49,7 +84,7 @@ div.csl-indent {
 }</style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -95,7 +130,39 @@ div.csl-indent {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -309,10 +376,24 @@ div.csl-indent {
     <h2 id="toc-title">Contenido</h2>
    
   <ul>
-  <li><a href="#objetivos" id="toc-objetivos" class="nav-link active" data-scroll-target="#objetivos"><span class="header-section-number">4.1</span> Objetivos</a></li>
-  <li><a href="#ruta-de-desarrollo" id="toc-ruta-de-desarrollo" class="nav-link" data-scroll-target="#ruta-de-desarrollo"><span class="header-section-number">4.2</span> Ruta de desarrollo</a></li>
-  <li><a href="#experimento-central" id="toc-experimento-central" class="nav-link" data-scroll-target="#experimento-central"><span class="header-section-number">4.3</span> Experimento central</a></li>
-  <li><a href="#referencia-conceptual" id="toc-referencia-conceptual" class="nav-link" data-scroll-target="#referencia-conceptual"><span class="header-section-number">4.4</span> Referencia conceptual</a></li>
+  <li><a href="#del-resultado-bajo-a-una-hipótesis-comprobable" id="toc-del-resultado-bajo-a-una-hipótesis-comprobable" class="nav-link active" data-scroll-target="#del-resultado-bajo-a-una-hipótesis-comprobable"><span class="header-section-number">4.1</span> Del resultado bajo a una hipótesis comprobable</a></li>
+  <li><a href="#preparar-un-laboratorio-reproducible" id="toc-preparar-un-laboratorio-reproducible" class="nav-link" data-scroll-target="#preparar-un-laboratorio-reproducible"><span class="header-section-number">4.2</span> Preparar un laboratorio reproducible</a></li>
+  <li><a href="#reutilizar-los-datos-sin-reutilizar-el-test" id="toc-reutilizar-los-datos-sin-reutilizar-el-test" class="nav-link" data-scroll-target="#reutilizar-los-datos-sin-reutilizar-el-test"><span class="header-section-number">4.3</span> Reutilizar los datos sin reutilizar el test</a></li>
+  <li><a href="#fijar-la-arquitectura-antes-de-intervenir" id="toc-fijar-la-arquitectura-antes-de-intervenir" class="nav-link" data-scroll-target="#fijar-la-arquitectura-antes-de-intervenir"><span class="header-section-number">4.4</span> Fijar la arquitectura antes de intervenir</a></li>
+  <li><a href="#la-escala-se-propaga-capa-por-capa" id="toc-la-escala-se-propaga-capa-por-capa" class="nav-link" data-scroll-target="#la-escala-se-propaga-capa-por-capa"><span class="header-section-number">4.5</span> La escala se propaga capa por capa</a></li>
+  <li><a href="#los-gradientes-también-se-multiplican" id="toc-los-gradientes-también-se-multiplican" class="nav-link" data-scroll-target="#los-gradientes-también-se-multiplican"><span class="header-section-number">4.6</span> Los gradientes también se multiplican</a></li>
+  <li><a href="#tres-estados-iniciales-observables" id="toc-tres-estados-iniciales-observables" class="nav-link" data-scroll-target="#tres-estados-iniciales-observables"><span class="header-section-number">4.7</span> Tres estados iniciales observables</a></li>
+  <li><a href="#un-ciclo-de-entrenamiento-instrumentado" id="toc-un-ciclo-de-entrenamiento-instrumentado" class="nav-link" data-scroll-target="#un-ciclo-de-entrenamiento-instrumentado"><span class="header-section-number">4.8</span> Un ciclo de entrenamiento instrumentado</a></li>
+  <li><a href="#comprobar-si-el-diagnóstico-predice-el-entrenamiento" id="toc-comprobar-si-el-diagnóstico-predice-el-entrenamiento" class="nav-link" data-scroll-target="#comprobar-si-el-diagnóstico-predice-el-entrenamiento"><span class="header-section-number">4.9</span> Comprobar si el diagnóstico predice el entrenamiento</a></li>
+  <li><a href="#qué-papel-cumple-batch-normalization" id="toc-qué-papel-cumple-batch-normalization" class="nav-link" data-scroll-target="#qué-papel-cumple-batch-normalization"><span class="header-section-number">4.10</span> Qué papel cumple Batch Normalization</a></li>
+  <li><a href="#comparar-recetas-de-optimización" id="toc-comparar-recetas-de-optimización" class="nav-link" data-scroll-target="#comparar-recetas-de-optimización"><span class="header-section-number">4.11</span> Comparar recetas de optimización</a></li>
+  <li><a href="#optimizar-bien-no-garantiza-generalizar" id="toc-optimizar-bien-no-garantiza-generalizar" class="nav-link" data-scroll-target="#optimizar-bien-no-garantiza-generalizar"><span class="header-section-number">4.12</span> Optimizar bien no garantiza generalizar</a></li>
+  <li><a href="#una-semilla-no-demuestra-estabilidad" id="toc-una-semilla-no-demuestra-estabilidad" class="nav-link" data-scroll-target="#una-semilla-no-demuestra-estabilidad"><span class="header-section-number">4.13</span> Una semilla no demuestra estabilidad</a></li>
+  <li><a href="#qué-receta-exploratoria-resulta" id="toc-qué-receta-exploratoria-resulta" class="nav-link" data-scroll-target="#qué-receta-exploratoria-resulta"><span class="header-section-number">4.14</span> Qué receta exploratoria resulta</a></li>
+  <li><a href="#costo-riesgos-y-límites" id="toc-costo-riesgos-y-límites" class="nav-link" data-scroll-target="#costo-riesgos-y-límites"><span class="header-section-number">4.15</span> Costo, riesgos y límites</a></li>
+  <li><a href="#qué-hemos-aprendido" id="toc-qué-hemos-aprendido" class="nav-link" data-scroll-target="#qué-hemos-aprendido"><span class="header-section-number">4.16</span> Qué hemos aprendido</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios"><span class="header-section-number">4.17</span> Ejercicios</a></li>
+  <li><a href="#reto" id="toc-reto" class="nav-link" data-scroll-target="#reto"><span class="header-section-number">4.18</span> Reto</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/edit/main/chapters/chapter04.qmd" class="toc-action"><i class="bi bi-github"></i>Editar esta página</a></li><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/issues/new" class="toc-action"><i class="bi empty"></i>Informar sobre problema</a></li></ul></div></nav>
     </div>
@@ -338,56 +419,1797 @@ div.csl-indent {
 </header>
 
 
-<div class="problem-banner">
-<strong>Problema:</strong> diagnosticar un modelo cuyas curvas oscilan, divergen o muestran una brecha persistente entre entrenamiento y validación.
+<div class="chapter-actions" aria-label="Recursos del capitulo">
+  <a class="chapter-action" href="../notebooks/chapter04.ipynb" download="">Descargar notebook</a>
+  <a class="chapter-action chapter-action-colab" href="https://colab.research.google.com/github/jflorez-giraldo/DeepLearningNotes/blob/main/notebooks/chapter04.ipynb" target="_blank" rel="noopener">Abrir en Colab</a>
 </div>
-<div class="callout callout-style-simple callout-warning callout-titled" title="Capítulo en desarrollo">
+
+<div class="problem-banner">
+<p><strong>Problema:</strong> un sistema de clasificación de semillas debe reentrenarse con un presupuesto limitado de perfiles verificados. Algunas ejecuciones casi no aprenden, otras mejoran entrenamiento mientras empeoran en validación y otras dependen demasiado de la semilla. Debemos construir una receta estable y justificar cada intervención con un diagnóstico.</p>
+</div>
+<section id="del-resultado-bajo-a-una-hipótesis-comprobable" class="level2" data-number="4.1">
+<h2 data-number="4.1" class="anchored" data-anchor-id="del-resultado-bajo-a-una-hipótesis-comprobable"><span class="header-section-number">4.1</span> Del resultado bajo a una hipótesis comprobable</h2>
+<p>Una red puede representar una relación y, aun así, no aprenderla. El Capítulo 3 mostró cómo ReLU amplía la familia funcional de una MLP; ahora mantendremos fijo el problema para estudiar el proceso de entrenamiento.</p>
+<p>Una métrica final baja no identifica su propia causa. Al menos cuatro patrones pueden producirla:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+<col style="width: 25%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Patrón</th>
+<th>Entrenamiento</th>
+<th>Validación</th>
+<th>Primera hipótesis</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>No aprende</td>
+<td>pérdida alta</td>
+<td>pérdida alta</td>
+<td>escala, gradientes, tasa o código</td>
+</tr>
+<tr class="even">
+<td>Oscila o diverge</td>
+<td>inestable o no finita</td>
+<td>inestable</td>
+<td>actualizaciones excesivas</td>
+</tr>
+<tr class="odd">
+<td>Sobreajusta</td>
+<td>mejora continuamente</td>
+<td>se estanca o empeora</td>
+<td>varianza y entrenamiento excesivo</td>
+</tr>
+<tr class="even">
+<td>Inestable entre semillas</td>
+<td>cambia mucho</td>
+<td>cambia mucho</td>
+<td>sensibilidad algorítmica</td>
+</tr>
+</tbody>
+</table>
+<p>La secuencia importa: <strong>primero hacemos que la red optimice de forma sana y después tratamos la generalización</strong>. Aplicar dropout a una red cuyos gradientes desaparecen no corrige la causa del fallo.</p>
+<div class="callout callout-style-simple callout-note callout-titled" title="Objetivos de aprendizaje">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Advertencia</span>Capítulo en desarrollo
+<span class="screen-reader-only">Nota</span>Objetivos de aprendizaje
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>Se desarrollará como laboratorio diagnóstico, no como catálogo de optimizadores.</p>
-</div>
-</div>
-<section id="objetivos" class="level2" data-number="4.1">
-<h2 data-number="4.1" class="anchored" data-anchor-id="objetivos"><span class="header-section-number">4.1</span> Objetivos</h2>
+<p>Al terminar este capítulo podrás:</p>
 <ul>
-<li>reconocer gradientes que desaparecen o explotan;</li>
-<li>relacionar inicialización, activaciones y profundidad;</li>
-<li>comparar SGD, momentum y Adam bajo controles comunes;</li>
-<li>usar weight decay, dropout, normalización y early stopping;</li>
-<li>diseñar schedules de tasa de aprendizaje; y</li>
-<li>separar variación aleatoria de mejoras reproducibles.</li>
+<li>interpretar conjuntamente pérdida de entrenamiento y validación;</li>
+<li>medir escalas de activaciones y gradientes por capa;</li>
+<li>relacionar profundidad, activación e inicialización;</li>
+<li>explicar SGD, momentum y AdamW como recetas de actualización diferentes;</li>
+<li>distinguir un schedule de una nueva familia de optimizadores;</li>
+<li>aplicar Batch Normalization, weight decay, dropout y early stopping con <code>train()</code> y <code>eval()</code> correctamente;</li>
+<li>restaurar el mejor checkpoint seleccionado por validación; y</li>
+<li>comparar configuraciones mediante semillas pareadas, costo y variabilidad.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="preparar-un-laboratorio-reproducible" class="level2" data-number="4.2">
+<h2 data-number="4.2" class="anchored" data-anchor-id="preparar-un-laboratorio-reproducible"><span class="header-section-number">4.2</span> Preparar un laboratorio reproducible</h2>
+<div id="a323915f" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> copy <span class="im">import</span> deepcopy</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> hashlib <span class="im">import</span> sha256</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> time <span class="im">import</span> perf_counter</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> urllib.request <span class="im">import</span> urlretrieve</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> zipfile <span class="im">import</span> ZipFile</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sklearn</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> f1_score</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>SEED <span class="op">=</span> <span class="dv">17</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>PAIR_SEEDS <span class="op">=</span> [<span class="dv">7</span>, <span class="dv">19</span>, <span class="dv">42</span>, <span class="dv">73</span>, <span class="dv">101</span>]</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>np.random.seed(SEED)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>torch.use_deterministic_algorithms(<span class="va">True</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cpu"</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"PyTorch </span><span class="sc">{</span>torch<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | NumPy </span><span class="sc">{</span>np<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | "</span></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"pandas </span><span class="sc">{</span>pd<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | scikit-learn </span><span class="sc">{</span>sklearn<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dispositivo: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss"> | hilos de PyTorch: </span><span class="sc">{</span>torch<span class="sc">.</span>get_num_threads()<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PyTorch 2.8.0 | NumPy 2.0.2 | pandas 2.3.3 | scikit-learn 1.6.1
+Dispositivo: cpu | hilos de PyTorch: 1</code></pre>
+</div>
+</div>
+<p>CPU, un solo hilo y algoritmos deterministas facilitan comparaciones pareadas. Los tiempos siguen dependiendo del equipo y de su carga; por eso reportaremos también épocas y parámetros.</p>
+</section>
+<section id="reutilizar-los-datos-sin-reutilizar-el-test" class="level2" data-number="4.3">
+<h2 data-number="4.3" class="anchored" data-anchor-id="reutilizar-los-datos-sin-reutilizar-el-test"><span class="header-section-number">4.3</span> Reutilizar los datos sin reutilizar el test</h2>
+<p>Continuamos con <em>Dry Bean</em>, cuyas 16 medidas geométricas y siete variedades se describieron en el capítulo anterior <span class="citation" data-cites="koklu2020dataset koklu2020beans">(<a href="../references.html#ref-koklu2020dataset" role="doc-biblioref">Koklu y Ozkan 2020a</a>, <a href="../references.html#ref-koklu2020beans" role="doc-biblioref">2020b</a>)</span>. El notebook sigue siendo autónomo: descarga, valida y prepara los datos.</p>
+<div id="42730606" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Mostrar carga y validación de Dry Bean</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DATA_URL <span class="op">=</span> (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://archive.ics.uci.edu/static/public/602/"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dry+bean+dataset.zip"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">".cache/chapter04"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ARCHIVE_PATH <span class="op">=</span> DATA_DIR <span class="op">/</span> <span class="st">"dry-bean-dataset.zip"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>ARFF_NAME <span class="op">=</span> <span class="st">"DryBeanDataset/Dry_Bean_Dataset.arff"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>EXPECTED_SHA256 <span class="op">=</span> (</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"0a64eff5be87f48c3dbbfc0a12a56c5"</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"d5b5167ef8e61cd45d69b3e7c7130c06f"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>FEATURE_NAMES <span class="op">=</span> [</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Area"</span>, <span class="st">"Perimeter"</span>, <span class="st">"MajorAxisLength"</span>, <span class="st">"MinorAxisLength"</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AspectRatio"</span>, <span class="st">"Eccentricity"</span>, <span class="st">"ConvexArea"</span>, <span class="st">"EquivDiameter"</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Extent"</span>, <span class="st">"Solidity"</span>, <span class="st">"Roundness"</span>, <span class="st">"Compactness"</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ShapeFactor1"</span>, <span class="st">"ShapeFactor2"</span>, <span class="st">"ShapeFactor3"</span>, <span class="st">"ShapeFactor4"</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>CLASS_NAMES <span class="op">=</span> [</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"BARBUNYA"</span>, <span class="st">"BOMBAY"</span>, <span class="st">"CALI"</span>, <span class="st">"DERMASON"</span>, <span class="st">"HOROZ"</span>, <span class="st">"SEKER"</span>, <span class="st">"SIRA"</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_dry_beans():</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    DATA_DIR.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> ARCHIVE_PATH.exists():</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>        temporary_path <span class="op">=</span> ARCHIVE_PATH.with_suffix(<span class="st">".download"</span>)</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        urlretrieve(DATA_URL, temporary_path)</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        temporary_path.replace(ARCHIVE_PATH)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    archive_hash <span class="op">=</span> sha256(ARCHIVE_PATH.read_bytes()).hexdigest()</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> archive_hash <span class="op">!=</span> EXPECTED_SHA256:</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"SHA-256 inesperado: </span><span class="sc">{</span>archive_hash<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> ZipFile(ARCHIVE_PATH) <span class="im">as</span> archive:</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ARFF_NAME <span class="kw">not</span> <span class="kw">in</span> archive.namelist() <span class="kw">or</span> archive.testzip() <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El ZIP no cumple el contrato esperado"</span>)</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> archive.<span class="bu">open</span>(ARFF_NAME) <span class="im">as</span> source:</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>            frame <span class="op">=</span> pd.read_csv(</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>                source,</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>                skiprows<span class="op">=</span><span class="dv">25</span>,</span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>                names<span class="op">=</span>FEATURE_NAMES <span class="op">+</span> [<span class="st">"Class"</span>],</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> frame.shape <span class="op">!=</span> (<span class="dv">13_611</span>, <span class="dv">17</span>):</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Dimensiones inesperadas: </span><span class="sc">{</span>frame<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">sorted</span>(frame[<span class="st">"Class"</span>].unique()) <span class="op">!=</span> CLASS_NAMES:</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Clases inesperadas"</span>)</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> frame.isna().<span class="bu">any</span>().<span class="bu">any</span>():</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Se encontraron valores faltantes"</span>)</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> frame</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>beans <span class="op">=</span> load_dry_beans().drop_duplicates().reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(beans) <span class="op">==</span> <span class="dv">13_543</span></span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>El test del Capítulo 3 ya fue consultado. No volveremos a presentarlo como evidencia independiente. Reconstruimos la partición original y usamos solo su 70% de entrenamiento. Dentro de ella simulamos un presupuesto fijo de 2.100 observaciones para ajuste; las 7.380 etiquetas restantes forman una validación de laboratorio reutilizada para decisiones exploratorias.</p>
+<div id="05dbd160" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>original_train_frame, _previous_holdout <span class="op">=</span> train_test_split(</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    beans,</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    test_size<span class="op">=</span><span class="fl">0.30</span>,</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>beans[<span class="st">"Class"</span>],</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>fit_frame, lab_validation_frame <span class="op">=</span> train_test_split(</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>    original_train_frame,</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    train_size<span class="op">=</span><span class="dv">2_100</span>,</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>original_train_frame[<span class="st">"Class"</span>],</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span><span class="dv">31_415</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>fit_frame <span class="op">=</span> fit_frame.reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>lab_validation_frame <span class="op">=</span> lab_validation_frame.reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>protocol_summary <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"uso"</span>: [<span class="st">"ajuste"</span>, <span class="st">"validación de laboratorio"</span>, <span class="st">"no reutilizado"</span>],</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"filas"</span>: [<span class="bu">len</span>(fit_frame), <span class="bu">len</span>(lab_validation_frame), <span class="bu">len</span>(_previous_holdout)],</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"decide parámetros"</span>: [<span class="va">True</span>, <span class="va">False</span>, <span class="va">False</span>],</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"decide hiperparámetros"</span>: [<span class="va">False</span>, <span class="va">True</span>, <span class="va">False</span>],</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>protocol_summary</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">uso</th>
+<th data-quarto-table-cell-role="th">filas</th>
+<th data-quarto-table-cell-role="th">decide parámetros</th>
+<th data-quarto-table-cell-role="th">decide hiperparámetros</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ajuste</td>
+<td>2100</td>
+<td>True</td>
+<td>False</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>validación de laboratorio</td>
+<td>7380</td>
+<td>False</td>
+<td>True</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>no reutilizado</td>
+<td>4063</td>
+<td>False</td>
+<td>False</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>La simulación no afirma que solo existan 2.100 etiquetas: el protocolo requiere 9.480 etiquetas en total. Restringe deliberadamente las observaciones que actualizan gradientes para hacer observable el sobreajuste y abaratar las repeticiones.</p>
+<div id="70397155" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>class_to_index <span class="op">=</span> {name: index <span class="cf">for</span> index, name <span class="kw">in</span> <span class="bu">enumerate</span>(CLASS_NAMES)}</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>fit_mean <span class="op">=</span> fit_frame[FEATURE_NAMES].mean().to_numpy(dtype<span class="op">=</span>np.float32)</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>fit_std <span class="op">=</span> fit_frame[FEATURE_NAMES].std(ddof<span class="op">=</span><span class="dv">0</span>).to_numpy(dtype<span class="op">=</span>np.float32)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> np.<span class="bu">any</span>(fit_std <span class="op">==</span> <span class="dv">0</span>):</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Existe una característica constante en el conjunto de ajuste"</span>)</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> frame_to_tensors(frame):</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>    values <span class="op">=</span> frame[FEATURE_NAMES].to_numpy(dtype<span class="op">=</span>np.float32)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>    standardized <span class="op">=</span> (values <span class="op">-</span> fit_mean) <span class="op">/</span> fit_std</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> frame[<span class="st">"Class"</span>].<span class="bu">map</span>(class_to_index).to_numpy(dtype<span class="op">=</span>np.int64)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.from_numpy(standardized), torch.from_numpy(labels)</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>X_fit, y_fit <span class="op">=</span> frame_to_tensors(fit_frame)</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>X_lab, y_lab <span class="op">=</span> frame_to_tensors(lab_validation_frame)</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> X_fit.shape <span class="op">==</span> (<span class="dv">2_100</span>, <span class="dv">16</span>)</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.isfinite(X_fit).<span class="bu">all</span>() <span class="kw">and</span> torch.isfinite(X_lab).<span class="bu">all</span>()</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Ajuste:"</span>, X_fit.shape, y_fit.shape)</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Validación de laboratorio:"</span>, X_lab.shape, y_lab.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Ajuste: torch.Size([2100, 16]) torch.Size([2100])
+Validación de laboratorio: torch.Size([7380, 16]) torch.Size([7380])</code></pre>
+</div>
+</div>
+</section>
+<section id="fijar-la-arquitectura-antes-de-intervenir" class="level2" data-number="4.4">
+<h2 data-number="4.4" class="anchored" data-anchor-id="fijar-la-arquitectura-antes-de-intervenir"><span class="header-section-number">4.4</span> Fijar la arquitectura antes de intervenir</h2>
+<p>Usaremos cinco capas ocultas de 128 unidades. Es deliberadamente más profunda y grande que la MLP del capítulo anterior: tiene capacidad suficiente para hacer visibles problemas de propagación y sobreajuste, pero sigue entrenando en CPU en segundos.</p>
+<div id="00de602d" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> DiagnosticMLP(nn.Module):</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, activation<span class="op">=</span><span class="st">"relu"</span>, dropout<span class="op">=</span><span class="fl">0.0</span>, width<span class="op">=</span><span class="dv">128</span>, depth<span class="op">=</span><span class="dv">5</span>):</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.activation_name <span class="op">=</span> activation</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.hidden_layers <span class="op">=</span> nn.ModuleList()</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a>        input_width <span class="op">=</span> <span class="dv">16</span></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(depth):</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>            <span class="va">self</span>.hidden_layers.append(nn.Linear(input_width, width))</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>            input_width <span class="op">=</span> width</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.output <span class="op">=</span> nn.Linear(input_width, <span class="dv">7</span>)</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.dropout <span class="op">=</span> nn.Dropout(dropout)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> activate(<span class="va">self</span>, values):</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="va">self</span>.activation_name <span class="op">==</span> <span class="st">"sigmoid"</span>:</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>            <span class="cf">return</span> torch.sigmoid(values)</span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.relu(values)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, X):</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>        hidden <span class="op">=</span> X</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> <span class="va">self</span>.hidden_layers:</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>            hidden <span class="op">=</span> <span class="va">self</span>.dropout(<span class="va">self</span>.activate(layer(hidden)))</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.output(hidden)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a>model_example <span class="op">=</span> DiagnosticMLP()</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a>parameter_count <span class="op">=</span> <span class="bu">sum</span>(parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> model_example.parameters())</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(model_example)</span>
+<span id="cb7-28"><a href="#cb7-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Parámetros: </span><span class="sc">{</span>parameter_count<span class="sc">:,}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>DiagnosticMLP(
+  (hidden_layers): ModuleList(
+    (0): Linear(in_features=16, out_features=128, bias=True)
+    (1-4): 4 x Linear(in_features=128, out_features=128, bias=True)
+  )
+  (output): Linear(in_features=128, out_features=7, bias=True)
+  (dropout): Dropout(p=0.0, inplace=False)
+)
+Parámetros: 69,127</code></pre>
+</div>
+</div>
+<p>La arquitectura tiene 69.127 parámetros frente a 2.100 observaciones de ajuste. No variaremos profundidad ni ancho: el objeto de estudio es el entrenamiento.</p>
+</section>
+<section id="la-escala-se-propaga-capa-por-capa" class="level2" data-number="4.5">
+<h2 data-number="4.5" class="anchored" data-anchor-id="la-escala-se-propaga-capa-por-capa"><span class="header-section-number">4.5</span> La escala se propaga capa por capa</h2>
+<p>Para una preactivación</p>
+<p><span class="math display">\[
+z_j=\sum_{i=1}^{n_{\mathrm{in}}}w_{ij}h_i,
+\]</span></p>
+<p>y bajo supuestos aproximados de independencia y media cero,</p>
+<p><span class="math display">\[
+\operatorname{Var}(z_j)
+\approx n_{\mathrm{in}}\operatorname{Var}(w_{ij})
+\operatorname{Var}(h_i).
+\]</span></p>
+<p>Si la varianza de los pesos no considera el <em>fan-in</em>, la señal puede crecer o contraerse repetidamente. Xavier busca preservar escala en activaciones simétricas <span class="citation" data-cites="glorot2010understanding">(<a href="../references.html#ref-glorot2010understanding" role="doc-biblioref">Glorot y Bengio 2010</a>)</span>; para ReLU, la inicialización de Kaiming compensa que aproximadamente la mitad de las entradas se anula <span class="citation" data-cites="he2015delving">(<a href="../references.html#ref-he2015delving" role="doc-biblioref">He et&nbsp;al. 2015</a>)</span>:</p>
+<p><span class="math display">\[
+\operatorname{Var}(w_{ij})\approx\frac{2}{n_{\mathrm{in}}}.
+\]</span></p>
+<div id="c4793027" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> initialize_model(model, strategy):</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    hidden_layers <span class="op">=</span> <span class="bu">list</span>(model.hidden_layers)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    all_layers <span class="op">=</span> hidden_layers <span class="op">+</span> [model.output]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> layer <span class="kw">in</span> all_layers:</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        nn.init.zeros_(layer.bias)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> strategy <span class="op">==</span> <span class="st">"large-normal"</span>:</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> hidden_layers:</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>            nn.init.normal_(layer.weight, mean<span class="op">=</span><span class="fl">0.0</span>, std<span class="op">=</span><span class="fl">3.0</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>        nn.init.xavier_uniform_(model.output.weight)</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> strategy <span class="op">==</span> <span class="st">"xavier"</span>:</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> all_layers:</span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a>            nn.init.xavier_uniform_(layer.weight)</span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">elif</span> strategy <span class="op">==</span> <span class="st">"kaiming"</span>:</span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> layer <span class="kw">in</span> hidden_layers:</span>
+<span id="cb9-17"><a href="#cb9-17" aria-hidden="true" tabindex="-1"></a>            nn.init.kaiming_normal_(layer.weight, nonlinearity<span class="op">=</span><span class="st">"relu"</span>)</span>
+<span id="cb9-18"><a href="#cb9-18" aria-hidden="true" tabindex="-1"></a>        nn.init.xavier_uniform_(model.output.weight)</span>
+<span id="cb9-19"><a href="#cb9-19" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb9-20"><a href="#cb9-20" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Inicialización desconocida: </span><span class="sc">{</span>strategy<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="los-gradientes-también-se-multiplican" class="level2" data-number="4.6">
+<h2 data-number="4.6" class="anchored" data-anchor-id="los-gradientes-también-se-multiplican"><span class="header-section-number">4.6</span> Los gradientes también se multiplican</h2>
+<p>En una red de profundidad <span class="math inline">\(L\)</span>, la regla de la cadena contiene un producto de Jacobianos:</p>
+<p><span class="math display">\[
+\frac{\partial\mathcal{L}}{\partial\mathbf{h}_{\ell}}
+=\frac{\partial\mathcal{L}}{\partial\mathbf{h}_L}
+\prod_{k=\ell+1}^{L}
+\frac{\partial\mathbf{h}_k}{\partial\mathbf{h}_{k-1}}.
+\]</span></p>
+<p>Factores repetidamente menores que uno hacen desaparecer el gradiente; factores grandes pueden hacerlo explotar. Compararemos capas mediante el gradiente relativo</p>
+<p><span class="math display">\[
+r_\ell=
+\frac{\|\nabla_{\mathbf{W}_\ell}\mathcal{L}\|_2}
+{\|\mathbf{W}_\ell\|_2+\varepsilon},
+\]</span></p>
+<p>que contextualiza la norma del gradiente por la escala de sus pesos.</p>
+<div id="55c55b46" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> inspect_signal(model, batch_X, batch_y, configuration):</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>    model.train()</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>    model.zero_grad(set_to_none<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    hidden <span class="op">=</span> batch_X</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    activations <span class="op">=</span> []</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> layer <span class="kw">in</span> model.hidden_layers:</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>        hidden <span class="op">=</span> model.activate(layer(hidden))</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>        activations.append(hidden)</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    logits <span class="op">=</span> model.output(hidden)</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    loss <span class="op">=</span> nn.functional.cross_entropy(logits, batch_y)</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    loss.backward()</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>    rows <span class="op">=</span> []</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> layer_index, (layer, activation) <span class="kw">in</span> <span class="bu">enumerate</span>(</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        <span class="bu">zip</span>(model.hidden_layers, activations), start<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>    ):</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> model.activation_name <span class="op">==</span> <span class="st">"sigmoid"</span>:</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>            inactive_fraction <span class="op">=</span> (</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>                (activation <span class="op">&lt;</span> <span class="fl">0.01</span>) <span class="op">|</span> (activation <span class="op">&gt;</span> <span class="fl">0.99</span>)</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>            ).to(torch.float32).mean().item()</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>            inactive_fraction <span class="op">=</span> (activation <span class="op">==</span> <span class="dv">0</span>).to(torch.float32).mean().item()</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>        rows.append({</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">"configuración"</span>: configuration,</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">"capa"</span>: layer_index,</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">"desviación activación"</span>: activation.std().item(),</span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fracción extrema/cero en lote"</span>: inactive_fraction,</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">"gradiente relativo"</span>: (</span>
+<span id="cb10-32"><a href="#cb10-32" aria-hidden="true" tabindex="-1"></a>                layer.weight.grad.norm() <span class="op">/</span> (layer.weight.norm() <span class="op">+</span> <span class="fl">1e-12</span>)</span>
+<span id="cb10-33"><a href="#cb10-33" aria-hidden="true" tabindex="-1"></a>            ).item(),</span>
+<span id="cb10-34"><a href="#cb10-34" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb10-35"><a href="#cb10-35" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> rows</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="tres-estados-iniciales-observables" class="level2" data-number="4.7">
+<h2 data-number="4.7" class="anchored" data-anchor-id="tres-estados-iniciales-observables"><span class="header-section-number">4.7</span> Tres estados iniciales observables</h2>
+<p>Comparamos un caso sigmoid con pesos grandes, sigmoid con Xavier y ReLU con Kaiming. Los dos primeros permiten observar saturación y gradientes decrecientes; el tercero empareja activación e inicialización.</p>
+<div id="bef51061" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>INITIALIZATION_CASES <span class="op">=</span> {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Sigmoid + Normal(0, 3)"</span>: (<span class="st">"sigmoid"</span>, <span class="st">"large-normal"</span>),</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Sigmoid + Xavier"</span>: (<span class="st">"sigmoid"</span>, <span class="st">"xavier"</span>),</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ReLU + Kaiming"</span>: (<span class="st">"relu"</span>, <span class="st">"kaiming"</span>),</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>signal_rows <span class="op">=</span> []</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> case_name, (activation, initialization) <span class="kw">in</span> INITIALIZATION_CASES.items():</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    torch.manual_seed(SEED)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    case_model <span class="op">=</span> DiagnosticMLP(activation<span class="op">=</span>activation)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>    initialize_model(case_model, initialization)</span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>    signal_rows.extend(</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>        inspect_signal(case_model, X_fit[:<span class="dv">128</span>], y_fit[:<span class="dv">128</span>], case_name)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>signal_diagnostics <span class="op">=</span> pd.DataFrame(signal_rows)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a>signal_diagnostics</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">configuración</th>
+<th data-quarto-table-cell-role="th">capa</th>
+<th data-quarto-table-cell-role="th">desviación activación</th>
+<th data-quarto-table-cell-role="th">fracción extrema/cero en lote</th>
+<th data-quarto-table-cell-role="th">gradiente relativo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>Sigmoid + Normal(0, 3)</td>
+<td>1</td>
+<td>0.450073</td>
+<td>0.583557</td>
+<td>0.002828</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Sigmoid + Normal(0, 3)</td>
+<td>2</td>
+<td>0.480370</td>
+<td>0.842102</td>
+<td>0.000750</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>Sigmoid + Normal(0, 3)</td>
+<td>3</td>
+<td>0.480208</td>
+<td>0.840881</td>
+<td>0.000389</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>Sigmoid + Normal(0, 3)</td>
+<td>4</td>
+<td>0.480071</td>
+<td>0.849060</td>
+<td>0.000269</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>Sigmoid + Normal(0, 3)</td>
+<td>5</td>
+<td>0.480320</td>
+<td>0.821167</td>
+<td>0.000215</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>Sigmoid + Xavier</td>
+<td>1</td>
+<td>0.112561</td>
+<td>0.000000</td>
+<td>0.000201</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>Sigmoid + Xavier</td>
+<td>2</td>
+<td>0.121757</td>
+<td>0.000000</td>
+<td>0.000406</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>Sigmoid + Xavier</td>
+<td>3</td>
+<td>0.111772</td>
+<td>0.000000</td>
+<td>0.001629</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>Sigmoid + Xavier</td>
+<td>4</td>
+<td>0.133402</td>
+<td>0.000000</td>
+<td>0.008898</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>Sigmoid + Xavier</td>
+<td>5</td>
+<td>0.116372</td>
+<td>0.000000</td>
+<td>0.040114</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">10</th>
+<td>ReLU + Kaiming</td>
+<td>1</td>
+<td>0.910402</td>
+<td>0.499512</td>
+<td>0.041330</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11</th>
+<td>ReLU + Kaiming</td>
+<td>2</td>
+<td>0.952899</td>
+<td>0.527466</td>
+<td>0.119537</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">12</th>
+<td>ReLU + Kaiming</td>
+<td>3</td>
+<td>0.912891</td>
+<td>0.458618</td>
+<td>0.129428</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">13</th>
+<td>ReLU + Kaiming</td>
+<td>4</td>
+<td>0.914178</td>
+<td>0.542969</td>
+<td>0.133524</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">14</th>
+<td>ReLU + Kaiming</td>
+<td>5</td>
+<td>0.779343</td>
+<td>0.525330</td>
+<td>0.149489</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-signal-propagation" class="cell" data-fig-height="4" data-fig-width="11" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="dv">4</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>diagnostics_to_plot <span class="op">=</span> [</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"desviación activación"</span>, <span class="st">"Desviación de activación"</span>, <span class="va">False</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"fracción extrema/cero en lote"</span>, <span class="st">"Fracción extrema/cero en lote"</span>, <span class="va">False</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"gradiente relativo"</span>, <span class="st">"Gradiente relativo"</span>, <span class="va">True</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> [<span class="st">"#9c755f"</span>, <span class="st">"#6042a6"</span>, <span class="st">"#327c78"</span>]</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> case_index, case_name <span class="kw">in</span> <span class="bu">enumerate</span>(INITIALIZATION_CASES):</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    case_rows <span class="op">=</span> signal_diagnostics[</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>        signal_diagnostics[<span class="st">"configuración"</span>] <span class="op">==</span> case_name</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> axis, (column, title, logarithmic) <span class="kw">in</span> <span class="bu">zip</span>(axes, diagnostics_to_plot):</span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>        axis.plot(</span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>            case_rows[<span class="st">"capa"</span>],</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>            case_rows[column],</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>            marker<span class="op">=</span><span class="st">"o"</span>,</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>            color<span class="op">=</span>colors[case_index],</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>            label<span class="op">=</span>case_name,</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>        axis.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Capa oculta"</span>, title<span class="op">=</span>title)</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> logarithmic:</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>            axis.set_yscale(<span class="st">"log"</span>)</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>        axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].legend(frameon<span class="op">=</span><span class="va">False</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-signal-propagation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Tres paneles comparan diagnósticos por capa para dos redes sigmoid y una red ReLU.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-signal-propagation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter04_files/figure-html/fig-signal-propagation-output-1.png" alt="Tres paneles comparan diagnósticos por capa para dos redes sigmoid y una red ReLU." width="1046" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-signal-propagation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;4.1: Escala inicial de activaciones, unidades saturadas o nulas y gradientes relativos por profundidad.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Los pesos grandes llevan muchas sigmoides cerca de 0 o 1. Xavier evita esa saturación inicial, pero no evita que las derivadas sigmoid menores que uno se multipliquen: el gradiente de la primera capa es mucho menor que el de la última. ReLU con Kaiming mantiene activaciones y gradientes en escalas más comparables. Que cerca de la mitad de sus activaciones sea cero en este lote es normal; no significa que la mitad de las unidades esté permanentemente muerta.</p>
+</section>
+<section id="un-ciclo-de-entrenamiento-instrumentado" class="level2" data-number="4.8">
+<h2 data-number="4.8" class="anchored" data-anchor-id="un-ciclo-de-entrenamiento-instrumentado"><span class="header-section-number">4.8</span> Un ciclo de entrenamiento instrumentado</h2>
+<p>La misma función ejecutará todos los experimentos. Registra pérdida, macro-F1, tasa, tiempo, checkpoint y fallos no finitos. Cuando hay early stopping, restaura una copia profunda del mejor <code>state_dict</code>.</p>
+<div id="f2a1d6a8" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> macro_f1(labels, predictions):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> f1_score(</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        labels.numpy(),</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        predictions.numpy(),</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        labels<span class="op">=</span>np.arange(<span class="bu">len</span>(CLASS_NAMES)),</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        average<span class="op">=</span><span class="st">"macro"</span>,</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        zero_division<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_model(model, X, y):</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> model(X)</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> nn.functional.cross_entropy(logits, y).item()</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>        predictions <span class="op">=</span> logits.argmax(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss, macro_f1(y, predictions)</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> optimizer_for(model, name, learning_rate, weight_decay<span class="op">=</span><span class="fl">0.0</span>):</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> name <span class="op">==</span> <span class="st">"SGD"</span>:</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.optim.SGD(</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>            model.parameters(), lr<span class="op">=</span>learning_rate, weight_decay<span class="op">=</span>weight_decay</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-25"><a href="#cb13-25" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> name <span class="op">==</span> <span class="st">"Momentum"</span>:</span>
+<span id="cb13-26"><a href="#cb13-26" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.optim.SGD(</span>
+<span id="cb13-27"><a href="#cb13-27" aria-hidden="true" tabindex="-1"></a>            model.parameters(),</span>
+<span id="cb13-28"><a href="#cb13-28" aria-hidden="true" tabindex="-1"></a>            lr<span class="op">=</span>learning_rate,</span>
+<span id="cb13-29"><a href="#cb13-29" aria-hidden="true" tabindex="-1"></a>            momentum<span class="op">=</span><span class="fl">0.9</span>,</span>
+<span id="cb13-30"><a href="#cb13-30" aria-hidden="true" tabindex="-1"></a>            weight_decay<span class="op">=</span>weight_decay,</span>
+<span id="cb13-31"><a href="#cb13-31" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-32"><a href="#cb13-32" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> name <span class="op">==</span> <span class="st">"AdamW"</span>:</span>
+<span id="cb13-33"><a href="#cb13-33" aria-hidden="true" tabindex="-1"></a>        decay_parameters <span class="op">=</span> [</span>
+<span id="cb13-34"><a href="#cb13-34" aria-hidden="true" tabindex="-1"></a>            parameter <span class="cf">for</span> parameter <span class="kw">in</span> model.parameters() <span class="cf">if</span> parameter.ndim <span class="op">&gt;</span> <span class="dv">1</span></span>
+<span id="cb13-35"><a href="#cb13-35" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb13-36"><a href="#cb13-36" aria-hidden="true" tabindex="-1"></a>        no_decay_parameters <span class="op">=</span> [</span>
+<span id="cb13-37"><a href="#cb13-37" aria-hidden="true" tabindex="-1"></a>            parameter <span class="cf">for</span> parameter <span class="kw">in</span> model.parameters() <span class="cf">if</span> parameter.ndim <span class="op">==</span> <span class="dv">1</span></span>
+<span id="cb13-38"><a href="#cb13-38" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb13-39"><a href="#cb13-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.optim.AdamW(</span>
+<span id="cb13-40"><a href="#cb13-40" aria-hidden="true" tabindex="-1"></a>            [</span>
+<span id="cb13-41"><a href="#cb13-41" aria-hidden="true" tabindex="-1"></a>                {<span class="st">"params"</span>: decay_parameters, <span class="st">"weight_decay"</span>: weight_decay},</span>
+<span id="cb13-42"><a href="#cb13-42" aria-hidden="true" tabindex="-1"></a>                {<span class="st">"params"</span>: no_decay_parameters, <span class="st">"weight_decay"</span>: <span class="fl">0.0</span>},</span>
+<span id="cb13-43"><a href="#cb13-43" aria-hidden="true" tabindex="-1"></a>            ],</span>
+<span id="cb13-44"><a href="#cb13-44" aria-hidden="true" tabindex="-1"></a>            lr<span class="op">=</span>learning_rate,</span>
+<span id="cb13-45"><a href="#cb13-45" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-46"><a href="#cb13-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Optimizador desconocido: </span><span class="sc">{</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb13-47"><a href="#cb13-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-48"><a href="#cb13-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-49"><a href="#cb13-49" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> run_training(</span>
+<span id="cb13-50"><a href="#cb13-50" aria-hidden="true" tabindex="-1"></a>    seed,</span>
+<span id="cb13-51"><a href="#cb13-51" aria-hidden="true" tabindex="-1"></a>    activation<span class="op">=</span><span class="st">"relu"</span>,</span>
+<span id="cb13-52"><a href="#cb13-52" aria-hidden="true" tabindex="-1"></a>    initialization<span class="op">=</span><span class="st">"kaiming"</span>,</span>
+<span id="cb13-53"><a href="#cb13-53" aria-hidden="true" tabindex="-1"></a>    optimizer_name<span class="op">=</span><span class="st">"AdamW"</span>,</span>
+<span id="cb13-54"><a href="#cb13-54" aria-hidden="true" tabindex="-1"></a>    learning_rate<span class="op">=</span><span class="fl">0.001</span>,</span>
+<span id="cb13-55"><a href="#cb13-55" aria-hidden="true" tabindex="-1"></a>    dropout<span class="op">=</span><span class="fl">0.0</span>,</span>
+<span id="cb13-56"><a href="#cb13-56" aria-hidden="true" tabindex="-1"></a>    weight_decay<span class="op">=</span><span class="fl">0.0</span>,</span>
+<span id="cb13-57"><a href="#cb13-57" aria-hidden="true" tabindex="-1"></a>    max_epochs<span class="op">=</span><span class="dv">100</span>,</span>
+<span id="cb13-58"><a href="#cb13-58" aria-hidden="true" tabindex="-1"></a>    patience<span class="op">=</span><span class="va">None</span>,</span>
+<span id="cb13-59"><a href="#cb13-59" aria-hidden="true" tabindex="-1"></a>    cosine<span class="op">=</span><span class="va">False</span>,</span>
+<span id="cb13-60"><a href="#cb13-60" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb13-61"><a href="#cb13-61" aria-hidden="true" tabindex="-1"></a>    torch.manual_seed(seed)</span>
+<span id="cb13-62"><a href="#cb13-62" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> DiagnosticMLP(activation<span class="op">=</span>activation, dropout<span class="op">=</span>dropout).to(device)</span>
+<span id="cb13-63"><a href="#cb13-63" aria-hidden="true" tabindex="-1"></a>    initialize_model(model, initialization)</span>
+<span id="cb13-64"><a href="#cb13-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-65"><a href="#cb13-65" aria-hidden="true" tabindex="-1"></a>    loader <span class="op">=</span> DataLoader(</span>
+<span id="cb13-66"><a href="#cb13-66" aria-hidden="true" tabindex="-1"></a>        TensorDataset(X_fit, y_fit),</span>
+<span id="cb13-67"><a href="#cb13-67" aria-hidden="true" tabindex="-1"></a>        batch_size<span class="op">=</span><span class="dv">128</span>,</span>
+<span id="cb13-68"><a href="#cb13-68" aria-hidden="true" tabindex="-1"></a>        shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb13-69"><a href="#cb13-69" aria-hidden="true" tabindex="-1"></a>        generator<span class="op">=</span>torch.Generator().manual_seed(seed),</span>
+<span id="cb13-70"><a href="#cb13-70" aria-hidden="true" tabindex="-1"></a>        num_workers<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb13-71"><a href="#cb13-71" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-72"><a href="#cb13-72" aria-hidden="true" tabindex="-1"></a>    optimizer <span class="op">=</span> optimizer_for(</span>
+<span id="cb13-73"><a href="#cb13-73" aria-hidden="true" tabindex="-1"></a>        model, optimizer_name, learning_rate, weight_decay</span>
+<span id="cb13-74"><a href="#cb13-74" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb13-75"><a href="#cb13-75" aria-hidden="true" tabindex="-1"></a>    scheduler <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb13-76"><a href="#cb13-76" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> cosine:</span>
+<span id="cb13-77"><a href="#cb13-77" aria-hidden="true" tabindex="-1"></a>        scheduler <span class="op">=</span> torch.optim.lr_scheduler.CosineAnnealingLR(</span>
+<span id="cb13-78"><a href="#cb13-78" aria-hidden="true" tabindex="-1"></a>            optimizer,</span>
+<span id="cb13-79"><a href="#cb13-79" aria-hidden="true" tabindex="-1"></a>            T_max<span class="op">=</span><span class="bu">max</span>(<span class="dv">1</span>, max_epochs <span class="op">-</span> <span class="dv">1</span>),</span>
+<span id="cb13-80"><a href="#cb13-80" aria-hidden="true" tabindex="-1"></a>            eta_min<span class="op">=</span>learning_rate <span class="op">/</span> <span class="dv">100</span>,</span>
+<span id="cb13-81"><a href="#cb13-81" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb13-82"><a href="#cb13-82" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-83"><a href="#cb13-83" aria-hidden="true" tabindex="-1"></a>    best_loss <span class="op">=</span> <span class="bu">float</span>(<span class="st">"inf"</span>)</span>
+<span id="cb13-84"><a href="#cb13-84" aria-hidden="true" tabindex="-1"></a>    best_state <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb13-85"><a href="#cb13-85" aria-hidden="true" tabindex="-1"></a>    best_epoch <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb13-86"><a href="#cb13-86" aria-hidden="true" tabindex="-1"></a>    epochs_without_improvement <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb13-87"><a href="#cb13-87" aria-hidden="true" tabindex="-1"></a>    history_rows <span class="op">=</span> []</span>
+<span id="cb13-88"><a href="#cb13-88" aria-hidden="true" tabindex="-1"></a>    failed <span class="op">=</span> <span class="va">False</span></span>
+<span id="cb13-89"><a href="#cb13-89" aria-hidden="true" tabindex="-1"></a>    failure_reason <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb13-90"><a href="#cb13-90" aria-hidden="true" tabindex="-1"></a>    started_at <span class="op">=</span> perf_counter()</span>
+<span id="cb13-91"><a href="#cb13-91" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-92"><a href="#cb13-92" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, max_epochs <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb13-93"><a href="#cb13-93" aria-hidden="true" tabindex="-1"></a>        model.train()</span>
+<span id="cb13-94"><a href="#cb13-94" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> batch_X, batch_y <span class="kw">in</span> loader:</span>
+<span id="cb13-95"><a href="#cb13-95" aria-hidden="true" tabindex="-1"></a>            optimizer.zero_grad(set_to_none<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb13-96"><a href="#cb13-96" aria-hidden="true" tabindex="-1"></a>            loss <span class="op">=</span> nn.functional.cross_entropy(model(batch_X), batch_y)</span>
+<span id="cb13-97"><a href="#cb13-97" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> torch.isfinite(loss):</span>
+<span id="cb13-98"><a href="#cb13-98" aria-hidden="true" tabindex="-1"></a>                failed <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb13-99"><a href="#cb13-99" aria-hidden="true" tabindex="-1"></a>                failure_reason <span class="op">=</span> <span class="st">"pérdida no finita"</span></span>
+<span id="cb13-100"><a href="#cb13-100" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb13-101"><a href="#cb13-101" aria-hidden="true" tabindex="-1"></a>            loss.backward()</span>
+<span id="cb13-102"><a href="#cb13-102" aria-hidden="true" tabindex="-1"></a>            finite_gradients <span class="op">=</span> <span class="bu">all</span>(</span>
+<span id="cb13-103"><a href="#cb13-103" aria-hidden="true" tabindex="-1"></a>                parameter.grad <span class="kw">is</span> <span class="va">None</span> <span class="kw">or</span> torch.isfinite(parameter.grad).<span class="bu">all</span>()</span>
+<span id="cb13-104"><a href="#cb13-104" aria-hidden="true" tabindex="-1"></a>                <span class="cf">for</span> parameter <span class="kw">in</span> model.parameters()</span>
+<span id="cb13-105"><a href="#cb13-105" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb13-106"><a href="#cb13-106" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> finite_gradients:</span>
+<span id="cb13-107"><a href="#cb13-107" aria-hidden="true" tabindex="-1"></a>                failed <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb13-108"><a href="#cb13-108" aria-hidden="true" tabindex="-1"></a>                failure_reason <span class="op">=</span> <span class="st">"gradiente no finito"</span></span>
+<span id="cb13-109"><a href="#cb13-109" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb13-110"><a href="#cb13-110" aria-hidden="true" tabindex="-1"></a>            optimizer.step()</span>
+<span id="cb13-111"><a href="#cb13-111" aria-hidden="true" tabindex="-1"></a>            finite_parameters <span class="op">=</span> <span class="bu">all</span>(</span>
+<span id="cb13-112"><a href="#cb13-112" aria-hidden="true" tabindex="-1"></a>                torch.isfinite(parameter).<span class="bu">all</span>() <span class="cf">for</span> parameter <span class="kw">in</span> model.parameters()</span>
+<span id="cb13-113"><a href="#cb13-113" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb13-114"><a href="#cb13-114" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> <span class="kw">not</span> finite_parameters:</span>
+<span id="cb13-115"><a href="#cb13-115" aria-hidden="true" tabindex="-1"></a>                failed <span class="op">=</span> <span class="va">True</span></span>
+<span id="cb13-116"><a href="#cb13-116" aria-hidden="true" tabindex="-1"></a>                failure_reason <span class="op">=</span> <span class="st">"parámetro no finito"</span></span>
+<span id="cb13-117"><a href="#cb13-117" aria-hidden="true" tabindex="-1"></a>                <span class="cf">break</span></span>
+<span id="cb13-118"><a href="#cb13-118" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-119"><a href="#cb13-119" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> failed:</span>
+<span id="cb13-120"><a href="#cb13-120" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb13-121"><a href="#cb13-121" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-122"><a href="#cb13-122" aria-hidden="true" tabindex="-1"></a>        fit_loss, fit_f1 <span class="op">=</span> evaluate_model(model, X_fit, y_fit)</span>
+<span id="cb13-123"><a href="#cb13-123" aria-hidden="true" tabindex="-1"></a>        validation_loss, validation_f1 <span class="op">=</span> evaluate_model(model, X_lab, y_lab)</span>
+<span id="cb13-124"><a href="#cb13-124" aria-hidden="true" tabindex="-1"></a>        history_rows.append({</span>
+<span id="cb13-125"><a href="#cb13-125" aria-hidden="true" tabindex="-1"></a>            <span class="st">"epoch"</span>: epoch,</span>
+<span id="cb13-126"><a href="#cb13-126" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fit_loss"</span>: fit_loss,</span>
+<span id="cb13-127"><a href="#cb13-127" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_loss"</span>: validation_loss,</span>
+<span id="cb13-128"><a href="#cb13-128" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fit_macro_f1"</span>: fit_f1,</span>
+<span id="cb13-129"><a href="#cb13-129" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_macro_f1"</span>: validation_f1,</span>
+<span id="cb13-130"><a href="#cb13-130" aria-hidden="true" tabindex="-1"></a>            <span class="st">"learning_rate"</span>: optimizer.param_groups[<span class="dv">0</span>][<span class="st">"lr"</span>],</span>
+<span id="cb13-131"><a href="#cb13-131" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb13-132"><a href="#cb13-132" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-133"><a href="#cb13-133" aria-hidden="true" tabindex="-1"></a>        previous_best_loss <span class="op">=</span> best_loss</span>
+<span id="cb13-134"><a href="#cb13-134" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> validation_loss <span class="op">&lt;</span> best_loss:</span>
+<span id="cb13-135"><a href="#cb13-135" aria-hidden="true" tabindex="-1"></a>            best_loss <span class="op">=</span> validation_loss</span>
+<span id="cb13-136"><a href="#cb13-136" aria-hidden="true" tabindex="-1"></a>            best_epoch <span class="op">=</span> epoch</span>
+<span id="cb13-137"><a href="#cb13-137" aria-hidden="true" tabindex="-1"></a>            best_state <span class="op">=</span> deepcopy(model.state_dict())</span>
+<span id="cb13-138"><a href="#cb13-138" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> validation_loss <span class="op">&lt;</span> previous_best_loss <span class="op">-</span> <span class="fl">1e-4</span>:</span>
+<span id="cb13-139"><a href="#cb13-139" aria-hidden="true" tabindex="-1"></a>            epochs_without_improvement <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb13-140"><a href="#cb13-140" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-141"><a href="#cb13-141" aria-hidden="true" tabindex="-1"></a>            epochs_without_improvement <span class="op">+=</span> <span class="dv">1</span></span>
+<span id="cb13-142"><a href="#cb13-142" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-143"><a href="#cb13-143" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> scheduler <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb13-144"><a href="#cb13-144" aria-hidden="true" tabindex="-1"></a>            scheduler.step()</span>
+<span id="cb13-145"><a href="#cb13-145" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> patience <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span> <span class="kw">and</span> epochs_without_improvement <span class="op">&gt;=</span> patience:</span>
+<span id="cb13-146"><a href="#cb13-146" aria-hidden="true" tabindex="-1"></a>            <span class="cf">break</span></span>
+<span id="cb13-147"><a href="#cb13-147" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-148"><a href="#cb13-148" aria-hidden="true" tabindex="-1"></a>    elapsed_seconds <span class="op">=</span> perf_counter() <span class="op">-</span> started_at</span>
+<span id="cb13-149"><a href="#cb13-149" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> pd.DataFrame(history_rows)</span>
+<span id="cb13-150"><a href="#cb13-150" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-151"><a href="#cb13-151" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> best_state <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb13-152"><a href="#cb13-152" aria-hidden="true" tabindex="-1"></a>        model.load_state_dict(best_state)</span>
+<span id="cb13-153"><a href="#cb13-153" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-154"><a href="#cb13-154" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb13-155"><a href="#cb13-155" aria-hidden="true" tabindex="-1"></a>        <span class="st">"model"</span>: model,</span>
+<span id="cb13-156"><a href="#cb13-156" aria-hidden="true" tabindex="-1"></a>        <span class="st">"history"</span>: history,</span>
+<span id="cb13-157"><a href="#cb13-157" aria-hidden="true" tabindex="-1"></a>        <span class="st">"best_epoch"</span>: best_epoch,</span>
+<span id="cb13-158"><a href="#cb13-158" aria-hidden="true" tabindex="-1"></a>        <span class="st">"epochs_run"</span>: <span class="bu">len</span>(history),</span>
+<span id="cb13-159"><a href="#cb13-159" aria-hidden="true" tabindex="-1"></a>        <span class="st">"seconds"</span>: elapsed_seconds,</span>
+<span id="cb13-160"><a href="#cb13-160" aria-hidden="true" tabindex="-1"></a>        <span class="st">"failed"</span>: failed,</span>
+<span id="cb13-161"><a href="#cb13-161" aria-hidden="true" tabindex="-1"></a>        <span class="st">"failure_reason"</span>: failure_reason,</span>
+<span id="cb13-162"><a href="#cb13-162" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="comprobar-si-el-diagnóstico-predice-el-entrenamiento" class="level2" data-number="4.9">
+<h2 data-number="4.9" class="anchored" data-anchor-id="comprobar-si-el-diagnóstico-predice-el-entrenamiento"><span class="header-section-number">4.9</span> Comprobar si el diagnóstico predice el entrenamiento</h2>
+<p>Entrenamos los tres estados iniciales con SGD, tasa 0,05 y 25 épocas. No hay regularización ni parada anticipada.</p>
+<div id="b1e8419c" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>initialization_runs <span class="op">=</span> {}</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> case_name, (activation, initialization) <span class="kw">in</span> INITIALIZATION_CASES.items():</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    initialization_runs[case_name] <span class="op">=</span> run_training(</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>        seed<span class="op">=</span>SEED,</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>        activation<span class="op">=</span>activation,</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>        initialization<span class="op">=</span>initialization,</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>        optimizer_name<span class="op">=</span><span class="st">"SGD"</span>,</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>        learning_rate<span class="op">=</span><span class="fl">0.05</span>,</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>        max_epochs<span class="op">=</span><span class="dv">25</span>,</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>initialization_results <span class="op">=</span> []</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> case_name, run <span class="kw">in</span> initialization_runs.items():</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> run[<span class="st">"history"</span>].empty:</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>        final_row <span class="op">=</span> pd.Series({</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fit_loss"</span>: np.nan,</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_loss"</span>: np.nan,</span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fit_macro_f1"</span>: np.nan,</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_macro_f1"</span>: np.nan,</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">else</span>:</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>        final_row <span class="op">=</span> run[<span class="st">"history"</span>].iloc[<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>    initialization_results.append({</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">"configuración"</span>: case_name,</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">"loss ajuste"</span>: final_row[<span class="st">"fit_loss"</span>],</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">"loss validación"</span>: final_row[<span class="st">"validation_loss"</span>],</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">"macro-F1 ajuste"</span>: final_row[<span class="st">"fit_macro_f1"</span>],</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">"macro-F1 validación"</span>: final_row[<span class="st">"validation_macro_f1"</span>],</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"falló"</span>: run[<span class="st">"failed"</span>],</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">"motivo"</span>: run[<span class="st">"failure_reason"</span>],</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(initialization_results).set_index(<span class="st">"configuración"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">loss ajuste</th>
+<th data-quarto-table-cell-role="th">loss validación</th>
+<th data-quarto-table-cell-role="th">macro-F1 ajuste</th>
+<th data-quarto-table-cell-role="th">macro-F1 validación</th>
+<th data-quarto-table-cell-role="th">falló</th>
+<th data-quarto-table-cell-role="th">motivo</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">configuración</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Sigmoid + Normal(0, 3)</th>
+<td>0.585580</td>
+<td>0.738001</td>
+<td>0.832651</td>
+<td>0.731937</td>
+<td>False</td>
+<td>None</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Sigmoid + Xavier</th>
+<td>1.841476</td>
+<td>1.841599</td>
+<td>0.059299</td>
+<td>0.059278</td>
+<td>False</td>
+<td>None</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">ReLU + Kaiming</th>
+<td>0.157855</td>
+<td>0.214601</td>
+<td>0.949267</td>
+<td>0.936364</td>
+<td>False</td>
+<td>None</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-initialization-training" class="cell" data-fig-height="4" data-fig-width="10" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> color, (case_name, run) <span class="kw">in</span> <span class="bu">zip</span>(colors, initialization_runs.items()):</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> run[<span class="st">"history"</span>]</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].plot(</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>], history[<span class="st">"fit_loss"</span>], color<span class="op">=</span>color, label<span class="op">=</span>case_name</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].plot(</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>], history[<span class="st">"validation_loss"</span>], color<span class="op">=</span>color, label<span class="op">=</span>case_name</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Ajuste"</span>, xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Entropía cruzada"</span>)</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Validación"</span>, xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Entropía cruzada"</span>)</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    axis.set_yscale(<span class="st">"log"</span>)</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>    axis.legend(frameon<span class="op">=</span><span class="va">False</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-initialization-training" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Curvas de pérdida de ajuste y validación para tres configuraciones iniciales.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-initialization-training-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter04_files/figure-html/fig-initialization-training-output-1.png" alt="Curvas de pérdida de ajuste y validación para tres configuraciones iniciales." width="950" height="375" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-initialization-training-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;4.2: Una inicialización y activación coherentes restauran el aprendizaje de la red profunda.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Sigmoid con Xavier evita saturación, pero su gradiente temprano casi no llega a las primeras capas y permanece cerca de la línea base mayoritaria. Los pesos grandes permiten algún aprendizaje, aunque con saturación y desempeño bajo. ReLU con Kaiming hace descender ambas pérdidas y supera 0,93 de macro-F1 en validación. El diagnóstico interno anticipó el comportamiento externo.</p>
+</section>
+<section id="qué-papel-cumple-batch-normalization" class="level2" data-number="4.10">
+<h2 data-number="4.10" class="anchored" data-anchor-id="qué-papel-cumple-batch-normalization"><span class="header-section-number">4.10</span> Qué papel cumple Batch Normalization</h2>
+<p>Batch Normalization estandariza preactivaciones por mini-batch y aprende escala <span class="math inline">\(\gamma\)</span> y desplazamiento <span class="math inline">\(\beta\)</span> <span class="citation" data-cites="ioffe2015batch">(<a href="../references.html#ref-ioffe2015batch" role="doc-biblioref">Ioffe y Szegedy 2015</a>)</span>:</p>
+<p><span class="math display">\[
+\widehat{z}=\frac{z-\mu_B}{\sqrt{\sigma_B^2+\varepsilon}},
+\qquad y=\gamma\widehat{z}+\beta.
+\]</span></p>
+<div id="e01b5075" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>linear_for_bn <span class="op">=</span> nn.Linear(<span class="dv">16</span>, <span class="dv">128</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>nn.init.kaiming_normal_(linear_for_bn.weight, nonlinearity<span class="op">=</span><span class="st">"relu"</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>batch_norm <span class="op">=</span> nn.BatchNorm1d(<span class="dv">128</span>)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>raw_preactivations <span class="op">=</span> linear_for_bn(X_fit[:<span class="dv">128</span>])</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>normalized_preactivations <span class="op">=</span> batch_norm(raw_preactivations)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>batch_norm_audit <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"antes"</span>: [</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>        raw_preactivations.mean(dim<span class="op">=</span><span class="dv">0</span>).<span class="bu">abs</span>().mean().item(),</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>        raw_preactivations.std(dim<span class="op">=</span><span class="dv">0</span>).mean().item(),</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"después"</span>: [</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>        normalized_preactivations.mean(dim<span class="op">=</span><span class="dv">0</span>).<span class="bu">abs</span>().mean().item(),</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>        normalized_preactivations.std(dim<span class="op">=</span><span class="dv">0</span>).mean().item(),</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>}, index<span class="op">=</span>[<span class="st">"media absoluta promedio"</span>, <span class="st">"desviación promedio"</span>])</span>
+<span id="cb16-19"><a href="#cb16-19" aria-hidden="true" tabindex="-1"></a>batch_norm_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">antes</th>
+<th data-quarto-table-cell-role="th">después</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">media absoluta promedio</th>
+<td>0.140956</td>
+<td>2.597335e-08</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">desviación promedio</th>
+<td>1.339395</td>
+<td>1.003924e+00</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Durante entrenamiento usa estadísticas del lote y actualiza promedios móviles; durante inferencia usa esos promedios. Olvidar <code>model.eval()</code> cambia el comportamiento. En este laboratorio, ReLU y Kaiming ya producen escalas sanas, así que no añadiremos normalización a la receta principal: una técnica no debe incorporarse sin una necesidad observada.</p>
+</section>
+<section id="comparar-recetas-de-optimización" class="level2" data-number="4.11">
+<h2 data-number="4.11" class="anchored" data-anchor-id="comparar-recetas-de-optimización"><span class="header-section-number">4.11</span> Comparar recetas de optimización</h2>
+<p>Con la propagación estabilizada, comparamos actualizaciones. SGD usa</p>
+<p><span class="math display">\[
+\boldsymbol{\theta}_{t+1}
+=\boldsymbol{\theta}_t-\eta\mathbf{g}_t.
+\]</span></p>
+<p>Momentum acumula una dirección suavizada, mientras AdamW adapta la escala por parámetro y desacopla weight decay <span class="citation" data-cites="kingma2015adam loshchilov2019decoupled">(<a href="../references.html#ref-kingma2015adam" role="doc-biblioref">Kingma y Ba 2015</a>; <a href="../references.html#ref-loshchilov2019decoupled" role="doc-biblioref">Loshchilov y Hutter 2019</a>)</span>. No sería justo asignarles la misma tasa: comparamos recetas convencionales prefijadas, no superioridad universal de algoritmos. Antes de ejecutar, declaramos esta regla exploratoria: consideramos elegibles pérdidas separadas por menos de 0,01; preferimos alcanzar macro-F1 0,92 antes y luego menor pérdida. Si un schedule cambia la pérdida menos de 0,002, conservamos tasa constante.</p>
+<div id="eafc7589" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>OPTIMIZER_CASES <span class="op">=</span> {</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SGD 0.05"</span>: {<span class="st">"optimizer_name"</span>: <span class="st">"SGD"</span>, <span class="st">"learning_rate"</span>: <span class="fl">0.05</span>},</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Momentum 0.03"</span>: {</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="st">"optimizer_name"</span>: <span class="st">"Momentum"</span>, <span class="st">"learning_rate"</span>: <span class="fl">0.03</span></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AdamW 0.001"</span>: {<span class="st">"optimizer_name"</span>: <span class="st">"AdamW"</span>, <span class="st">"learning_rate"</span>: <span class="fl">0.001</span>},</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AdamW + coseno"</span>: {</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        <span class="st">"optimizer_name"</span>: <span class="st">"AdamW"</span>, <span class="st">"learning_rate"</span>: <span class="fl">0.001</span>, <span class="st">"cosine"</span>: <span class="va">True</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>    },</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a>optimizer_runs <span class="op">=</span> {</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>    name: run_training(seed<span class="op">=</span>SEED, max_epochs<span class="op">=</span><span class="dv">60</span>, <span class="op">**</span>configuration)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, configuration <span class="kw">in</span> OPTIMIZER_CASES.items()</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>optimizer_rows <span class="op">=</span> []</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, run <span class="kw">in</span> optimizer_runs.items():</span>
+<span id="cb17-19"><a href="#cb17-19" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> run[<span class="st">"history"</span>]</span>
+<span id="cb17-20"><a href="#cb17-20" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> history.empty:</span>
+<span id="cb17-21"><a href="#cb17-21" aria-hidden="true" tabindex="-1"></a>        optimizer_rows.append({</span>
+<span id="cb17-22"><a href="#cb17-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">"receta"</span>: name,</span>
+<span id="cb17-23"><a href="#cb17-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mejor loss validación"</span>: np.nan,</span>
+<span id="cb17-24"><a href="#cb17-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">"macro-F1 en esa época"</span>: np.nan,</span>
+<span id="cb17-25"><a href="#cb17-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mejor época"</span>: np.nan,</span>
+<span id="cb17-26"><a href="#cb17-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">"época hasta F1 0.92"</span>: np.nan,</span>
+<span id="cb17-27"><a href="#cb17-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb17-28"><a href="#cb17-28" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb17-29"><a href="#cb17-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb17-30"><a href="#cb17-30" aria-hidden="true" tabindex="-1"></a>    best_row <span class="op">=</span> history.loc[history[<span class="st">"validation_loss"</span>].idxmin()]</span>
+<span id="cb17-31"><a href="#cb17-31" aria-hidden="true" tabindex="-1"></a>    reached <span class="op">=</span> history[history[<span class="st">"validation_macro_f1"</span>] <span class="op">&gt;=</span> <span class="fl">0.92</span>]</span>
+<span id="cb17-32"><a href="#cb17-32" aria-hidden="true" tabindex="-1"></a>    optimizer_rows.append({</span>
+<span id="cb17-33"><a href="#cb17-33" aria-hidden="true" tabindex="-1"></a>        <span class="st">"receta"</span>: name,</span>
+<span id="cb17-34"><a href="#cb17-34" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mejor loss validación"</span>: best_row[<span class="st">"validation_loss"</span>],</span>
+<span id="cb17-35"><a href="#cb17-35" aria-hidden="true" tabindex="-1"></a>        <span class="st">"macro-F1 en esa época"</span>: best_row[<span class="st">"validation_macro_f1"</span>],</span>
+<span id="cb17-36"><a href="#cb17-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mejor época"</span>: <span class="bu">int</span>(best_row[<span class="st">"epoch"</span>]),</span>
+<span id="cb17-37"><a href="#cb17-37" aria-hidden="true" tabindex="-1"></a>        <span class="st">"época hasta F1 0.92"</span>: (</span>
+<span id="cb17-38"><a href="#cb17-38" aria-hidden="true" tabindex="-1"></a>            <span class="bu">int</span>(reached.iloc[<span class="dv">0</span>][<span class="st">"epoch"</span>]) <span class="cf">if</span> <span class="bu">len</span>(reached) <span class="cf">else</span> np.nan</span>
+<span id="cb17-39"><a href="#cb17-39" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb17-40"><a href="#cb17-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">"segundos"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb17-41"><a href="#cb17-41" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb17-42"><a href="#cb17-42" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-43"><a href="#cb17-43" aria-hidden="true" tabindex="-1"></a>optimizer_results <span class="op">=</span> pd.DataFrame(optimizer_rows).set_index(<span class="st">"receta"</span>)</span>
+<span id="cb17-44"><a href="#cb17-44" aria-hidden="true" tabindex="-1"></a>optimizer_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mejor loss validación</th>
+<th data-quarto-table-cell-role="th">macro-F1 en esa época</th>
+<th data-quarto-table-cell-role="th">mejor época</th>
+<th data-quarto-table-cell-role="th">época hasta F1 0.92</th>
+<th data-quarto-table-cell-role="th">segundos</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">receta</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">SGD 0.05</th>
+<td>0.207331</td>
+<td>0.937712</td>
+<td>31</td>
+<td>7</td>
+<td>1.370236</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Momentum 0.03</th>
+<td>0.214295</td>
+<td>0.935533</td>
+<td>8</td>
+<td>4</td>
+<td>1.322280</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">AdamW 0.001</th>
+<td>0.212602</td>
+<td>0.937522</td>
+<td>13</td>
+<td>4</td>
+<td>1.438727</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">AdamW + coseno</th>
+<td>0.212488</td>
+<td>0.937729</td>
+<td>13</td>
+<td>4</td>
+<td>1.485764</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-optimizer-comparison" class="cell" data-fig-height="4" data-fig-width="10" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>optimizer_colors <span class="op">=</span> [<span class="st">"#6042a6"</span>, <span class="st">"#327c78"</span>, <span class="st">"#e07a5f"</span>, <span class="st">"#3d405b"</span>]</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> color, (name, run) <span class="kw">in</span> <span class="bu">zip</span>(optimizer_colors, optimizer_runs.items()):</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> run[<span class="st">"history"</span>]</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].plot(</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>], history[<span class="st">"validation_loss"</span>], label<span class="op">=</span>name, color<span class="op">=</span>color</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].plot(</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>], history[<span class="st">"learning_rate"</span>], label<span class="op">=</span>name, color<span class="op">=</span>color</span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-12"><a href="#cb18-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Entropía cruzada"</span>, title<span class="op">=</span><span class="st">"Validación"</span>)</span>
+<span id="cb18-13"><a href="#cb18-13" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Tasa de aprendizaje"</span>, title<span class="op">=</span><span class="st">"Schedule"</span>)</span>
+<span id="cb18-14"><a href="#cb18-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_yscale(<span class="st">"log"</span>)</span>
+<span id="cb18-15"><a href="#cb18-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb18-16"><a href="#cb18-16" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb18-17"><a href="#cb18-17" aria-hidden="true" tabindex="-1"></a>    axis.legend(frameon<span class="op">=</span><span class="va">False</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb18-18"><a href="#cb18-18" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb18-19"><a href="#cb18-19" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-optimizer-comparison" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Curvas de pérdida de validación y tasa de aprendizaje para cuatro recetas.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-optimizer-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter04_files/figure-html/fig-optimizer-comparison-output-1.png" alt="Curvas de pérdida de validación y tasa de aprendizaje para cuatro recetas." width="951" height="375" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-optimizer-comparison-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;4.3: Las recetas adaptativas o con momentum alcanzan pronto una solución competitiva, pero continuar entrenando puede degradar validación.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>La regla declarada selecciona AdamW sin schedule para los experimentos siguientes, entre estas cuatro recetas y esta semilla. No establece que AdamW sea universalmente superior. Un schedule coseno reduce gradualmente</p>
+<p><span class="math display">\[
+\eta_t=\eta_{\min}
++\frac{\eta_{\max}-\eta_{\min}}{2}
+\left(1+\cos\frac{\pi t}{T}\right),
+\]</span></p>
+<p>pero aquí no produce una mejora suficientemente grande para justificar otro componente.</p>
+</section>
+<section id="optimizar-bien-no-garantiza-generalizar" class="level2" data-number="4.12">
+<h2 data-number="4.12" class="anchored" data-anchor-id="optimizar-bien-no-garantiza-generalizar"><span class="header-section-number">4.12</span> Optimizar bien no garantiza generalizar</h2>
+<p>Las curvas de AdamW alcanzan pronto su mejor validación y luego la pérdida de ajuste continúa bajando. Esa divergencia es la señal para estudiar regularización.</p>
+<p>Weight decay contrae pesos; con AdamW la contracción está desacoplada del gradiente de la pérdida. Dropout aplica una máscara aleatoria durante entrenamiento <span class="citation" data-cites="srivastava2014dropout">(<a href="../references.html#ref-srivastava2014dropout" role="doc-biblioref">Srivastava et&nbsp;al. 2014</a>)</span>:</p>
+<p><span class="math display">\[
+\widetilde{\mathbf{h}}
+=\frac{\mathbf{m}\odot\mathbf{h}}{1-p},
+\qquad m_j\sim\operatorname{Bernoulli}(1-p).
+\]</span></p>
+<p><code>model.eval()</code> desactiva dropout. Early stopping no modifica el forward: usa validación para seleccionar un checkpoint antes de que la brecha siga creciendo <span class="citation" data-cites="prechelt1998early">(<a href="../references.html#ref-prechelt1998early" role="doc-biblioref">Prechelt 1998</a>)</span>.</p>
+<p>Antes de ejecutar la ablación fijamos la regla: seleccionamos menor pérdida de validación y, si dos configuraciones difieren menos de 0,005, elegimos la que introduce menos intervenciones.</p>
+<div id="faa40a17" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>REGULARIZATION_CASES <span class="op">=</span> {</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Sin regularización"</span>: {<span class="st">"dropout"</span>: <span class="fl">0.0</span>, <span class="st">"weight_decay"</span>: <span class="fl">0.0</span>},</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Weight decay"</span>: {<span class="st">"dropout"</span>: <span class="fl">0.0</span>, <span class="st">"weight_decay"</span>: <span class="fl">1e-4</span>},</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Dropout"</span>: {<span class="st">"dropout"</span>: <span class="fl">0.20</span>, <span class="st">"weight_decay"</span>: <span class="fl">0.0</span>},</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Dropout + decay"</span>: {<span class="st">"dropout"</span>: <span class="fl">0.20</span>, <span class="st">"weight_decay"</span>: <span class="fl">1e-4</span>},</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>regularization_runs <span class="op">=</span> {}</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, configuration <span class="kw">in</span> REGULARIZATION_CASES.items():</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    regularization_runs[name] <span class="op">=</span> run_training(</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>        seed<span class="op">=</span>SEED,</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>        optimizer_name<span class="op">=</span><span class="st">"AdamW"</span>,</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>        learning_rate<span class="op">=</span><span class="fl">0.001</span>,</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>        max_epochs<span class="op">=</span><span class="dv">150</span>,</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>        patience<span class="op">=</span><span class="dv">15</span>,</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>        <span class="op">**</span>configuration,</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>regularization_rows <span class="op">=</span> []</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, run <span class="kw">in</span> regularization_runs.items():</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> run[<span class="st">"history"</span>]</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> history.empty:</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        regularization_rows.append({</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">"configuración"</span>: name,</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mejor época"</span>: np.nan,</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">"épocas ejecutadas"</span>: <span class="dv">0</span>,</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">"loss ajuste"</span>: np.nan,</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">"loss validación"</span>: np.nan,</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>            <span class="st">"brecha loss"</span>: np.nan,</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>            <span class="st">"macro-F1 validación"</span>: np.nan,</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">continue</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>    best_row <span class="op">=</span> history.loc[history[<span class="st">"validation_loss"</span>].idxmin()]</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>    regularization_rows.append({</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>        <span class="st">"configuración"</span>: name,</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mejor época"</span>: <span class="bu">int</span>(best_row[<span class="st">"epoch"</span>]),</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>        <span class="st">"épocas ejecutadas"</span>: run[<span class="st">"epochs_run"</span>],</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>        <span class="st">"loss ajuste"</span>: best_row[<span class="st">"fit_loss"</span>],</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>        <span class="st">"loss validación"</span>: best_row[<span class="st">"validation_loss"</span>],</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>        <span class="st">"brecha loss"</span>: best_row[<span class="st">"validation_loss"</span>] <span class="op">-</span> best_row[<span class="st">"fit_loss"</span>],</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>        <span class="st">"macro-F1 validación"</span>: best_row[<span class="st">"validation_macro_f1"</span>],</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>        <span class="st">"segundos"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>regularization_results <span class="op">=</span> pd.DataFrame(regularization_rows).set_index(</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>    <span class="st">"configuración"</span></span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>regularization_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mejor época</th>
+<th data-quarto-table-cell-role="th">épocas ejecutadas</th>
+<th data-quarto-table-cell-role="th">loss ajuste</th>
+<th data-quarto-table-cell-role="th">loss validación</th>
+<th data-quarto-table-cell-role="th">brecha loss</th>
+<th data-quarto-table-cell-role="th">macro-F1 validación</th>
+<th data-quarto-table-cell-role="th">segundos</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">configuración</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Sin regularización</th>
+<td>13</td>
+<td>28</td>
+<td>0.135120</td>
+<td>0.212602</td>
+<td>0.077482</td>
+<td>0.937522</td>
+<td>0.666704</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Weight decay</th>
+<td>13</td>
+<td>28</td>
+<td>0.132550</td>
+<td>0.213012</td>
+<td>0.080462</td>
+<td>0.937424</td>
+<td>0.659908</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Dropout</th>
+<td>35</td>
+<td>50</td>
+<td>0.165968</td>
+<td>0.210264</td>
+<td>0.044296</td>
+<td>0.935592</td>
+<td>1.365802</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Dropout + decay</th>
+<td>35</td>
+<td>50</td>
+<td>0.166358</td>
+<td>0.211021</td>
+<td>0.044664</td>
+<td>0.935768</td>
+<td>1.364090</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Las diferencias entre las dos configuraciones con dropout son inferiores a 0,005 de pérdida. La regla declarada conserva dropout sin weight decay. Weight decay no se incorpora solo porque esté disponible.</p>
+<div id="cell-fig-regularization-early-stopping" class="cell" data-fig-height="4" data-fig-width="11" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="dv">4</span>))</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, color <span class="kw">in</span> [(<span class="st">"Sin regularización"</span>, <span class="st">"#6042a6"</span>), (<span class="st">"Dropout"</span>, <span class="st">"#327c78"</span>)]:</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    run <span class="op">=</span> regularization_runs[name]</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> run[<span class="st">"history"</span>]</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].plot(history[<span class="st">"epoch"</span>], history[<span class="st">"fit_loss"</span>], color<span class="op">=</span>color, label<span class="op">=</span>name)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].plot(</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>], history[<span class="st">"validation_loss"</span>], color<span class="op">=</span>color, label<span class="op">=</span>name</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">2</span>].plot(</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>],</span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"validation_loss"</span>] <span class="op">-</span> history[<span class="st">"fit_loss"</span>],</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>color,</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>name,</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].axvline(run[<span class="st">"best_epoch"</span>], color<span class="op">=</span>color, linestyle<span class="op">=</span><span class="st">"--"</span>, alpha<span class="op">=</span><span class="fl">0.7</span>)</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Ajuste"</span>, xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Pérdida"</span>)</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Validación"</span>, xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Pérdida"</span>)</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">2</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Brecha"</span>, xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Validación - ajuste"</span>)</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>    axis.legend(frameon<span class="op">=</span><span class="va">False</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-regularization-early-stopping" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Pérdidas y brecha para redes sin regularización y con dropout.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-regularization-early-stopping-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter04_files/figure-html/fig-regularization-early-stopping-output-1.png" alt="Pérdidas y brecha para redes sin regularización y con dropout." width="1046" height="375" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-regularization-early-stopping-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;4.4: Dropout retrasa la brecha de generalización y early stopping selecciona un checkpoint por validación.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Early stopping usa pérdida de validación, <code>patience=15</code> y <code>min_delta=1e-4</code>. Detener no basta: el ciclo restaura el estado de la mejor época. Devolver el último estado después de agotar la paciencia perdería precisamente el checkpoint seleccionado.</p>
+</section>
+<section id="una-semilla-no-demuestra-estabilidad" class="level2" data-number="4.13">
+<h2 data-number="4.13" class="anchored" data-anchor-id="una-semilla-no-demuestra-estabilidad"><span class="header-section-number">4.13</span> Una semilla no demuestra estabilidad</h2>
+<p>Comparamos la referencia y dropout con cinco semillas pareadas. La partición no cambia; cada semilla controla inicialización, orden de mini-batches y máscaras. No elegiremos la mejor ejecución. Antes de ejecutarlas definimos una mejora material como mediana del delta macro-F1 de al menos 0,01 y ventaja en cuatro de cinco semillas. Esta comparación sigue siendo exploratoria: los checkpoints y la comparación usan la misma validación de laboratorio.</p>
+<div id="f2e1e2b8" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>paired_rows <span class="op">=</span> []</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>paired_runs <span class="op">=</span> {}</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, dropout <span class="kw">in</span> [(<span class="st">"Referencia"</span>, <span class="fl">0.0</span>), (<span class="st">"Dropout"</span>, <span class="fl">0.20</span>)]:</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        run <span class="op">=</span> run_training(</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a>            seed<span class="op">=</span>seed,</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>            optimizer_name<span class="op">=</span><span class="st">"AdamW"</span>,</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>            learning_rate<span class="op">=</span><span class="fl">0.001</span>,</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>            dropout<span class="op">=</span>dropout,</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>            max_epochs<span class="op">=</span><span class="dv">150</span>,</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a>            patience<span class="op">=</span><span class="dv">15</span>,</span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a>        paired_runs[(seed, name)] <span class="op">=</span> run</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>        validation_loss, validation_f1 <span class="op">=</span> evaluate_model(</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>            run[<span class="st">"model"</span>], X_lab, y_lab</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>        fit_loss, fit_f1 <span class="op">=</span> evaluate_model(run[<span class="st">"model"</span>], X_fit, y_fit)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        paired_rows.append({</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">"semilla"</span>: seed,</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">"configuración"</span>: name,</span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mejor época"</span>: run[<span class="st">"best_epoch"</span>],</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>            <span class="st">"épocas ejecutadas"</span>: run[<span class="st">"epochs_run"</span>],</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">"loss validación"</span>: validation_loss,</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">"macro-F1 ajuste"</span>: fit_f1,</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>            <span class="st">"macro-F1 validación"</span>: validation_f1,</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>            <span class="st">"brecha F1"</span>: fit_f1 <span class="op">-</span> validation_f1,</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>paired_results <span class="op">=</span> pd.DataFrame(paired_rows)</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>paired_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th">configuración</th>
+<th data-quarto-table-cell-role="th">mejor época</th>
+<th data-quarto-table-cell-role="th">épocas ejecutadas</th>
+<th data-quarto-table-cell-role="th">loss validación</th>
+<th data-quarto-table-cell-role="th">macro-F1 ajuste</th>
+<th data-quarto-table-cell-role="th">macro-F1 validación</th>
+<th data-quarto-table-cell-role="th">brecha F1</th>
+<th data-quarto-table-cell-role="th">segundos</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>7</td>
+<td>Referencia</td>
+<td>12</td>
+<td>27</td>
+<td>0.214672</td>
+<td>0.958061</td>
+<td>0.938043</td>
+<td>0.020018</td>
+<td>0.629425</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>7</td>
+<td>Dropout</td>
+<td>27</td>
+<td>42</td>
+<td>0.207863</td>
+<td>0.943234</td>
+<td>0.938297</td>
+<td>0.004937</td>
+<td>1.127571</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>19</td>
+<td>Referencia</td>
+<td>13</td>
+<td>28</td>
+<td>0.217544</td>
+<td>0.963747</td>
+<td>0.938082</td>
+<td>0.025665</td>
+<td>0.673559</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>19</td>
+<td>Dropout</td>
+<td>31</td>
+<td>46</td>
+<td>0.212102</td>
+<td>0.943554</td>
+<td>0.937614</td>
+<td>0.005941</td>
+<td>1.274607</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>42</td>
+<td>Referencia</td>
+<td>11</td>
+<td>26</td>
+<td>0.220160</td>
+<td>0.957475</td>
+<td>0.936315</td>
+<td>0.021161</td>
+<td>0.604923</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>42</td>
+<td>Dropout</td>
+<td>29</td>
+<td>44</td>
+<td>0.211911</td>
+<td>0.942986</td>
+<td>0.937546</td>
+<td>0.005440</td>
+<td>1.199210</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>73</td>
+<td>Referencia</td>
+<td>9</td>
+<td>24</td>
+<td>0.209638</td>
+<td>0.949944</td>
+<td>0.936058</td>
+<td>0.013886</td>
+<td>0.565762</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>73</td>
+<td>Dropout</td>
+<td>31</td>
+<td>46</td>
+<td>0.204470</td>
+<td>0.944592</td>
+<td>0.938818</td>
+<td>0.005775</td>
+<td>1.237767</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>101</td>
+<td>Referencia</td>
+<td>14</td>
+<td>29</td>
+<td>0.214643</td>
+<td>0.960979</td>
+<td>0.938438</td>
+<td>0.022540</td>
+<td>0.688529</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>101</td>
+<td>Dropout</td>
+<td>40</td>
+<td>55</td>
+<td>0.206372</td>
+<td>0.945228</td>
+<td>0.939533</td>
+<td>0.005696</td>
+<td>1.491938</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="7e8b3898" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>paired_pivot <span class="op">=</span> paired_results.pivot(</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    index<span class="op">=</span><span class="st">"semilla"</span>, columns<span class="op">=</span><span class="st">"configuración"</span>, values<span class="op">=</span><span class="st">"macro-F1 validación"</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>paired_pivot[<span class="st">"Delta dropout"</span>] <span class="op">=</span> (</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    paired_pivot[<span class="st">"Dropout"</span>] <span class="op">-</span> paired_pivot[<span class="st">"Referencia"</span>]</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>paired_pivot</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="19">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">configuración</th>
+<th data-quarto-table-cell-role="th">Dropout</th>
+<th data-quarto-table-cell-role="th">Referencia</th>
+<th data-quarto-table-cell-role="th">Delta dropout</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">7</th>
+<td>0.938297</td>
+<td>0.938043</td>
+<td>0.000254</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>0.937614</td>
+<td>0.938082</td>
+<td>-0.000468</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">42</th>
+<td>0.937546</td>
+<td>0.936315</td>
+<td>0.001232</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">73</th>
+<td>0.938818</td>
+<td>0.936058</td>
+<td>0.002759</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">101</th>
+<td>0.939533</td>
+<td>0.938438</td>
+<td>0.001094</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-seed-variability" class="cell" data-fig-height="4" data-fig-width="9" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">4</span>))</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>x_positions <span class="op">=</span> {<span class="st">"Referencia"</span>: <span class="dv">0</span>, <span class="st">"Dropout"</span>: <span class="dv">1</span>}</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    seed_rows <span class="op">=</span> paired_results[paired_results[<span class="st">"semilla"</span>] <span class="op">==</span> seed]</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    x <span class="op">=</span> [x_positions[name] <span class="cf">for</span> name <span class="kw">in</span> seed_rows[<span class="st">"configuración"</span>]]</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].plot(</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        x, seed_rows[<span class="st">"macro-F1 validación"</span>], marker<span class="op">=</span><span class="st">"o"</span>, alpha<span class="op">=</span><span class="fl">0.65</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].plot(x, seed_rows[<span class="st">"loss validación"</span>], marker<span class="op">=</span><span class="st">"o"</span>, alpha<span class="op">=</span><span class="fl">0.65</span>)</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Macro-F1"</span>, ylabel<span class="op">=</span><span class="st">"Validación"</span>)</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(title<span class="op">=</span><span class="st">"Entropía cruzada"</span>, ylabel<span class="op">=</span><span class="st">"Validación"</span>)</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>    axis.set_xticks([<span class="dv">0</span>, <span class="dv">1</span>], [<span class="st">"Referencia"</span>, <span class="st">"Dropout"</span>])</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-seed-variability" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Líneas conectan referencia y dropout para cada semilla en dos métricas.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-seed-variability-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter04_files/figure-html/fig-seed-variability-output-1.png" alt="Líneas conectan referencia y dropout para cada semilla en dos métricas." width="853" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-seed-variability-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;4.5: Comparación pareada de macro-F1 y pérdida de validación en cinco semillas.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div id="1f0981eb" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>stability_summary <span class="op">=</span> paired_results.groupby(<span class="st">"configuración"</span>).agg(</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    macro_f1_mediana<span class="op">=</span>(<span class="st">"macro-F1 validación"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    macro_f1_mínimo<span class="op">=</span>(<span class="st">"macro-F1 validación"</span>, <span class="st">"min"</span>),</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    macro_f1_máximo<span class="op">=</span>(<span class="st">"macro-F1 validación"</span>, <span class="st">"max"</span>),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    loss_mediana<span class="op">=</span>(<span class="st">"loss validación"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    época_mediana<span class="op">=</span>(<span class="st">"mejor época"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    segundos_mediana<span class="op">=</span>(<span class="st">"segundos"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>stability_summary</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">macro_f1_mediana</th>
+<th data-quarto-table-cell-role="th">macro_f1_mínimo</th>
+<th data-quarto-table-cell-role="th">macro_f1_máximo</th>
+<th data-quarto-table-cell-role="th">loss_mediana</th>
+<th data-quarto-table-cell-role="th">época_mediana</th>
+<th data-quarto-table-cell-role="th">segundos_mediana</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">configuración</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Dropout</th>
+<td>0.938297</td>
+<td>0.937546</td>
+<td>0.939533</td>
+<td>0.207863</td>
+<td>31.0</td>
+<td>1.237767</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Referencia</th>
+<td>0.938043</td>
+<td>0.936058</td>
+<td>0.938438</td>
+<td>0.214672</td>
+<td>12.0</td>
+<td>0.629425</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Dropout reduce la pérdida de validación en las cinco parejas y mejora macro-F1 en cuatro, pero las diferencias de macro-F1 son pequeñas. Solo se cumple la segunda condición del umbral declarado. La conclusión correcta es: en este laboratorio, dropout mejora consistentemente el objetivo probabilístico y retrasa el sobreajuste, pero no demuestra una mejora material de clasificación.</p>
+</section>
+<section id="qué-receta-exploratoria-resulta" class="level2" data-number="4.14">
+<h2 data-number="4.14" class="anchored" data-anchor-id="qué-receta-exploratoria-resulta"><span class="header-section-number">4.14</span> Qué receta exploratoria resulta</h2>
+<p>El laboratorio produce una receta candidata razonable:</p>
+<table class="caption-top table">
+<colgroup>
+<col style="width: 33%">
+<col style="width: 33%">
+<col style="width: 33%">
+</colgroup>
+<thead>
+<tr class="header">
+<th>Decisión</th>
+<th>Elección</th>
+<th>Evidencia</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td>Activación e inicialización</td>
+<td>ReLU + Kaiming</td>
+<td>señal y gradientes sanos</td>
+</tr>
+<tr class="even">
+<td>Optimización</td>
+<td>AdamW, tasa 0,001</td>
+<td>convergencia rápida y competitiva</td>
+</tr>
+<tr class="odd">
+<td>Schedule</td>
+<td>constante</td>
+<td>coseno no justificó su complejidad</td>
+</tr>
+<tr class="even">
+<td>Normalización</td>
+<td>sin BatchNorm</td>
+<td>no había escala inestable tras Kaiming</td>
+</tr>
+<tr class="odd">
+<td>Regularización</td>
+<td>dropout 0,20</td>
+<td>menor pérdida en cinco semillas</td>
+</tr>
+<tr class="even">
+<td>Parada</td>
+<td>paciencia 15</td>
+<td>restaura el mejor checkpoint</td>
+</tr>
+</tbody>
+</table>
+<p>No evaluamos esta receta en el holdout anterior. Después de múltiples decisiones sobre la misma validación de laboratorio, estas cifras no son confirmatorias. Confirmarlas requeriría nuevos granos o un protocolo anidado diseñado antes de volver a experimentar.</p>
+</section>
+<section id="costo-riesgos-y-límites" class="level2" data-number="4.15">
+<h2 data-number="4.15" class="anchored" data-anchor-id="costo-riesgos-y-límites"><span class="header-section-number">4.15</span> Costo, riesgos y límites</h2>
+<ul>
+<li>La red tiene 69.127 parámetros, 2.100 perfiles de ajuste y 7.380 perfiles etiquetados para validación exploratoria.</li>
+<li>Dropout necesita más épocas y aproximadamente más tiempo para llegar a su checkpoint; una menor pérdida no es gratuita.</li>
+<li>Cinco semillas miden aleatoriedad algorítmica, no incertidumbre poblacional.</li>
+<li>La partición aleatoria no evalúa otra cámara, cosecha, finca o país.</li>
+<li>Los umbrales de paciencia, saturación y mejora material son decisiones del laboratorio, no constantes universales.</li>
+<li>Comparar muchas recetas puede sobreajustar la validación, aunque test permanezca oculto.</li>
+<li>Batch Normalization depende del tamaño del mini-batch; no extrapolamos la demostración a batches pequeños.</li>
+<li>Gradient clipping puede contener una actualización extrema, pero ocultaría el diagnóstico inicial y no sustituye una escala coherente.</li>
+</ul>
+<div class="callout callout-style-simple callout-important callout-titled" title="Antes de cambiar el modelo">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Antes de cambiar el modelo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Inspecciona primero datos y código; después activaciones y gradientes; luego tasa e inicialización; y solo cuando entrenamiento sea sano estudia regularización. Una técnica aplicada sin hipótesis puede mejorar una ejecución por accidente y fallar en la siguiente semilla.</p>
+</div>
+</div>
+</section>
+<section id="qué-hemos-aprendido" class="level2" data-number="4.16">
+<h2 data-number="4.16" class="anchored" data-anchor-id="qué-hemos-aprendido"><span class="header-section-number">4.16</span> Qué hemos aprendido</h2>
+<ul>
+<li>Las curvas distinguen fallos de optimización y de generalización.</li>
+<li>La varianza de los pesos y la derivada de la activación se propagan con la profundidad.</li>
+<li>El gradiente relativo permite comparar capas de escalas distintas.</li>
+<li>ReLU y Kaiming forman una pareja coherente para este caso.</li>
+<li>Momentum, AdamW y schedules cambian la trayectoria, no la familia funcional.</li>
+<li>Batch Normalization, dropout y <code>eval()</code> modifican el comportamiento del modelo de formas diferentes.</li>
+<li>Weight decay y dropout no deben añadirse automáticamente.</li>
+<li>Early stopping selecciona y restaura un estado; no es solo interrumpir un bucle.</li>
+<li>Una mejora menor que la variabilidad entre semillas debe declararse como pequeña o inconclusa.</li>
 </ul>
 </section>
-<section id="ruta-de-desarrollo" class="level2" data-number="4.2">
-<h2 data-number="4.2" class="anchored" data-anchor-id="ruta-de-desarrollo"><span class="header-section-number">4.2</span> Ruta de desarrollo</h2>
+<section id="ejercicios" class="level2" data-number="4.17">
+<h2 data-number="4.17" class="anchored" data-anchor-id="ejercicios"><span class="header-section-number">4.17</span> Ejercicios</h2>
 <ol type="1">
-<li>Caso deliberadamente inestable.</li>
-<li>Inspección de activaciones y normas de gradiente.</li>
-<li>Inicialización y normalización.</li>
-<li>Optimización y schedules.</li>
-<li>Regularización y early stopping.</li>
-<li>Ablación y comparación con varias semillas.</li>
+<li>Deriva la varianza aproximada de una preactivación y explica qué supuestos permiten eliminar términos cruzados.</li>
+<li>Cambia la profundidad de 5 a 10 capas sin modificar otro elemento. Compara gradientes relativos para sigmoid/Xavier y ReLU/Kaiming.</li>
+<li>Implementa la razón de actualización relativa <span class="math inline">\(\|\Delta W\|/(\|W\|+\varepsilon)\)</span> y compárala entre SGD y AdamW.</li>
+<li>Añade Batch Normalization después de cada capa lineal. Mantén fijo el resto y evalúa cinco semillas antes de concluir.</li>
+<li>Omite <code>model.eval()</code> durante validación con dropout y BatchNorm. Describe por qué el resultado deja de representar inferencia.</li>
+<li>Compara weight decay aplicado a todos los parámetros frente a excluir sesgos y parámetros de normalización.</li>
+<li>Cambia <code>patience</code> entre 5, 15 y 30. Reporta desempeño y costo, sin consultar ningún holdout.</li>
+<li>Diseña una comparación justa de tasas para SGD, momentum y AdamW sin realizar una búsqueda ilimitada.</li>
+<li>Calcula mediana, rango intercuartílico y peor semilla de macro-F1. Explica por qué la mejor semilla no resume estabilidad.</li>
+<li>Propón un protocolo anidado que permita seguir desarrollando el modelo sin reutilizar la misma validación indefinidamente.</li>
 </ol>
 </section>
-<section id="experimento-central" class="level2" data-number="4.3">
-<h2 data-number="4.3" class="anchored" data-anchor-id="experimento-central"><span class="header-section-number">4.3</span> Experimento central</h2>
-<p>Una matriz de ablación cambia una decisión por vez y registra precisión, brecha de generalización, tiempo y estabilidad.</p>
-</section>
-<section id="referencia-conceptual" class="level2" data-number="4.4">
-<h2 data-number="4.4" class="anchored" data-anchor-id="referencia-conceptual"><span class="header-section-number">4.4</span> Referencia conceptual</h2>
-<p>Estabilidad numérica, dropout, generalización y optimización en <span class="citation" data-cites="zhang2023dive">(<a href="../references.html#ref-zhang2023dive" role="doc-biblioref">Zhang et&nbsp;al. 2023</a>)</span>.</p>
+<section id="reto" class="level2" data-number="4.18">
+<h2 data-number="4.18" class="anchored" data-anchor-id="reto"><span class="header-section-number">4.18</span> Reto</h2>
+<p>Construye un tablero diagnóstico que reciba el historial de una ejecución y clasifique automáticamente cuatro alarmas: pérdida no finita, gradiente explosivo, gradiente desaparecido y brecha creciente de generalización. Define los umbrales antes de mirar los resultados, prueba el tablero sobre los casos de este capítulo y documenta falsos positivos. El objetivo no es reemplazar el juicio técnico, sino convertir síntomas dispersos en hipótesis verificables.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-zhang2023dive" class="csl-entry" role="listitem">
-Zhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. <em>Dive into Deep Learning</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781009389433">https://doi.org/10.1017/9781009389433</a>.
+<div id="ref-glorot2010understanding" class="csl-entry" role="listitem">
+Glorot, Xavier, y Yoshua Bengio. 2010. <span>«Understanding the difficulty of training deep feedforward neural networks»</span>. <em>Proceedings of the Thirteenth International Conference on Artificial Intelligence and Statistics</em>, 249-56. <a href="https://proceedings.mlr.press/v9/glorot10a.html">https://proceedings.mlr.press/v9/glorot10a.html</a>.
+</div>
+<div id="ref-he2015delving" class="csl-entry" role="listitem">
+He, Kaiming, Xiangyu Zhang, Shaoqing Ren, y Jian Sun. 2015. <span>«Delving deep into rectifiers: Surpassing human-level performance on ImageNet classification»</span>. <em>Proceedings of the IEEE International Conference on Computer Vision</em>, 1026-34. <a href="https://doi.org/10.1109/ICCV.2015.123">https://doi.org/10.1109/ICCV.2015.123</a>.
+</div>
+<div id="ref-ioffe2015batch" class="csl-entry" role="listitem">
+Ioffe, Sergey, y Christian Szegedy. 2015. <span>«Batch normalization: Accelerating deep network training by reducing internal covariate shift»</span>. <em>Proceedings of the 32nd International Conference on Machine Learning</em>, 448-56. <a href="https://proceedings.mlr.press/v37/ioffe15.html">https://proceedings.mlr.press/v37/ioffe15.html</a>.
+</div>
+<div id="ref-kingma2015adam" class="csl-entry" role="listitem">
+Kingma, Diederik P., y Jimmy Ba. 2015. <span>«Adam: A method for stochastic optimization»</span>. <em>International Conference on Learning Representations</em>. <a href="https://arxiv.org/abs/1412.6980">https://arxiv.org/abs/1412.6980</a>.
+</div>
+<div id="ref-koklu2020dataset" class="csl-entry" role="listitem">
+Koklu, Murat, y Ilker Ali Ozkan. 2020a. <span>«Dry Bean»</span>. UCI Machine Learning Repository. <a href="https://doi.org/10.24432/C50S4B">https://doi.org/10.24432/C50S4B</a>.
+</div>
+<div id="ref-koklu2020beans" class="csl-entry" role="listitem">
+Koklu, Murat, y Ilker Ali Ozkan. 2020b. <span>«Multiclass classification of dry beans using computer vision and machine learning techniques»</span>. <em>Computers and Electronics in Agriculture</em> 174: 105507. <a href="https://doi.org/10.1016/j.compag.2020.105507">https://doi.org/10.1016/j.compag.2020.105507</a>.
+</div>
+<div id="ref-loshchilov2019decoupled" class="csl-entry" role="listitem">
+Loshchilov, Ilya, y Frank Hutter. 2019. <span>«Decoupled weight decay regularization»</span>. <em>International Conference on Learning Representations</em>. <a href="https://openreview.net/forum?id=Bkg6RiCqY7">https://openreview.net/forum?id=Bkg6RiCqY7</a>.
+</div>
+<div id="ref-prechelt1998early" class="csl-entry" role="listitem">
+Prechelt, Lutz. 1998. <span>«Early stopping—but when?»</span> En <em>Neural Networks: Tricks of the Trade</em>. Springer. <a href="https://doi.org/10.1007/3-540-49430-8_3">https://doi.org/10.1007/3-540-49430-8_3</a>.
+</div>
+<div id="ref-srivastava2014dropout" class="csl-entry" role="listitem">
+Srivastava, Nitish, Geoffrey Hinton, Alex Krizhevsky, Ilya Sutskever, y Ruslan Salakhutdinov. 2014. <span>«Dropout: A simple way to prevent neural networks from overfitting»</span>. <em>Journal of Machine Learning Research</em> 15 (56): 1929-58. <a href="https://jmlr.org/papers/v15/srivastava14a.html">https://jmlr.org/papers/v15/srivastava14a.html</a>.
 </div>
 </div>
 </section>
