@@ -1,0 +1,1375 @@
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="es" xml:lang="es"><head>
+
+<meta charset="utf-8">
+<meta name="generator" content="quarto-1.10.18">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+
+<meta name="description" content="Libro abierto de deep learning orientado a problemas, con fundamentos matemáticos, experimentos reproducibles y aplicaciones en PyTorch.">
+
+<title>1&nbsp; Del dato al tensor: fundamentos de PyTorch – Deep Learning: de los problemas a las redes neuronales</title>
+<style>
+/* Default styles provided by pandoc.
+** See https://pandoc.org/MANUAL.html#variables-for-html for config info.
+*/
+span.smallcaps{font-variant: small-caps;}
+div.columns{display: flex; gap: 1.5em;}
+div.column{flex: auto;}
+@media screen {
+div.columns{gap: min(4vw, 1.5em);}
+div.column{overflow-x: auto;}
+}
+div.hanging-indent{margin-left: 1.5em; text-indent: -1.5em;}
+ul.task-list{list-style: none;}
+ul.task-list li input[type="checkbox"] {
+  width: 0.8em;
+  margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
+  vertical-align: middle;
+}
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
+</style>
+
+
+<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="../site_libs/quarto-nav/headroom.min.js"></script>
+<script src="../site_libs/clipboard/clipboard.min.js"></script>
+<script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
+<script src="../site_libs/quarto-search/fuse.min.js"></script>
+<script src="../site_libs/quarto-search/quarto-search.js"></script>
+<meta name="quarto:offset" content="../">
+<link href="../chapters/chapter02.html" rel="next">
+<link href="../preface.html" rel="prev">
+<script src="../site_libs/quarto-html/quarto.js" type="module"></script>
+<script src="../site_libs/quarto-html/tabsets/tabsets.js" type="module"></script>
+<script src="../site_libs/quarto-html/popper.min.js"></script>
+<script src="../site_libs/quarto-html/tippy.umd.min.js"></script>
+<script src="../site_libs/quarto-html/anchor.min.js"></script>
+<link href="../site_libs/quarto-html/tippy.css" rel="stylesheet">
+<link href="../site_libs/quarto-html/quarto-syntax-highlighting-682c9f2a48d7bc9838ab31e35edc1f00.css" rel="stylesheet" id="quarto-text-highlighting-styles">
+<script src="../site_libs/bootstrap/bootstrap.min.js"></script>
+<link href="../site_libs/bootstrap/bootstrap-icons.css" rel="stylesheet">
+<link href="../site_libs/bootstrap/bootstrap-40d13ccd583f61e85f6c2fe657b7f008.min.css" rel="stylesheet" append-hash="true" id="quarto-bootstrap" data-mode="light">
+<script id="quarto-search-options" type="application/json">{
+  "location": "sidebar",
+  "copy-button": false,
+  "collapse-after": 3,
+  "panel-placement": "start",
+  "type": "textbox",
+  "limit": 20,
+  "keyboard-shortcut": [
+    "f",
+    "/",
+    "s"
+  ],
+  "language": {
+    "search-no-results-text": "No se han encontrado resultados",
+    "search-matching-documents-text": "documentos encontrados",
+    "search-copy-link-title": "Copiar el enlace en la búsqueda",
+    "search-hide-matches-text": "Ocultar resultados adicionales",
+    "search-more-match-text": "resultado adicional en este documento",
+    "search-more-matches-text": "resultados adicionales en este documento",
+    "search-clear-button-title": "Borrar",
+    "search-text-placeholder": "",
+    "search-detached-cancel-button-title": "Cancelar",
+    "search-submit-button-title": "Enviar",
+    "search-label": "Buscar"
+  }
+}</script>
+<style>html{ scroll-behavior: smooth; }</style>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
+
+</head>
+
+<body class="nav-sidebar docked quarto-light">
+
+<div id="quarto-search-results"></div>
+  <header id="quarto-header" class="headroom fixed-top">
+  <nav class="quarto-secondary-nav">
+    <div class="container-fluid d-flex">
+      <button type="button" class="quarto-btn-toggle btn" data-bs-toggle="collapse" role="button" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">
+        <i class="bi bi-layout-text-sidebar-reverse"></i>
+      </button>
+        <nav class="quarto-page-breadcrumbs" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/chapter01.html">Parte I - Aprender representaciones</a></li><li class="breadcrumb-item"><a href="../chapters/chapter01.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Del dato al tensor: fundamentos de PyTorch</span></a></li></ol></nav>
+        <a class="flex-grow-1" role="navigation" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item" aria-controls="quarto-sidebar" aria-expanded="false" aria-label="Alternar barra lateral" onclick="if (window.quartoToggleHeadroom) { window.quartoToggleHeadroom(); }">      
+        </a>
+      <button type="button" class="btn quarto-search-button" aria-label="Buscar" onclick="window.quartoOpenSearch();">
+        <i class="bi bi-search"></i>
+      </button>
+    </div>
+  </nav>
+</header>
+<!-- content -->
+<div id="quarto-content" class="quarto-container page-columns page-rows-contents page-layout-article">
+<!-- sidebar -->
+  <nav id="quarto-sidebar" class="sidebar collapse collapse-horizontal quarto-sidebar-collapse-item sidebar-navigation docked overflow-auto">
+    <div class="pt-lg-2 mt-2 text-left sidebar-header">
+    <div class="sidebar-title mb-0 py-0">
+      <a href="../">Deep Learning: de los problemas a las redes neuronales</a> 
+        <div class="sidebar-tools-main">
+    <a href="https://github.com/jflorez-giraldo/DeepLearningNotes" title="Ejecutar el código" class="quarto-navigation-tool px-1" aria-label="Ejecutar el código"><i class="bi bi-github"></i></a>
+</div>
+    </div>
+      </div>
+        <div class="mt-2 flex-shrink-0 align-items-center">
+        <div class="sidebar-search">
+        <div id="quarto-search" class="" title="Buscar"></div>
+        </div>
+        </div>
+    <div class="sidebar-menu-container"> 
+    <ul class="list-unstyled mt-1">
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../index.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Aprender resolviendo problemas</span></a>
+  </div>
+</li>
+        <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../preface.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Prefacio</span></a>
+  </div>
+</li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true">
+ <span class="menu-text">Parte I - Aprender representaciones</span></a>
+          <a class="sidebar-item-toggle text-start" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-1" role="navigation" aria-expanded="true" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-1" class="collapse list-unstyled sidebar-section depth1 show">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter01.html" class="sidebar-item-text sidebar-link active">
+ <span class="menu-text"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Del dato al tensor: fundamentos de PyTorch</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter02.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">¿Cómo aprende una máquina una relación desconocida?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter03.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">3</span>&nbsp; <span class="chapter-title">¿Cómo aprender relaciones no lineales?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter04.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">4</span>&nbsp; <span class="chapter-title">¿Por qué una red entrena mal o no generaliza?</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false">
+ <span class="menu-text">Parte II - Aprender de imágenes</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-2" role="navigation" aria-expanded="false" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-2" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter05.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">5</span>&nbsp; <span class="chapter-title">¿Cómo reconocer patrones espaciales?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter06.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">6</span>&nbsp; <span class="chapter-title">¿Cómo entrenar redes visuales profundas?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter07.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">7</span>&nbsp; <span class="chapter-title">¿Cómo aprender visión con pocas etiquetas?</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false">
+ <span class="menu-text">Parte III - Aprender de secuencias y lenguaje</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-3" role="navigation" aria-expanded="false" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-3" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter08.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">8</span>&nbsp; <span class="chapter-title">¿Cómo predecir el siguiente valor de una secuencia?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter09.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">9</span>&nbsp; <span class="chapter-title">¿Cómo conservar información durante más tiempo?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter10.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">10</span>&nbsp; <span class="chapter-title">¿Cómo seleccionar qué información atender?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter11.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">11</span>&nbsp; <span class="chapter-title">¿Cómo transferir representaciones del lenguaje?</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false">
+ <span class="menu-text">Parte IV - Sistemas, generación y decisiones</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-4" role="navigation" aria-expanded="false" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-4" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter12.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">12</span>&nbsp; <span class="chapter-title">¿Cómo aprender sin etiquetas y generar nuevos datos?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter13.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">13</span>&nbsp; <span class="chapter-title">¿Cómo construir un sistema reproducible?</span></span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../chapters/chapter14.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text"><span class="chapter-number">14</span>&nbsp; <span class="chapter-title">¿Cómo aprender a tomar decisiones secuenciales?</span></span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+        <li class="sidebar-item sidebar-item-section">
+      <div class="sidebar-item-container"> 
+            <a class="sidebar-item-text sidebar-link text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false">
+ <span class="menu-text">Material adicional</span></a>
+          <a class="sidebar-item-toggle text-start collapsed" data-bs-toggle="collapse" data-bs-target="#quarto-sidebar-section-5" role="navigation" aria-expanded="false" aria-label="Alternar sección">
+            <i class="bi bi-chevron-right ms-2"></i>
+          </a> 
+      </div>
+      <ul id="quarto-sidebar-section-5" class="collapse list-unstyled sidebar-section depth1 ">  
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../appendix.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Apéndices</span></a>
+  </div>
+</li>
+          <li class="sidebar-item">
+  <div class="sidebar-item-container"> 
+  <a href="../references.html" class="sidebar-item-text sidebar-link">
+ <span class="menu-text">Referencias</span></a>
+  </div>
+</li>
+      </ul>
+  </li>
+    </ul>
+    </div>
+</nav>
+<div id="quarto-sidebar-glass" class="quarto-sidebar-collapse-item" data-bs-toggle="collapse" data-bs-target=".quarto-sidebar-collapse-item"></div>
+<!-- margin-sidebar -->
+    <div id="quarto-margin-sidebar" class="sidebar margin-sidebar">
+        <nav id="TOC" role="doc-toc" class="toc-active">
+    <h2 id="toc-title">Contenido</h2>
+   
+  <ul>
+  <li><a href="#por-qué-comenzar-por-los-tensores" id="toc-por-qué-comenzar-por-los-tensores" class="nav-link active" data-scroll-target="#por-qué-comenzar-por-los-tensores"><span class="header-section-number">1.1</span> Por qué comenzar por los tensores</a></li>
+  <li><a href="#preparar-el-entorno" id="toc-preparar-el-entorno" class="nav-link" data-scroll-target="#preparar-el-entorno"><span class="header-section-number">1.2</span> Preparar el entorno</a></li>
+  <li><a href="#del-arreglo-al-tensor" id="toc-del-arreglo-al-tensor" class="nav-link" data-scroll-target="#del-arreglo-al-tensor"><span class="header-section-number">1.3</span> Del arreglo al tensor</a>
+  <ul class="collapse">
+  <li><a href="#propiedades-que-siempre-deben-inspeccionarse" id="toc-propiedades-que-siempre-deben-inspeccionarse" class="nav-link" data-scroll-target="#propiedades-que-siempre-deben-inspeccionarse"><span class="header-section-number">1.3.1</span> Propiedades que siempre deben inspeccionarse</a></li>
+  <li><a href="#numpy-y-memoria-compartida" id="toc-numpy-y-memoria-compartida" class="nav-link" data-scroll-target="#numpy-y-memoria-compartida"><span class="header-section-number">1.3.2</span> NumPy y memoria compartida</a></li>
+  </ul></li>
+  <li><a href="#seleccionar-observaciones-y-regiones" id="toc-seleccionar-observaciones-y-regiones" class="nav-link" data-scroll-target="#seleccionar-observaciones-y-regiones"><span class="header-section-number">1.4</span> Seleccionar observaciones y regiones</a></li>
+  <li><a href="#cambiar-la-forma-sin-cambiar-los-datos" id="toc-cambiar-la-forma-sin-cambiar-los-datos" class="nav-link" data-scroll-target="#cambiar-la-forma-sin-cambiar-los-datos"><span class="header-section-number">1.5</span> Cambiar la forma sin cambiar los datos</a></li>
+  <li><a href="#operaciones-vectorizadas" id="toc-operaciones-vectorizadas" class="nav-link" data-scroll-target="#operaciones-vectorizadas"><span class="header-section-number">1.6</span> Operaciones vectorizadas</a>
+  <ul class="collapse">
+  <li><a href="#broadcasting" id="toc-broadcasting" class="nav-link" data-scroll-target="#broadcasting"><span class="header-section-number">1.6.1</span> Broadcasting</a></li>
+  <li><a href="#producto-elemento-a-elemento-y-producto-matricial" id="toc-producto-elemento-a-elemento-y-producto-matricial" class="nav-link" data-scroll-target="#producto-elemento-a-elemento-y-producto-matricial"><span class="header-section-number">1.6.2</span> Producto elemento a elemento y producto matricial</a></li>
+  </ul></li>
+  <li><a href="#mover-datos-al-dispositivo" id="toc-mover-datos-al-dispositivo" class="nav-link" data-scroll-target="#mover-datos-al-dispositivo"><span class="header-section-number">1.7</span> Mover datos al dispositivo</a></li>
+  <li><a href="#autograd-aprender-significa-diferenciar" id="toc-autograd-aprender-significa-diferenciar" class="nav-link" data-scroll-target="#autograd-aprender-significa-diferenciar"><span class="header-section-number">1.8</span> Autograd: aprender significa diferenciar</a></li>
+  <li><a href="#organizar-datos-con-dataset-y-dataloader" id="toc-organizar-datos-con-dataset-y-dataloader" class="nav-link" data-scroll-target="#organizar-datos-con-dataset-y-dataloader"><span class="header-section-number">1.9</span> Organizar datos con Dataset y DataLoader</a>
+  <ul class="collapse">
+  <li><a href="#un-ciclo-mínimo-de-preparación" id="toc-un-ciclo-mínimo-de-preparación" class="nav-link" data-scroll-target="#un-ciclo-mínimo-de-preparación"><span class="header-section-number">1.9.1</span> Un ciclo mínimo de preparación</a></li>
+  </ul></li>
+  <li><a href="#diagnóstico-de-errores-frecuentes" id="toc-diagnóstico-de-errores-frecuentes" class="nav-link" data-scroll-target="#diagnóstico-de-errores-frecuentes"><span class="header-section-number">1.10</span> Diagnóstico de errores frecuentes</a>
+  <ul class="collapse">
+  <li><a href="#ejes-en-el-orden-incorrecto" id="toc-ejes-en-el-orden-incorrecto" class="nav-link" data-scroll-target="#ejes-en-el-orden-incorrecto"><span class="header-section-number">1.10.1</span> Ejes en el orden incorrecto</a></li>
+  <li><a href="#etiquetas-con-tipo-incorrecto" id="toc-etiquetas-con-tipo-incorrecto" class="nav-link" data-scroll-target="#etiquetas-con-tipo-incorrecto"><span class="header-section-number">1.10.2</span> Etiquetas con tipo incorrecto</a></li>
+  <li><a href="#datos-y-modelo-en-dispositivos-diferentes" id="toc-datos-y-modelo-en-dispositivos-diferentes" class="nav-link" data-scroll-target="#datos-y-modelo-en-dispositivos-diferentes"><span class="header-section-number">1.10.3</span> Datos y modelo en dispositivos diferentes</a></li>
+  <li><a href="#gradientes-acumulados-accidentalmente" id="toc-gradientes-acumulados-accidentalmente" class="nav-link" data-scroll-target="#gradientes-acumulados-accidentalmente"><span class="header-section-number">1.10.4</span> Gradientes acumulados accidentalmente</a></li>
+  <li><a href="#eliminar-el-eje-del-lote" id="toc-eliminar-el-eje-del-lote" class="nav-link" data-scroll-target="#eliminar-el-eje-del-lote"><span class="header-section-number">1.10.5</span> Eliminar el eje del lote</a></li>
+  </ul></li>
+  <li><a href="#solución-integrada-del-problema" id="toc-solución-integrada-del-problema" class="nav-link" data-scroll-target="#solución-integrada-del-problema"><span class="header-section-number">1.11</span> Solución integrada del problema</a></li>
+  <li><a href="#qué-hemos-aprendido" id="toc-qué-hemos-aprendido" class="nav-link" data-scroll-target="#qué-hemos-aprendido"><span class="header-section-number">1.12</span> Qué hemos aprendido</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios"><span class="header-section-number">1.13</span> Ejercicios</a></li>
+  <li><a href="#reto" id="toc-reto" class="nav-link" data-scroll-target="#reto"><span class="header-section-number">1.14</span> Reto</a></li>
+  </ul>
+<div class="toc-actions"><ul><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/edit/main/chapters/chapter01.qmd" class="toc-action"><i class="bi bi-github"></i>Editar esta página</a></li><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/issues/new" class="toc-action"><i class="bi empty"></i>Informar sobre problema</a></li></ul></div></nav>
+    </div>
+<!-- main -->
+<main class="content" id="quarto-document-content">
+
+<header id="title-block-header" class="quarto-title-block default"><nav class="quarto-page-breadcrumbs quarto-title-breadcrumbs d-none d-lg-block" aria-label="breadcrumb"><ol class="breadcrumb"><li class="breadcrumb-item"><a href="../chapters/chapter01.html">Parte I - Aprender representaciones</a></li><li class="breadcrumb-item"><a href="../chapters/chapter01.html"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Del dato al tensor: fundamentos de PyTorch</span></a></li></ol></nav>
+<div class="quarto-title">
+<h1 class="title"><span class="chapter-number">1</span>&nbsp; <span class="chapter-title">Del dato al tensor: fundamentos de PyTorch</span></h1>
+</div>
+
+
+
+<div class="quarto-title-meta">
+
+    
+  
+    
+  </div>
+  
+
+
+</header>
+
+
+<div class="chapter-actions" aria-label="Recursos del capitulo">
+  <a class="chapter-action" href="../notebooks/chapter01.ipynb" download="">Descargar notebook</a>
+  <a class="chapter-action chapter-action-colab" href="https://colab.research.google.com/github/jflorez-giraldo/DeepLearningNotes/blob/main/notebooks/chapter01.ipynb" target="_blank" rel="noopener">Abrir en Colab</a>
+</div>
+
+<div class="problem-banner">
+<p><strong>Problema:</strong> un sistema recibe lotes de imágenes en escala de grises producidas por sensores de control de calidad. Antes de entrenar un clasificador debemos representar el lote, normalizar cada imagen, mover los datos al dispositivo disponible y comprobar que las operaciones conservan las dimensiones esperadas.</p>
+</div>
+<section id="por-qué-comenzar-por-los-tensores" class="level2" data-number="1.1">
+<h2 data-number="1.1" class="anchored" data-anchor-id="por-qué-comenzar-por-los-tensores"><span class="header-section-number">1.1</span> Por qué comenzar por los tensores</h2>
+<p>En deep learning, casi toda la información termina representada como un <strong>tensor</strong>: una colección rectangular de valores con una forma, un tipo y un dispositivo. Las imágenes, los parámetros de una red, las predicciones y los gradientes comparten esta representación.</p>
+<p>Una expresión breve como</p>
+<div class="code-copy-outer-scaffold"><div class="sourceCode" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> criterion(model(images), labels)</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a>loss.backward()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<p>oculta varias operaciones: un lote entra al modelo, PyTorch construye un grafo computacional, la pérdida resume el error y <code>backward()</code> calcula cómo cambiar cada parámetro. Para razonar sobre ese proceso primero debemos poder responder:</p>
+<ul>
+<li>¿qué representa cada eje del tensor?;</li>
+<li>¿qué tipo numérico contiene?;</li>
+<li>¿en qué dispositivo reside?;</li>
+<li>¿qué operación cambia su forma?;</li>
+<li>¿qué valores participan en el cálculo de gradientes?</li>
+</ul>
+<div class="callout callout-style-simple callout-note callout-titled" title="Objetivos de aprendizaje">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Nota</span>Objetivos de aprendizaje
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Al terminar este capítulo podrás:</p>
+<ul>
+<li>crear tensores a partir de datos y describir <code>shape</code>, <code>dtype</code> y <code>device</code>;</li>
+<li>seleccionar, reorganizar y combinar dimensiones sin confundir observaciones con características;</li>
+<li>explicar broadcasting y distinguir multiplicación elemento a elemento de multiplicación matricial;</li>
+<li>normalizar un lote de imágenes respetando sus ejes;</li>
+<li>seleccionar CPU, CUDA o MPS y mover datos de forma coherente;</li>
+<li>construir un <code>Dataset</code> y recorrerlo mediante un <code>DataLoader</code>;</li>
+<li>usar autograd para calcular un gradiente sencillo; y</li>
+<li>reconocer errores comunes de dimensiones, tipos y dispositivos.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="preparar-el-entorno" class="level2" data-number="1.2">
+<h2 data-number="1.2" class="anchored" data-anchor-id="preparar-el-entorno"><span class="header-section-number">1.2</span> Preparar el entorno</h2>
+<p>El notebook está diseñado para PyTorch 2.4 o posterior. En Google Colab, PyTorch suele estar instalado; la siguiente celda permite comprobar el entorno.</p>
+<div id="ff40161e" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb2"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> platform</span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a>SEED <span class="op">=</span> <span class="dv">42</span></span>
+<span id="cb2-7"><a href="#cb2-7" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb2-8"><a href="#cb2-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-9"><a href="#cb2-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Python: </span><span class="sc">{</span>platform<span class="sc">.</span>python_version()<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb2-10"><a href="#cb2-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"PyTorch: </span><span class="sc">{</span>torch<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La selección de dispositivo debe ocurrir en un solo lugar. CUDA corresponde a GPU NVIDIA; MPS permite usar GPU en equipos Apple compatibles.</p>
+<div id="8067dad1" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> select_device():</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.cuda.is_available():</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.device(<span class="st">"cuda"</span>)</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> torch.backends.mps.is_available():</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.device(<span class="st">"mps"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.device(<span class="st">"cpu"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> select_device()</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dispositivo seleccionado: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-simple callout-important callout-titled" title="Una regla operacional">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Una regla operacional
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Los datos de entrada y los parámetros del modelo deben estar en el mismo dispositivo. Mover solo uno de ellos producirá un error en la primera operación que los combine.</p>
+</div>
+</div>
+</section>
+<section id="del-arreglo-al-tensor" class="level2" data-number="1.3">
+<h2 data-number="1.3" class="anchored" data-anchor-id="del-arreglo-al-tensor"><span class="header-section-number">1.3</span> Del arreglo al tensor</h2>
+<p>Representaremos inicialmente cuatro imágenes de un sensor. Cada imagen tiene un canal, cuatro filas y cinco columnas. La forma del lote es, por tanto, <span class="math inline">\((N,C,H,W)=(4,1,4,5)\)</span>.</p>
+<div id="30b2de4a" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>image_values <span class="op">=</span> [</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">15</span>, <span class="dv">13</span>, <span class="dv">11</span>],</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">13</span>, <span class="dv">16</span>, <span class="dv">18</span>, <span class="dv">17</span>, <span class="dv">12</span>],</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">11</span>, <span class="dv">15</span>, <span class="dv">19</span>, <span class="dv">16</span>, <span class="dv">10</span>],</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">10</span>, <span class="dv">12</span>, <span class="dv">14</span>, <span class="dv">13</span>, <span class="dv">9</span>],</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">30</span>, <span class="dv">31</span>, <span class="dv">29</span>, <span class="dv">28</span>, <span class="dv">30</span>],</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">31</span>, <span class="dv">35</span>, <span class="dv">37</span>, <span class="dv">34</span>, <span class="dv">29</span>],</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">29</span>, <span class="dv">36</span>, <span class="dv">42</span>, <span class="dv">35</span>, <span class="dv">28</span>],</span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">27</span>, <span class="dv">29</span>, <span class="dv">31</span>, <span class="dv">30</span>, <span class="dv">26</span>],</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">9</span>],</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">9</span>, <span class="dv">11</span>, <span class="dv">12</span>, <span class="dv">11</span>, <span class="dv">8</span>],</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">8</span>, <span class="dv">10</span>, <span class="dv">13</span>, <span class="dv">10</span>, <span class="dv">7</span>],</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">7</span>, <span class="dv">8</span>, <span class="dv">9</span>, <span class="dv">8</span>, <span class="dv">6</span>],</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>    [</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">20</span>, <span class="dv">22</span>, <span class="dv">21</span>, <span class="dv">19</span>, <span class="dv">18</span>],</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">21</span>, <span class="dv">25</span>, <span class="dv">28</span>, <span class="dv">24</span>, <span class="dv">20</span>],</span>
+<span id="cb4-30"><a href="#cb4-30" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">19</span>, <span class="dv">26</span>, <span class="dv">32</span>, <span class="dv">25</span>, <span class="dv">18</span>],</span>
+<span id="cb4-31"><a href="#cb4-31" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">17</span>, <span class="dv">20</span>, <span class="dv">22</span>, <span class="dv">20</span>, <span class="dv">16</span>],</span>
+<span id="cb4-32"><a href="#cb4-32" aria-hidden="true" tabindex="-1"></a>        ]</span>
+<span id="cb4-33"><a href="#cb4-33" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb4-34"><a href="#cb4-34" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb4-35"><a href="#cb4-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-36"><a href="#cb4-36" aria-hidden="true" tabindex="-1"></a>images <span class="op">=</span> torch.tensor(image_values, dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb4-37"><a href="#cb4-37" aria-hidden="true" tabindex="-1"></a>labels <span class="op">=</span> torch.tensor([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">0</span>, <span class="dv">1</span>], dtype<span class="op">=</span>torch.int64)</span>
+<span id="cb4-38"><a href="#cb4-38" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-39"><a href="#cb4-39" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de imágenes:"</span>, images.shape)</span>
+<span id="cb4-40"><a href="#cb4-40" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de etiquetas:"</span>, labels.shape)</span>
+<span id="cb4-41"><a href="#cb4-41" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tipo de imágenes:"</span>, images.dtype)</span>
+<span id="cb4-42"><a href="#cb4-42" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tipo de etiquetas:"</span>, labels.dtype)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La forma no es una anotación decorativa. Es parte del significado:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Eje</th>
+<th style="text-align: right;">Tamaño</th>
+<th>Interpretación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(N\)</span></td>
+<td style="text-align: right;">4</td>
+<td>imágenes en el lote</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(C\)</span></td>
+<td style="text-align: right;">1</td>
+<td>canales por imagen</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(H\)</span></td>
+<td style="text-align: right;">4</td>
+<td>filas</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(W\)</span></td>
+<td style="text-align: right;">5</td>
+<td>columnas</td>
+</tr>
+</tbody>
+</table>
+<p>Las imágenes usan <code>float32</code> porque las operaciones de una red y sus gradientes requieren números de punto flotante. Las etiquetas usan <code>int64</code> porque muchas funciones de clasificación esperan índices enteros de clase.</p>
+<section id="propiedades-que-siempre-deben-inspeccionarse" class="level3" data-number="1.3.1">
+<h3 data-number="1.3.1" class="anchored" data-anchor-id="propiedades-que-siempre-deben-inspeccionarse"><span class="header-section-number">1.3.1</span> Propiedades que siempre deben inspeccionarse</h3>
+<div id="c4b49c16" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a>tensor_audit <span class="op">=</span> {</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"shape"</span>: <span class="bu">tuple</span>(images.shape),</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ndim"</span>: images.ndim,</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"numel"</span>: images.numel(),</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dtype"</span>: <span class="bu">str</span>(images.dtype),</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"device"</span>: <span class="bu">str</span>(images.device),</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"requires_grad"</span>: images.requires_grad,</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>tensor_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>numel()</code> cuenta escalares. Aquí debe coincidir con <span class="math inline">\(4\times1\times4\times5=80\)</span>. Esta igualdad es útil para auditar operaciones de reorganización.</p>
+</section>
+<section id="numpy-y-memoria-compartida" class="level3" data-number="1.3.2">
+<h3 data-number="1.3.2" class="anchored" data-anchor-id="numpy-y-memoria-compartida"><span class="header-section-number">1.3.2</span> NumPy y memoria compartida</h3>
+<p><code>torch.from_numpy()</code> puede compartir memoria con un arreglo de NumPy en CPU. Modificar uno puede modificar el otro, una propiedad eficiente pero fácil de pasar por alto.</p>
+<div id="d8988920" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>numpy_array <span class="op">=</span> np.array([<span class="fl">1.0</span>, <span class="fl">2.0</span>, <span class="fl">3.0</span>], dtype<span class="op">=</span>np.float32)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>shared_tensor <span class="op">=</span> torch.from_numpy(numpy_array)</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>numpy_array[<span class="dv">0</span>] <span class="op">=</span> <span class="fl">99.0</span></span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(shared_tensor)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Cuando se necesita independencia explícita se utiliza una copia:</p>
+<div id="5b06a815" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>independent_tensor <span class="op">=</span> torch.tensor(numpy_array)</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>numpy_array[<span class="dv">1</span>] <span class="op">=</span> <span class="op">-</span><span class="fl">10.0</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"NumPy:"</span>, numpy_array)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Tensor independiente:"</span>, independent_tensor)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+</section>
+<section id="seleccionar-observaciones-y-regiones" class="level2" data-number="1.4">
+<h2 data-number="1.4" class="anchored" data-anchor-id="seleccionar-observaciones-y-regiones"><span class="header-section-number">1.4</span> Seleccionar observaciones y regiones</h2>
+<p>La indexación conserva la lógica de NumPy. El siguiente acceso selecciona la primera imagen, su único canal y todas las posiciones espaciales.</p>
+<div id="216a0b5c" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>first_image <span class="op">=</span> images[<span class="dv">0</span>, <span class="dv">0</span>, :, :]</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(first_image)</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(first_image.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Eliminar el eje de canal produce una matriz <span class="math inline">\((H,W)\)</span>. En cambio, el corte <code>images[0:1]</code> conserva el eje del lote:</p>
+<div id="a16c669a" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>one_image_batch <span class="op">=</span> images[<span class="dv">0</span>:<span class="dv">1</span>]</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Imagen sin ejes de lote y canal:"</span>, first_image.shape)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Lote de una imagen:"</span>, one_image_batch.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Esta diferencia importa porque una capa convolucional normalmente espera cuatro dimensiones. Una selección que elimina accidentalmente el eje del lote puede romper el modelo.</p>
+<p>Podemos extraer una región central de todas las imágenes sin iterar:</p>
+<div id="40390137" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>central_regions <span class="op">=</span> images[:, :, <span class="dv">1</span>:<span class="dv">3</span>, <span class="dv">1</span>:<span class="dv">4</span>]</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(central_regions.shape)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(central_regions)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="cambiar-la-forma-sin-cambiar-los-datos" class="level2" data-number="1.5">
+<h2 data-number="1.5" class="anchored" data-anchor-id="cambiar-la-forma-sin-cambiar-los-datos"><span class="header-section-number">1.5</span> Cambiar la forma sin cambiar los datos</h2>
+<p>Una red densa recibe una matriz con una fila por observación. Para convertir cada imagen de <span class="math inline">\(1\times4\times5\)</span> en 20 características usamos <code>flatten</code>:</p>
+<div id="cde232d1" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>flat_images <span class="op">=</span> images.flatten(start_dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(flat_images.shape)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> flat_images.shape <span class="op">==</span> (<span class="dv">4</span>, <span class="dv">20</span>)</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> flat_images.numel() <span class="op">==</span> images.numel()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>reshape</code> permite expresar la misma intención cuando conocemos la forma de destino. El valor <code>-1</code> pide a PyTorch inferir una dimensión.</p>
+<div id="b0b167e3" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>flat_with_reshape <span class="op">=</span> images.reshape(images.shape[<span class="dv">0</span>], <span class="op">-</span><span class="dv">1</span>)</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(torch.equal(flat_images, flat_with_reshape))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>permute</code> no aplana: cambia el orden de los ejes. Esto es necesario al intercambiar datos entre bibliotecas que usan <span class="math inline">\((N,H,W,C)\)</span> y PyTorch, que usa <span class="math inline">\((N,C,H,W)\)</span>.</p>
+<div id="6e5a06b5" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>channels_last <span class="op">=</span> images.permute(<span class="dv">0</span>, <span class="dv">2</span>, <span class="dv">3</span>, <span class="dv">1</span>)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"PyTorch NCHW:"</span>, images.shape)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Canales al final NHWC:"</span>, channels_last.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div class="callout callout-style-simple callout-warning callout-titled" title="No intercambiar reshape y permute">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Advertencia</span>No intercambiar reshape y permute
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p><code>reshape</code> reorganiza cómo se agrupan los valores; <code>permute</code> cambia qué eje representa cada posición. Ambos pueden producir un tensor con el mismo número de elementos, pero no necesariamente con el mismo significado.</p>
+</div>
+</div>
+</section>
+<section id="operaciones-vectorizadas" class="level2" data-number="1.6">
+<h2 data-number="1.6" class="anchored" data-anchor-id="operaciones-vectorizadas"><span class="header-section-number">1.6</span> Operaciones vectorizadas</h2>
+<p>La media de intensidad por imagen puede obtenerse en una operación. Debemos reducir canal, altura y anchura, pero conservar el eje del lote.</p>
+<div id="1c75150d" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>mean_per_image <span class="op">=</span> images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>max_per_image <span class="op">=</span> images.amax(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>))</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>summary <span class="op">=</span> torch.stack([mean_per_image, max_per_image], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(summary)</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma del resumen:"</span>, summary.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La reducción produce dos características por imagen. <code>stack</code> crea un eje nuevo; <code>cat</code> concatena sobre un eje existente.</p>
+<div id="da5f1b4e" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>first_half <span class="op">=</span> images[:<span class="dv">2</span>]</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>second_half <span class="op">=</span> images[<span class="dv">2</span>:]</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>reconstructed_batch <span class="op">=</span> torch.cat([first_half, second_half], dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.equal(images, reconstructed_batch)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="broadcasting" class="level3" data-number="1.6.1">
+<h3 data-number="1.6.1" class="anchored" data-anchor-id="broadcasting"><span class="header-section-number">1.6.1</span> Broadcasting</h3>
+<p>Queremos normalizar cada imagen con su propia media y desviación estándar:</p>
+<p>[ z_{nchw}=. ]</p>
+<p>Las estadísticas deben conservar dimensiones unitarias para que PyTorch pueda expandirlas virtualmente sobre canal, altura y anchura.</p>
+<div id="92f8adf7" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>means <span class="op">=</span> images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>stds <span class="op">=</span> images.std(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>normalized_images <span class="op">=</span> (images <span class="op">-</span> means) <span class="op">/</span> (stds <span class="op">+</span> <span class="fl">1e-6</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Imágenes:"</span>, images.shape)</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medias:"</span>, means.shape)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Normalizadas:"</span>, normalized_images.shape)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Medias después de normalizar:"</span>, normalized_images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Broadcasting no copia físicamente la media 20 veces. PyTorch alinea las dimensiones desde la derecha y permite combinar tamaños iguales o tamaños uno.</p>
+<div class="callout callout-style-simple callout-tip callout-titled" title="Auditar broadcasting">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Tip</span>Auditar broadcasting
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Antes de una operación, escribe las formas una debajo de otra y alínealas a la derecha. En este caso, <code>(4, 1, 4, 5)</code> y <code>(4, 1, 1, 1)</code> son compatibles.</p>
+</div>
+</div>
+</section>
+<section id="producto-elemento-a-elemento-y-producto-matricial" class="level3" data-number="1.6.2">
+<h3 data-number="1.6.2" class="anchored" data-anchor-id="producto-elemento-a-elemento-y-producto-matricial"><span class="header-section-number">1.6.2</span> Producto elemento a elemento y producto matricial</h3>
+<p>El operador <code>*</code> combina posiciones correspondientes. El operador <code>@</code> realiza producto matricial.</p>
+<div id="141be914" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>features <span class="op">=</span> torch.tensor([</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.2</span>, <span class="fl">1.0</span>, <span class="op">-</span><span class="fl">0.5</span>],</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.7</span>, <span class="fl">0.3</span>, <span class="fl">0.1</span>],</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>weights <span class="op">=</span> torch.tensor([</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.4</span>, <span class="op">-</span><span class="fl">0.2</span>],</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.1</span>, <span class="fl">0.8</span>],</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">0.6</span>, <span class="fl">0.3</span>],</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>], dtype<span class="op">=</span>torch.float32)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a>scores <span class="op">=</span> features <span class="op">@</span> weights</span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Características:"</span>, features.shape)</span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pesos:"</span>, weights.shape)</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Scores:"</span>, scores.shape)</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(scores)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La regla dimensional es</p>
+<p>[ (B,D)@(D,K)=(B,K), ]</p>
+<p>donde <span class="math inline">\(B\)</span> es el lote, <span class="math inline">\(D\)</span> el número de características y <span class="math inline">\(K\)</span> el número de salidas.</p>
+</section>
+</section>
+<section id="mover-datos-al-dispositivo" class="level2" data-number="1.7">
+<h2 data-number="1.7" class="anchored" data-anchor-id="mover-datos-al-dispositivo"><span class="header-section-number">1.7</span> Mover datos al dispositivo</h2>
+<p>Mover el lote es explícito. La variable original permanece en CPU; <code>to()</code> devuelve un tensor en el dispositivo solicitado.</p>
+<div id="90b86961" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>images_device <span class="op">=</span> images.to(device)</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>labels_device <span class="op">=</span> labels.to(device)</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(images_device.device)</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(labels_device.device)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Para volver a NumPy se requiere CPU y un tensor desconectado del grafo:</p>
+<div id="4cf261dd" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>images_numpy <span class="op">=</span> images_device.detach().cpu().numpy()</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(images_numpy.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Copiar datos entre CPU y GPU tiene costo. En un ciclo de entrenamiento se mueven mini-batches completos, no escalares individuales.</p>
+</section>
+<section id="autograd-aprender-significa-diferenciar" class="level2" data-number="1.8">
+<h2 data-number="1.8" class="anchored" data-anchor-id="autograd-aprender-significa-diferenciar"><span class="header-section-number">1.8</span> Autograd: aprender significa diferenciar</h2>
+<p>Supongamos un modelo lineal muy pequeño para estimar un score a partir de las dos características del resumen. Sus parámetros son un vector <span class="math inline">\(\mathbf{w}\)</span> y un intercepto <span class="math inline">\(b\)</span>:</p>
+<p>[ _i = _i^+b. ]</p>
+<div id="b5771746" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>X <span class="op">=</span> summary</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>y <span class="op">=</span> labels.to(torch.float32)</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>w <span class="op">=</span> torch.zeros(<span class="dv">2</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>b <span class="op">=</span> torch.zeros(<span class="dv">1</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>predictions <span class="op">=</span> X <span class="op">@</span> w <span class="op">+</span> b</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>loss <span class="op">=</span> ((predictions <span class="op">-</span> y) <span class="op">**</span> <span class="dv">2</span>).mean()</span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>loss.backward()</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pérdida:"</span>, loss.item())</span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de w:"</span>, w.grad)</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de b:"</span>, b.grad)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>requires_grad=True</code> indica que las operaciones sobre esos tensores deben registrarse. <code>backward()</code> aplica la regla de la cadena desde la pérdida escalar hasta cada parámetro hoja.</p>
+<p>Para el error cuadrático medio,</p>
+<p>[ _{} =^ (+b-). ]</p>
+<p>Podemos comprobar que el gradiente automático coincide con la expresión:</p>
+<div id="ae7fb527" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>manual_gradient <span class="op">=</span> <span class="dv">2</span> <span class="op">/</span> <span class="bu">len</span>(X) <span class="op">*</span> X.T <span class="op">@</span> (X <span class="op">@</span> w.detach() <span class="op">+</span> b.detach() <span class="op">-</span> y)</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente manual:"</span>, manual_gradient)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Coinciden:"</span>, torch.allclose(w.grad, manual_gradient))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Los gradientes se acumulan. Antes de calcular un nuevo gradiente debemos reiniciarlos. Los optimizadores realizan este paso mediante <code>optimizer.zero_grad()</code>.</p>
+<div id="ed53a1c8" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    learning_rate <span class="op">=</span> <span class="fl">0.001</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>    w <span class="op">-=</span> learning_rate <span class="op">*</span> w.grad</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>    b <span class="op">-=</span> learning_rate <span class="op">*</span> b.grad</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>w.grad.zero_()</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>b.grad.zero_()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>torch.no_grad()</code> evita registrar la actualización como parte del grafo. En los capítulos siguientes un optimizador reemplazará esta actualización manual.</p>
+</section>
+<section id="organizar-datos-con-dataset-y-dataloader" class="level2" data-number="1.9">
+<h2 data-number="1.9" class="anchored" data-anchor-id="organizar-datos-con-dataset-y-dataloader"><span class="header-section-number">1.9</span> Organizar datos con Dataset y DataLoader</h2>
+<p>Los proyectos reales no entregan todos los datos en una lista escrita a mano. PyTorch separa dos responsabilidades:</p>
+<ul>
+<li><code>Dataset</code> define cómo obtener una observación y su etiqueta;</li>
+<li><code>DataLoader</code> agrupa, mezcla y entrega mini-batches.</li>
+</ul>
+<p>Para tensores que ya caben en memoria podemos usar <code>TensorDataset</code>.</p>
+<div id="fbe97ca1" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>dataset <span class="op">=</span> TensorDataset(normalized_images, labels)</span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>loader <span class="op">=</span> DataLoader(</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>    dataset,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    batch_size<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>    shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>    generator<span class="op">=</span>torch.Generator().manual_seed(SEED),</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch_id, (batch_images, batch_labels) <span class="kw">in</span> <span class="bu">enumerate</span>(loader):</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    <span class="bu">print</span>(</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Batch </span><span class="sc">{</span>batch_id<span class="sc">}</span><span class="ss">: "</span>,</span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"X=</span><span class="sc">{</span><span class="bu">tuple</span>(batch_images.shape)<span class="sc">}</span><span class="ss">, "</span>,</span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"y=</span><span class="sc">{</span><span class="bu">tuple</span>(batch_labels.shape)<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p><code>shuffle=True</code> altera el orden al comienzo de cada época. La semilla del generador hace reproducible este ejemplo, aunque en un entrenamiento completo también deben controlarse otras fuentes de aleatoriedad.</p>
+<section id="un-ciclo-mínimo-de-preparación" class="level3" data-number="1.9.1">
+<h3 data-number="1.9.1" class="anchored" data-anchor-id="un-ciclo-mínimo-de-preparación"><span class="header-section-number">1.9.1</span> Un ciclo mínimo de preparación</h3>
+<p>El patrón que reutilizaremos es:</p>
+<div id="6515475b" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> batch_images, batch_labels <span class="kw">in</span> loader:</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    batch_images <span class="op">=</span> batch_images.to(device)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    batch_labels <span class="op">=</span> batch_labels.to(device)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> batch_images.ndim <span class="op">==</span> <span class="dv">4</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> batch_images.shape[<span class="dv">0</span>] <span class="op">==</span> batch_labels.shape[<span class="dv">0</span>]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Las aserciones convierten supuestos silenciosos en errores cercanos a su causa. En proyectos posteriores también validaremos rangos, valores faltantes y correspondencia de clases.</p>
+</section>
+</section>
+<section id="diagnóstico-de-errores-frecuentes" class="level2" data-number="1.10">
+<h2 data-number="1.10" class="anchored" data-anchor-id="diagnóstico-de-errores-frecuentes"><span class="header-section-number">1.10</span> Diagnóstico de errores frecuentes</h2>
+<section id="ejes-en-el-orden-incorrecto" class="level3" data-number="1.10.1">
+<h3 data-number="1.10.1" class="anchored" data-anchor-id="ejes-en-el-orden-incorrecto"><span class="header-section-number">1.10.1</span> Ejes en el orden incorrecto</h3>
+<p>Una forma como <code>(32, 224, 224, 3)</code> puede parecer válida, pero una CNN de PyTorch la interpretaría como 224 canales. La corrección es <code>tensor.permute(0, 3, 1, 2)</code>.</p>
+</section>
+<section id="etiquetas-con-tipo-incorrecto" class="level3" data-number="1.10.2">
+<h3 data-number="1.10.2" class="anchored" data-anchor-id="etiquetas-con-tipo-incorrecto"><span class="header-section-number">1.10.2</span> Etiquetas con tipo incorrecto</h3>
+<p>Para clasificación multiclase, <code>CrossEntropyLoss</code> espera normalmente índices de clase <code>int64</code>, no valores <code>float32</code> ni vectores one-hot.</p>
+</section>
+<section id="datos-y-modelo-en-dispositivos-diferentes" class="level3" data-number="1.10.3">
+<h3 data-number="1.10.3" class="anchored" data-anchor-id="datos-y-modelo-en-dispositivos-diferentes"><span class="header-section-number">1.10.3</span> Datos y modelo en dispositivos diferentes</h3>
+<p>El mensaje suele mencionar que se encontraron tensores en dos dispositivos. Centralizar la selección y mover cada mini-batch reduce este riesgo.</p>
+</section>
+<section id="gradientes-acumulados-accidentalmente" class="level3" data-number="1.10.4">
+<h3 data-number="1.10.4" class="anchored" data-anchor-id="gradientes-acumulados-accidentalmente"><span class="header-section-number">1.10.4</span> Gradientes acumulados accidentalmente</h3>
+<p>Dos llamadas a <code>backward()</code> suman gradientes si no se reinician. El ciclo estándar es <code>zero_grad()</code>, forward, pérdida, <code>backward()</code> y <code>step()</code>.</p>
+</section>
+<section id="eliminar-el-eje-del-lote" class="level3" data-number="1.10.5">
+<h3 data-number="1.10.5" class="anchored" data-anchor-id="eliminar-el-eje-del-lote"><span class="header-section-number">1.10.5</span> Eliminar el eje del lote</h3>
+<p><code>images[0]</code> y <code>images[0:1]</code> no tienen la misma forma. El segundo conserva un lote de tamaño uno.</p>
+</section>
+</section>
+<section id="solución-integrada-del-problema" class="level2" data-number="1.11">
+<h2 data-number="1.11" class="anchored" data-anchor-id="solución-integrada-del-problema"><span class="header-section-number">1.11</span> Solución integrada del problema</h2>
+<p>Ya podemos construir una función que recibe un lote, valida su estructura, normaliza cada imagen y lo mueve al dispositivo.</p>
+<div id="7ecd1890" class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> prepare_image_batch(batch, target_device):</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> batch.ndim <span class="op">!=</span> <span class="dv">4</span>:</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>            <span class="st">"Se esperaba un tensor (N, C, H, W); "</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"se recibió </span><span class="sc">{</span><span class="bu">tuple</span>(batch.shape)<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> batch.is_floating_point():</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        batch <span class="op">=</span> batch.to(torch.float32)</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> torch.isfinite(batch).<span class="bu">all</span>():</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El lote contiene valores no finitos"</span>)</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    means <span class="op">=</span> batch.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>    stds <span class="op">=</span> batch.std(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>), keepdim<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>    normalized <span class="op">=</span> (batch <span class="op">-</span> means) <span class="op">/</span> stds.clamp_min(<span class="fl">1e-6</span>)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> normalized.to(target_device)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>prepared_images <span class="op">=</span> prepare_image_batch(images, device)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prepared_images.shape <span class="op">==</span> images.shape</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> prepared_images.device.<span class="bu">type</span> <span class="op">==</span> device.<span class="bu">type</span></span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.allclose(</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>    prepared_images.mean(dim<span class="op">=</span>(<span class="dv">1</span>, <span class="dv">2</span>, <span class="dv">3</span>)).cpu(),</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>    torch.zeros(<span class="bu">len</span>(images)),</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>    atol<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Lote preparado:"</span>, prepared_images.shape, prepared_images.device)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>La función no entrena todavía un clasificador. Resuelve una etapa previa y crítica: entrega al modelo un lote con contrato explícito, tipo apropiado, valores finitos, normalización por observación y dispositivo coherente.</p>
+</section>
+<section id="qué-hemos-aprendido" class="level2" data-number="1.12">
+<h2 data-number="1.12" class="anchored" data-anchor-id="qué-hemos-aprendido"><span class="header-section-number">1.12</span> Qué hemos aprendido</h2>
+<ul>
+<li>Un tensor se interpreta conjuntamente por sus valores, forma, tipo y dispositivo.</li>
+<li>En visión, PyTorch usa normalmente el orden <span class="math inline">\((N,C,H,W)\)</span>.</li>
+<li>La indexación puede conservar o eliminar ejes; esa diferencia afecta a las capas posteriores.</li>
+<li><code>reshape</code>, <code>flatten</code> y <code>permute</code> resuelven problemas distintos.</li>
+<li>Broadcasting permite vectorizar operaciones sin copiar datos innecesarios.</li>
+<li><code>*</code> opera elemento a elemento; <code>@</code> contrae dimensiones compatibles.</li>
+<li>Autograd registra operaciones y aplica la regla de la cadena desde una pérdida escalar.</li>
+<li><code>Dataset</code> representa observaciones y <code>DataLoader</code> construye mini-batches.</li>
+<li>Las validaciones de forma, tipo, finitud y dispositivo deben ocurrir cerca de la entrada del sistema.</li>
+</ul>
+<p>En el próximo capítulo estos elementos se usarán para aprender una relación a partir de datos y construir un ciclo de entrenamiento completo.</p>
+</section>
+<section id="ejercicios" class="level2" data-number="1.13">
+<h2 data-number="1.13" class="anchored" data-anchor-id="ejercicios"><span class="header-section-number">1.13</span> Ejercicios</h2>
+<ol type="1">
+<li>Crea un tensor de diez imágenes RGB de <span class="math inline">\(32\times32\)</span>. Explica cada eje y calcula el número total de escalares sin usar <code>numel()</code>; comprueba después el resultado con PyTorch.</li>
+<li>Convierte un lote con forma <code>(N, H, W, C)</code> a <code>(N, C, H, W)</code> y verifica que un píxel específico conserva sus tres canales.</li>
+<li>Calcula media y desviación estándar por canal para un lote RGB. Escribe las formas de los tensores antes de usar broadcasting.</li>
+<li>Implementa una estandarización global y compárala con la normalización por imagen de este capítulo. Explica qué información elimina cada estrategia.</li>
+<li>Construye una matriz de 20 características por imagen y multiplícala por una matriz de pesos para obtener tres scores por observación. Justifica todas las dimensiones.</li>
+<li>Modifica el ejemplo de autograd para usar error absoluto medio. ¿Qué ocurre con el gradiente cuando una predicción coincide exactamente con la etiqueta?</li>
+<li>Crea un <code>DataLoader</code> con cinco observaciones y <code>batch_size=2</code>. Registra el tamaño de cada mini-batch y explica el último resultado.</li>
+<li>Extiende <code>prepare_image_batch()</code> para aceptar un rango esperado de valores y producir un error informativo cuando el lote lo incumpla.</li>
+</ol>
+</section>
+<section id="reto" class="level2" data-number="1.14">
+<h2 data-number="1.14" class="anchored" data-anchor-id="reto"><span class="header-section-number">1.14</span> Reto</h2>
+<p>Construye un <code>Dataset</code> que genere imágenes sintéticas de <span class="math inline">\(16\times16\)</span> con dos clases: imágenes con una franja vertical brillante e imágenes con una franja horizontal. Visualiza ejemplos, crea particiones de entrenamiento y validación, y entrega mini-batches normalizados. No entrenes todavía la red: documenta el contrato de datos que deberá recibir el modelo del Capítulo 3.</p>
+
+
+</section>
+
+</main> <!-- /main -->
+<script id="quarto-html-after-body" type="application/javascript">
+  window.document.addEventListener("DOMContentLoaded", function (event) {
+    const icon = "";
+    const anchorJS = new window.AnchorJS();
+    anchorJS.options = {
+      placement: 'right',
+      icon: icon
+    };
+    anchorJS.add('.anchored');
+    const isCodeAnnotation = (el) => {
+      for (const clz of el.classList) {
+        if (clz.startsWith('code-annotation-')) {                     
+          return true;
+        }
+      }
+      return false;
+    }
+    const onCopySuccess = function(e) {
+      // button target
+      const button = e.trigger;
+      // don't keep focus
+      button.blur();
+      // flash "checked"
+      button.classList.add('code-copy-button-checked');
+      var currentTitle = button.getAttribute("title");
+      button.setAttribute("title", "Copiado");
+      let tooltip;
+      if (window.bootstrap) {
+        button.setAttribute("data-bs-toggle", "tooltip");
+        button.setAttribute("data-bs-placement", "left");
+        button.setAttribute("data-bs-title", "Copiado");
+        tooltip = new bootstrap.Tooltip(button, 
+          { trigger: "manual", 
+            customClass: "code-copy-button-tooltip",
+            offset: [0, -8]});
+        tooltip.show();    
+      }
+      setTimeout(function() {
+        if (tooltip) {
+          tooltip.hide();
+          button.removeAttribute("data-bs-title");
+          button.removeAttribute("data-bs-toggle");
+          button.removeAttribute("data-bs-placement");
+        }
+        button.setAttribute("title", currentTitle);
+        button.classList.remove('code-copy-button-checked');
+      }, 1000);
+      // clear code selection
+      e.clearSelection();
+    }
+    const getTextToCopy = function(trigger) {
+      const outerScaffold = trigger.parentElement.cloneNode(true);
+      const codeEl = outerScaffold.querySelector('code');
+      for (const childEl of codeEl.children) {
+        if (isCodeAnnotation(childEl)) {
+          childEl.remove();
+        }
+      }
+      return codeEl.innerText;
+    }
+    const clipboard = new window.ClipboardJS('.code-copy-button:not([data-in-quarto-modal])', {
+      text: getTextToCopy
+    });
+    clipboard.on('success', onCopySuccess);
+    if (window.document.getElementById('quarto-embedded-source-code-modal')) {
+      const clipboardModal = new window.ClipboardJS('.code-copy-button[data-in-quarto-modal]', {
+        text: getTextToCopy,
+        container: window.document.getElementById('quarto-embedded-source-code-modal')
+      });
+      clipboardModal.on('success', onCopySuccess);
+    }
+      var localhostRegex = new RegExp(/^(?:http|https):\/\/localhost\:?[0-9]*\//);
+      var mailtoRegex = new RegExp(/^mailto:/);
+        var filterRegex = new RegExp('/' + window.location.host + '/');
+      var isInternal = (href) => {
+          return filterRegex.test(href) || localhostRegex.test(href) || mailtoRegex.test(href);
+      }
+      // Inspect non-navigation links and adorn them if external
+     var links = window.document.querySelectorAll('a[href]:not(.nav-link):not(.navbar-brand):not(.toc-action):not(.sidebar-link):not(.sidebar-item-toggle):not(.pagination-link):not(.no-external):not([aria-hidden]):not(.dropdown-item):not(.quarto-navigation-tool):not(.about-link)');
+      for (var i=0; i<links.length; i++) {
+        const link = links[i];
+        if (!isInternal(link.href)) {
+          // undo the damage that might have been done by quarto-nav.js in the case of
+          // links that we want to consider external
+          if (link.dataset.originalHref !== undefined) {
+            link.href = link.dataset.originalHref;
+          }
+            // target, if specified
+            link.setAttribute("target", "_blank");
+            if (link.getAttribute("rel") === null) {
+              link.setAttribute("rel", "noopener");
+            }
+        }
+      }
+    function tippyHover(el, contentFn, onTriggerFn, onUntriggerFn) {
+      const config = {
+        allowHTML: true,
+        maxWidth: 500,
+        delay: 100,
+        arrow: false,
+        appendTo: function(el) {
+            return el.parentElement;
+        },
+        interactive: true,
+        interactiveBorder: 10,
+        theme: 'quarto',
+        placement: 'bottom-start',
+      };
+      if (contentFn) {
+        config.content = contentFn;
+      }
+      if (onTriggerFn) {
+        config.onTrigger = onTriggerFn;
+      }
+      if (onUntriggerFn) {
+        config.onUntrigger = onUntriggerFn;
+      }
+      window.tippy(el, config); 
+    }
+    const noterefs = window.document.querySelectorAll('a[role="doc-noteref"]');
+    for (var i=0; i<noterefs.length; i++) {
+      const ref = noterefs[i];
+      tippyHover(ref, function() {
+        // use id or data attribute instead here
+        let href = ref.getAttribute('data-footnote-href') || ref.getAttribute('href');
+        try { href = new URL(href).hash; } catch {}
+        const id = href.replace(/^#\/?/, "");
+        const note = window.document.getElementById(id);
+        if (note) {
+          return note.innerHTML;
+        } else {
+          return "";
+        }
+      });
+    }
+    const xrefs = window.document.querySelectorAll('a.quarto-xref');
+    const processXRef = (id, note) => {
+      // Strip column container classes
+      const stripColumnClz = (el) => {
+        el.classList.remove("page-full", "page-columns");
+        if (el.children) {
+          for (const child of el.children) {
+            stripColumnClz(child);
+          }
+        }
+      }
+      stripColumnClz(note)
+      if (id === null || id.startsWith('sec-')) {
+        // Special case sections, only their first couple elements
+        const container = document.createElement("div");
+        if (note.children && note.children.length > 2) {
+          container.appendChild(note.children[0].cloneNode(true));
+          for (let i = 1; i < note.children.length; i++) {
+            const child = note.children[i];
+            if (child.tagName === "P" && child.innerText === "") {
+              continue;
+            } else {
+              container.appendChild(child.cloneNode(true));
+              break;
+            }
+          }
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(container);
+          }
+          return container.innerHTML
+        } else {
+          if (window.Quarto?.typesetMath) {
+            window.Quarto.typesetMath(note);
+          }
+          return note.innerHTML;
+        }
+      } else {
+        // Remove any anchor links if they are present
+        const anchorLink = note.querySelector('a.anchorjs-link');
+        if (anchorLink) {
+          anchorLink.remove();
+        }
+        if (window.Quarto?.typesetMath) {
+          window.Quarto.typesetMath(note);
+        }
+        if (note.classList.contains("callout")) {
+          return note.outerHTML;
+        } else {
+          return note.innerHTML;
+        }
+      }
+    }
+    for (var i=0; i<xrefs.length; i++) {
+      const xref = xrefs[i];
+      tippyHover(xref, undefined, function(instance) {
+        instance.disable();
+        let url = xref.getAttribute('href');
+        let hash = undefined; 
+        if (url.startsWith('#')) {
+          hash = url;
+        } else {
+          try { hash = new URL(url).hash; } catch {}
+        }
+        if (hash) {
+          const id = hash.replace(/^#\/?/, "");
+          const note = window.document.getElementById(id);
+          if (note !== null) {
+            try {
+              const html = processXRef(id, note.cloneNode(true));
+              instance.setContent(html);
+            } finally {
+              instance.enable();
+              instance.show();
+            }
+          } else {
+            // See if we can fetch this
+            fetch(url.split('#')[0])
+            .then(res => res.text())
+            .then(html => {
+              const parser = new DOMParser();
+              const htmlDoc = parser.parseFromString(html, "text/html");
+              const note = htmlDoc.getElementById(id);
+              if (note !== null) {
+                const html = processXRef(id, note);
+                instance.setContent(html);
+              } 
+            }).finally(() => {
+              instance.enable();
+              instance.show();
+            });
+          }
+        } else {
+          // See if we can fetch a full url (with no hash to target)
+          // This is a special case and we should probably do some content thinning / targeting
+          fetch(url)
+          .then(res => res.text())
+          .then(html => {
+            const parser = new DOMParser();
+            const htmlDoc = parser.parseFromString(html, "text/html");
+            const note = htmlDoc.querySelector('main.content');
+            if (note !== null) {
+              // This should only happen for chapter cross references
+              // (since there is no id in the URL)
+              // remove the first header
+              if (note.children.length > 0 && note.children[0].tagName === "HEADER") {
+                note.children[0].remove();
+              }
+              const html = processXRef(null, note);
+              instance.setContent(html);
+            } 
+          }).finally(() => {
+            instance.enable();
+            instance.show();
+          });
+        }
+      }, function(instance) {
+      });
+    }
+        let selectedAnnoteEl;
+        const selectorForAnnotation = ( cell, annotation) => {
+          let cellAttr = 'data-code-cell="' + cell + '"';
+          let lineAttr = 'data-code-annotation="' +  annotation + '"';
+          const selector = 'span[' + cellAttr + '][' + lineAttr + ']';
+          return selector;
+        }
+        const selectCodeLines = (annoteEl) => {
+          const doc = window.document;
+          const targetCell = annoteEl.getAttribute("data-target-cell");
+          const targetAnnotation = annoteEl.getAttribute("data-target-annotation");
+          const annoteSpan = window.document.querySelector(selectorForAnnotation(targetCell, targetAnnotation));
+          const lines = annoteSpan.getAttribute("data-code-lines").split(",");
+          const lineIds = lines.map((line) => {
+            return targetCell + "-" + line;
+          })
+          let top = null;
+          let height = null;
+          let parent = null;
+          if (lineIds.length > 0) {
+              //compute the position of the single el (top and bottom and make a div)
+              const el = window.document.getElementById(lineIds[0]);
+              top = el.offsetTop;
+              height = el.offsetHeight;
+              parent = el.parentElement.parentElement;
+            if (lineIds.length > 1) {
+              const lastEl = window.document.getElementById(lineIds[lineIds.length - 1]);
+              const bottom = lastEl.offsetTop + lastEl.offsetHeight;
+              height = bottom - top;
+            }
+            if (top !== null && height !== null && parent !== null) {
+              // cook up a div (if necessary) and position it 
+              let div = window.document.getElementById("code-annotation-line-highlight");
+              if (div === null) {
+                div = window.document.createElement("div");
+                div.setAttribute("id", "code-annotation-line-highlight");
+                div.style.position = 'absolute';
+                parent.appendChild(div);
+              }
+              div.style.top = top - 2 + "px";
+              div.style.height = height + 4 + "px";
+              div.style.left = 0;
+              let gutterDiv = window.document.getElementById("code-annotation-line-highlight-gutter");
+              if (gutterDiv === null) {
+                gutterDiv = window.document.createElement("div");
+                gutterDiv.setAttribute("id", "code-annotation-line-highlight-gutter");
+                gutterDiv.style.position = 'absolute';
+                const codeCell = window.document.getElementById(targetCell);
+                const gutter = codeCell.querySelector('.code-annotation-gutter');
+                gutter.appendChild(gutterDiv);
+              }
+              gutterDiv.style.top = top - 2 + "px";
+              gutterDiv.style.height = height + 4 + "px";
+            }
+            selectedAnnoteEl = annoteEl;
+          }
+        };
+        const unselectCodeLines = () => {
+          const elementsIds = ["code-annotation-line-highlight", "code-annotation-line-highlight-gutter"];
+          elementsIds.forEach((elId) => {
+            const div = window.document.getElementById(elId);
+            if (div) {
+              div.remove();
+            }
+          });
+          selectedAnnoteEl = undefined;
+        };
+          // Handle positioning of the toggle
+      window.addEventListener(
+        "resize",
+        throttle(() => {
+          elRect = undefined;
+          if (selectedAnnoteEl) {
+            selectCodeLines(selectedAnnoteEl);
+          }
+        }, 10)
+      );
+      function throttle(fn, ms) {
+      let throttle = false;
+      let timer;
+        return (...args) => {
+          if(!throttle) { // first call gets through
+              fn.apply(this, args);
+              throttle = true;
+          } else { // all the others get throttled
+              if(timer) clearTimeout(timer); // cancel #2
+              timer = setTimeout(() => {
+                fn.apply(this, args);
+                timer = throttle = false;
+              }, ms);
+          }
+        };
+      }
+        // Attach click handler to the DT
+        const annoteDls = window.document.querySelectorAll('dt[data-target-cell]');
+        for (const annoteDlNode of annoteDls) {
+          annoteDlNode.addEventListener('click', (event) => {
+            const clickedEl = event.target;
+            if (clickedEl !== selectedAnnoteEl) {
+              unselectCodeLines();
+              const activeEl = window.document.querySelector('dt[data-target-cell].code-annotation-active');
+              if (activeEl) {
+                activeEl.classList.remove('code-annotation-active');
+              }
+              selectCodeLines(clickedEl);
+              clickedEl.classList.add('code-annotation-active');
+            } else {
+              // Unselect the line
+              unselectCodeLines();
+              clickedEl.classList.remove('code-annotation-active');
+            }
+          });
+        }
+    const findCites = (el) => {
+      const parentEl = el.parentElement;
+      if (parentEl) {
+        const cites = parentEl.dataset.cites;
+        if (cites) {
+          return {
+            el,
+            cites: cites.split(' ')
+          };
+        } else {
+          return findCites(el.parentElement)
+        }
+      } else {
+        return undefined;
+      }
+    };
+    var bibliorefs = window.document.querySelectorAll('a[role="doc-biblioref"]');
+    for (var i=0; i<bibliorefs.length; i++) {
+      const ref = bibliorefs[i];
+      const citeInfo = findCites(ref);
+      if (citeInfo) {
+        tippyHover(citeInfo.el, function() {
+          var popup = window.document.createElement('div');
+          citeInfo.cites.forEach(function(cite) {
+            var citeDiv = window.document.createElement('div');
+            citeDiv.classList.add('hanging-indent');
+            citeDiv.classList.add('csl-entry');
+            var biblioDiv = window.document.getElementById('ref-' + cite);
+            if (biblioDiv) {
+              citeDiv.innerHTML = biblioDiv.innerHTML;
+            }
+            popup.appendChild(citeDiv);
+          });
+          return popup.innerHTML;
+        });
+      }
+    }
+  });
+  </script>
+<nav class="page-navigation">
+  <div class="nav-page nav-page-previous">
+      <a href="../preface.html" class="pagination-link" aria-label="Prefacio">
+        <i class="bi bi-arrow-left-short"></i> <span class="nav-page-text">Prefacio</span>
+      </a>          
+  </div>
+  <div class="nav-page nav-page-next">
+      <a href="../chapters/chapter02.html" class="pagination-link" aria-label="¿Cómo aprende una máquina una relación desconocida?">
+        <span class="nav-page-text"><span class="chapter-number">2</span>&nbsp; <span class="chapter-title">¿Cómo aprende una máquina una relación desconocida?</span></span> <i class="bi bi-arrow-right-short"></i>
+      </a>
+  </div>
+</nav>
+</div> <!-- /content -->
+<footer class="footer">
+  <div class="nav-footer">
+    <div class="nav-footer-left">
+<p>Deep Learning Notes</p>
+</div>   
+    <div class="nav-footer-center">
+      &nbsp;
+    <div class="toc-actions d-sm-block d-md-none"><ul><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/edit/main/chapters/chapter01.qmd" class="toc-action"><i class="bi bi-github"></i>Editar esta página</a></li><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/issues/new" class="toc-action"><i class="bi empty"></i>Informar sobre problema</a></li></ul></div></div>
+    <div class="nav-footer-right">
+<p>Jonathan Florez Giraldo</p>
+</div>
+  </div>
+</footer>
+
+
+
+
+<script src="../site_libs/quarto-html/zenscroll-min.js"></script>
+</body></html>

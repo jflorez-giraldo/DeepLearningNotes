@@ -1,0 +1,1023 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Deep Learning: de los problemas a las redes neuronales",
+    "section": "",
+    "text": "Aprender resolviendo problemas\nEste libro es un recurso de nivel de posgrado para estudiar deep learning a partir de problemas. Conecta formulación, fundamentos matemáticos, experimentos computacionales y soluciones reproducibles con PyTorch.\nflowchart LR\n    A[Problema] --&gt; B[Datos]\n    B --&gt; C[Línea base]\n    C --&gt; D[Representación]\n    D --&gt; E[Entrenamiento]\n    E --&gt; F[Diagnóstico]\n    F --&gt; G[Decisión]\n    G -. nuevos errores .-&gt; A\n\n\n\n\nflowchart LR\n    A[Problema] --&gt; B[Datos]\n    B --&gt; C[Línea base]\n    C --&gt; D[Representación]\n    D --&gt; E[Entrenamiento]\n    E --&gt; F[Diagnóstico]\n    F --&gt; G[Decisión]\n    G -. nuevos errores .-&gt; A\n\n\n Ruta de trabajo que organiza cada problema del libro.",
+    "crumbs": [
+      "Aprender resolviendo problemas"
+    ]
+  },
+  {
+    "objectID": "index.html#qué-aprenderás",
+    "href": "index.html#qué-aprenderás",
+    "title": "Deep Learning: de los problemas a las redes neuronales",
+    "section": "Qué aprenderás",
+    "text": "Qué aprenderás\nEl recorrido desarrolla la capacidad de:\n\nrepresentar datos tabulares, imágenes, secuencias y texto mediante tensores;\nconstruir y entrenar modelos con la interfaz esencial de PyTorch;\nderivar y explicar las operaciones que permiten aprender parámetros;\ndiseñar MLP, redes convolucionales, redes recurrentes y transformers;\ndiagnosticar problemas de optimización, generalización y estabilidad;\ncomparar modelos con protocolos de evaluación reproducibles;\naprovechar modelos preentrenados cuando las etiquetas o el cómputo son limitados;\nanalizar errores, costo computacional, robustez y condiciones de uso; y\nformular problemas introductorios de decisión secuencial mediante reinforcement learning.",
+    "crumbs": [
+      "Aprender resolviendo problemas"
+    ]
+  },
+  {
+    "objectID": "index.html#ruta-de-aprendizaje",
+    "href": "index.html#ruta-de-aprendizaje",
+    "title": "Deep Learning: de los problemas a las redes neuronales",
+    "section": "Ruta de aprendizaje",
+    "text": "Ruta de aprendizaje\nLa Parte I abre la caja de herramientas: tensores, diferenciación automática, redes multicapa y entrenamiento estable. La Parte II estudia cómo las convoluciones aprovechan la estructura espacial y cómo transferir representaciones visuales. La Parte III desarrolla modelos para secuencias, atención y lenguaje. La Parte IV conecta aprendizaje generativo, sistemas reproducibles y decisiones secuenciales.\nLos algoritmos no se presentan como recetas aisladas. Cada capítulo parte de una necesidad observable, establece una línea base y utiliza experimentos para explicar qué aporta la arquitectura y dónde puede fallar.",
+    "crumbs": [
+      "Aprender resolviendo problemas"
+    ]
+  },
+  {
+    "objectID": "index.html#estado-de-la-edición",
+    "href": "index.html#estado-de-la-edición",
+    "title": "Deep Learning: de los problemas a las redes neuronales",
+    "section": "Estado de la edición",
+    "text": "Estado de la edición\nEsta primera versión publicable contiene la arquitectura completa del libro y el capítulo piloto sobre tensores y PyTorch. Los demás capítulos presentan el problema articulador, los objetivos y la ruta de desarrollo para hacer visible la progresión del curso.",
+    "crumbs": [
+      "Aprender resolviendo problemas"
+    ]
+  },
+  {
+    "objectID": "index.html#recursos",
+    "href": "index.html#recursos",
+    "title": "Deep Learning: de los problemas a las redes neuronales",
+    "section": "Recursos",
+    "text": "Recursos\nEl HTML permite navegar, buscar y copiar código. Los capítulos desarrollados incluyen un notebook descargable y un enlace para ejecutarlo en Google Colab. El código detecta CPU, CUDA o Apple Silicon y explicita las dimensiones de los tensores en las operaciones importantes.\nEl contenido toma como referencia conceptual Dive into Deep Learning (Zhang et al. 2023), la documentación oficial de PyTorch (PyTorch Foundation 2026) y literatura especializada citada en cada capítulo. Consulte el Prefacio para conocer las convenciones metodológicas y de reproducibilidad.\n\n\n\n\nPyTorch Foundation. 2026. PyTorch Documentation. Online documentation. https://pytorch.org/docs/stable/.\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Aprender resolviendo problemas"
+    ]
+  },
+  {
+    "objectID": "preface.html",
+    "href": "preface.html",
+    "title": "Prefacio",
+    "section": "",
+    "text": "Propósito\nUna red neuronal puede implementarse en pocas líneas y aun así resolver el problema equivocado, aprender una señal espuria o producir una evaluación optimista. Este libro fue creado para que la arquitectura aparezca como una respuesta razonada a un problema y no como el punto de partida del análisis.\nEl texto combina cuatro perspectivas:",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#propósito",
+    "href": "preface.html#propósito",
+    "title": "Prefacio",
+    "section": "",
+    "text": "aplicada: qué decisión o predicción se necesita y bajo qué condiciones;\nmatemática: qué función representa el modelo y qué objetivo optimiza;\ncomputacional: cómo se organizan tensores, módulos y ciclos de entrenamiento;\nestadística: qué evidencia permite sostener que el resultado generaliza.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#audiencia-y-prerrequisitos",
+    "href": "preface.html#audiencia-y-prerrequisitos",
+    "title": "Prefacio",
+    "section": "Audiencia y prerrequisitos",
+    "text": "Audiencia y prerrequisitos\nLa audiencia principal son estudiantes de maestría en Estadística Aplicada, Ciencia de Datos, Machine Learning y áreas cuantitativas relacionadas. Se espera familiaridad con Python, NumPy, análisis de datos, probabilidad, vectores, matrices y derivadas básicas.\nNo se presupone experiencia con PyTorch. El primer capítulo introduce sus objetos fundamentales antes de construir redes neuronales.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#principios-de-aprendizaje",
+    "href": "preface.html#principios-de-aprendizaje",
+    "title": "Prefacio",
+    "section": "Principios de aprendizaje",
+    "text": "Principios de aprendizaje\n\nComenzar con el problema\nCada capítulo identifica la unidad de análisis, el resultado esperado, la información disponible, los errores relevantes y las condiciones de uso antes de seleccionar una arquitectura.\n\n\nComparar con una línea base\nUna red compleja debe justificar su costo. Las mejoras se interpretan respecto a una regla simple, un modelo lineal o una arquitectura más pequeña.\n\n\nConectar matemáticas y código\nLas dimensiones, operaciones, funciones de pérdida y gradientes se muestran en notación y se inspeccionan con tensores. La implementación concisa aparece después de hacer visible el mecanismo central.\n\n\nSeparar entrenamiento, selección y evaluación\nLos parámetros se aprenden con entrenamiento; los hiperparámetros y decisiones de parada se seleccionan con validación; el conjunto de test se reserva para una evaluación final. Consultar repetidamente test invalida su independencia.\n\n\nDiagnosticar, no solo puntuar\nLas curvas de aprendizaje, errores por clase, ejemplos concretos, calibración, sensibilidad a semillas y desempeño por grupos complementan las métricas promedio.\n\n\nHacer visible el costo\nCada experimento debe registrar tamaño del modelo, tiempo aproximado, dispositivo y compromisos entre precisión y recursos. Una mejora marginal no siempre justifica un modelo mucho más costoso.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#convenciones-de-los-capítulos",
+    "href": "preface.html#convenciones-de-los-capítulos",
+    "title": "Prefacio",
+    "section": "Convenciones de los capítulos",
+    "text": "Convenciones de los capítulos\nLos capítulos completos siguen, cuando el problema lo permite, esta secuencia:\n\nsituación y pregunta aplicada;\ndatos, particiones y criterio de éxito;\nlínea base;\nintuición y formulación matemática;\nmecanismo implementado con tensores;\nimplementación idiomática con PyTorch;\nexperimentos controlados;\nevaluación y análisis de errores;\ncosto, riesgos y limitaciones;\nejercicios y reto de extensión.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#reproducibilidad",
+    "href": "preface.html#reproducibilidad",
+    "title": "Prefacio",
+    "section": "Reproducibilidad",
+    "text": "Reproducibilidad\nLos ejemplos fijan semillas cuando la aleatoriedad no es el objeto de estudio, pero una semilla fija no demuestra estabilidad. Los resultados importantes deben comprobarse con varias inicializaciones o particiones.\nLos notebooks detectan el dispositivo disponible y se diseñan para Google Colab. El libro no ejecuta modelos costosos durante cada render: los resultados aprobados se congelan y la integración continua comprueba la construcción del HTML sin reentrenar.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#alcance",
+    "href": "preface.html#alcance",
+    "title": "Prefacio",
+    "section": "Alcance",
+    "text": "Alcance\nLa primera edición cubre PyTorch, MLP, optimización, CNN, transferencia, RNN, LSTM, GRU, atención, transformers, aprendizaje generativo, desarrollo de sistemas y una introducción a reinforcement learning. Detección, segmentación, recomendadores, procesos gaussianos y entrenamiento distribuido avanzado quedan como posibles extensiones.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "preface.html#fuentes-y-licencia",
+    "href": "preface.html#fuentes-y-licencia",
+    "title": "Prefacio",
+    "section": "Fuentes y licencia",
+    "text": "Fuentes y licencia\nLa selección conceptual está informada por Dive into Deep Learning (Zhang et al. 2023). Las explicaciones, problemas y experimentos se desarrollan para este curso. Toda adaptación directa debe marcarse en su lugar de uso.\nEl libro se distribuye bajo CC BY-SA 4.0, compatible con la licencia de D2L. Los detalles de atribución están en ATTRIBUTION.md.\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Prefacio"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html",
+    "href": "chapters/chapter01.html",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "",
+    "text": "1.1 Por qué comenzar por los tensores\nEn deep learning, casi toda la información termina representada como un tensor: una colección rectangular de valores con una forma, un tipo y un dispositivo. Las imágenes, los parámetros de una red, las predicciones y los gradientes comparten esta representación.\nUna expresión breve como\noculta varias operaciones: un lote entra al modelo, PyTorch construye un grafo computacional, la pérdida resume el error y backward() calcula cómo cambiar cada parámetro. Para razonar sobre ese proceso primero debemos poder responder:",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#por-qué-comenzar-por-los-tensores",
+    "href": "chapters/chapter01.html#por-qué-comenzar-por-los-tensores",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "",
+    "text": "loss = criterion(model(images), labels)\nloss.backward()\n\n\n¿qué representa cada eje del tensor?;\n¿qué tipo numérico contiene?;\n¿en qué dispositivo reside?;\n¿qué operación cambia su forma?;\n¿qué valores participan en el cálculo de gradientes?\n\n\n\n\n\n\n\nNotaObjetivos de aprendizaje\n\n\n\nAl terminar este capítulo podrás:\n\ncrear tensores a partir de datos y describir shape, dtype y device;\nseleccionar, reorganizar y combinar dimensiones sin confundir observaciones con características;\nexplicar broadcasting y distinguir multiplicación elemento a elemento de multiplicación matricial;\nnormalizar un lote de imágenes respetando sus ejes;\nseleccionar CPU, CUDA o MPS y mover datos de forma coherente;\nconstruir un Dataset y recorrerlo mediante un DataLoader;\nusar autograd para calcular un gradiente sencillo; y\nreconocer errores comunes de dimensiones, tipos y dispositivos.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#preparar-el-entorno",
+    "href": "chapters/chapter01.html#preparar-el-entorno",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.2 Preparar el entorno",
+    "text": "1.2 Preparar el entorno\nEl notebook está diseñado para PyTorch 2.4 o posterior. En Google Colab, PyTorch suele estar instalado; la siguiente celda permite comprobar el entorno.\n\nimport platform\n\nimport numpy as np\nimport torch\n\nSEED = 42\ntorch.manual_seed(SEED)\n\nprint(f\"Python: {platform.python_version()}\")\nprint(f\"PyTorch: {torch.__version__}\")\n\nLa selección de dispositivo debe ocurrir en un solo lugar. CUDA corresponde a GPU NVIDIA; MPS permite usar GPU en equipos Apple compatibles.\n\ndef select_device():\n    if torch.cuda.is_available():\n        return torch.device(\"cuda\")\n    if torch.backends.mps.is_available():\n        return torch.device(\"mps\")\n    return torch.device(\"cpu\")\n\n\ndevice = select_device()\nprint(f\"Dispositivo seleccionado: {device}\")\n\n\n\n\n\n\n\nImportanteUna regla operacional\n\n\n\nLos datos de entrada y los parámetros del modelo deben estar en el mismo dispositivo. Mover solo uno de ellos producirá un error en la primera operación que los combine.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#del-arreglo-al-tensor",
+    "href": "chapters/chapter01.html#del-arreglo-al-tensor",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.3 Del arreglo al tensor",
+    "text": "1.3 Del arreglo al tensor\nRepresentaremos inicialmente cuatro imágenes de un sensor. Cada imagen tiene un canal, cuatro filas y cinco columnas. La forma del lote es, por tanto, \\((N,C,H,W)=(4,1,4,5)\\).\n\nimage_values = [\n    [\n        [\n            [12, 14, 15, 13, 11],\n            [13, 16, 18, 17, 12],\n            [11, 15, 19, 16, 10],\n            [10, 12, 14, 13, 9],\n        ]\n    ],\n    [\n        [\n            [30, 31, 29, 28, 30],\n            [31, 35, 37, 34, 29],\n            [29, 36, 42, 35, 28],\n            [27, 29, 31, 30, 26],\n        ]\n    ],\n    [\n        [\n            [8, 9, 8, 10, 9],\n            [9, 11, 12, 11, 8],\n            [8, 10, 13, 10, 7],\n            [7, 8, 9, 8, 6],\n        ]\n    ],\n    [\n        [\n            [20, 22, 21, 19, 18],\n            [21, 25, 28, 24, 20],\n            [19, 26, 32, 25, 18],\n            [17, 20, 22, 20, 16],\n        ]\n    ],\n]\n\nimages = torch.tensor(image_values, dtype=torch.float32)\nlabels = torch.tensor([0, 1, 0, 1], dtype=torch.int64)\n\nprint(\"Forma de imágenes:\", images.shape)\nprint(\"Forma de etiquetas:\", labels.shape)\nprint(\"Tipo de imágenes:\", images.dtype)\nprint(\"Tipo de etiquetas:\", labels.dtype)\n\nLa forma no es una anotación decorativa. Es parte del significado:\n\n\n\nEje\nTamaño\nInterpretación\n\n\n\n\n\\(N\\)\n4\nimágenes en el lote\n\n\n\\(C\\)\n1\ncanales por imagen\n\n\n\\(H\\)\n4\nfilas\n\n\n\\(W\\)\n5\ncolumnas\n\n\n\nLas imágenes usan float32 porque las operaciones de una red y sus gradientes requieren números de punto flotante. Las etiquetas usan int64 porque muchas funciones de clasificación esperan índices enteros de clase.\n\n1.3.1 Propiedades que siempre deben inspeccionarse\n\ntensor_audit = {\n    \"shape\": tuple(images.shape),\n    \"ndim\": images.ndim,\n    \"numel\": images.numel(),\n    \"dtype\": str(images.dtype),\n    \"device\": str(images.device),\n    \"requires_grad\": images.requires_grad,\n}\ntensor_audit\n\nnumel() cuenta escalares. Aquí debe coincidir con \\(4\\times1\\times4\\times5=80\\). Esta igualdad es útil para auditar operaciones de reorganización.\n\n\n1.3.2 NumPy y memoria compartida\ntorch.from_numpy() puede compartir memoria con un arreglo de NumPy en CPU. Modificar uno puede modificar el otro, una propiedad eficiente pero fácil de pasar por alto.\n\nnumpy_array = np.array([1.0, 2.0, 3.0], dtype=np.float32)\nshared_tensor = torch.from_numpy(numpy_array)\n\nnumpy_array[0] = 99.0\nprint(shared_tensor)\n\nCuando se necesita independencia explícita se utiliza una copia:\n\nindependent_tensor = torch.tensor(numpy_array)\nnumpy_array[1] = -10.0\nprint(\"NumPy:\", numpy_array)\nprint(\"Tensor independiente:\", independent_tensor)",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#seleccionar-observaciones-y-regiones",
+    "href": "chapters/chapter01.html#seleccionar-observaciones-y-regiones",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.4 Seleccionar observaciones y regiones",
+    "text": "1.4 Seleccionar observaciones y regiones\nLa indexación conserva la lógica de NumPy. El siguiente acceso selecciona la primera imagen, su único canal y todas las posiciones espaciales.\n\nfirst_image = images[0, 0, :, :]\nprint(first_image)\nprint(first_image.shape)\n\nEliminar el eje de canal produce una matriz \\((H,W)\\). En cambio, el corte images[0:1] conserva el eje del lote:\n\none_image_batch = images[0:1]\nprint(\"Imagen sin ejes de lote y canal:\", first_image.shape)\nprint(\"Lote de una imagen:\", one_image_batch.shape)\n\nEsta diferencia importa porque una capa convolucional normalmente espera cuatro dimensiones. Una selección que elimina accidentalmente el eje del lote puede romper el modelo.\nPodemos extraer una región central de todas las imágenes sin iterar:\n\ncentral_regions = images[:, :, 1:3, 1:4]\nprint(central_regions.shape)\nprint(central_regions)",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#cambiar-la-forma-sin-cambiar-los-datos",
+    "href": "chapters/chapter01.html#cambiar-la-forma-sin-cambiar-los-datos",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.5 Cambiar la forma sin cambiar los datos",
+    "text": "1.5 Cambiar la forma sin cambiar los datos\nUna red densa recibe una matriz con una fila por observación. Para convertir cada imagen de \\(1\\times4\\times5\\) en 20 características usamos flatten:\n\nflat_images = images.flatten(start_dim=1)\nprint(flat_images.shape)\n\nassert flat_images.shape == (4, 20)\nassert flat_images.numel() == images.numel()\n\nreshape permite expresar la misma intención cuando conocemos la forma de destino. El valor -1 pide a PyTorch inferir una dimensión.\n\nflat_with_reshape = images.reshape(images.shape[0], -1)\nprint(torch.equal(flat_images, flat_with_reshape))\n\npermute no aplana: cambia el orden de los ejes. Esto es necesario al intercambiar datos entre bibliotecas que usan \\((N,H,W,C)\\) y PyTorch, que usa \\((N,C,H,W)\\).\n\nchannels_last = images.permute(0, 2, 3, 1)\nprint(\"PyTorch NCHW:\", images.shape)\nprint(\"Canales al final NHWC:\", channels_last.shape)\n\n\n\n\n\n\n\nAdvertenciaNo intercambiar reshape y permute\n\n\n\nreshape reorganiza cómo se agrupan los valores; permute cambia qué eje representa cada posición. Ambos pueden producir un tensor con el mismo número de elementos, pero no necesariamente con el mismo significado.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#operaciones-vectorizadas",
+    "href": "chapters/chapter01.html#operaciones-vectorizadas",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.6 Operaciones vectorizadas",
+    "text": "1.6 Operaciones vectorizadas\nLa media de intensidad por imagen puede obtenerse en una operación. Debemos reducir canal, altura y anchura, pero conservar el eje del lote.\n\nmean_per_image = images.mean(dim=(1, 2, 3))\nmax_per_image = images.amax(dim=(1, 2, 3))\n\nsummary = torch.stack([mean_per_image, max_per_image], dim=1)\nprint(summary)\nprint(\"Forma del resumen:\", summary.shape)\n\nLa reducción produce dos características por imagen. stack crea un eje nuevo; cat concatena sobre un eje existente.\n\nfirst_half = images[:2]\nsecond_half = images[2:]\nreconstructed_batch = torch.cat([first_half, second_half], dim=0)\n\nassert torch.equal(images, reconstructed_batch)\n\n\n1.6.1 Broadcasting\nQueremos normalizar cada imagen con su propia media y desviación estándar:\n[ z_{nchw}=. ]\nLas estadísticas deben conservar dimensiones unitarias para que PyTorch pueda expandirlas virtualmente sobre canal, altura y anchura.\n\nmeans = images.mean(dim=(1, 2, 3), keepdim=True)\nstds = images.std(dim=(1, 2, 3), keepdim=True)\nnormalized_images = (images - means) / (stds + 1e-6)\n\nprint(\"Imágenes:\", images.shape)\nprint(\"Medias:\", means.shape)\nprint(\"Normalizadas:\", normalized_images.shape)\nprint(\"Medias después de normalizar:\", normalized_images.mean(dim=(1, 2, 3)))\n\nBroadcasting no copia físicamente la media 20 veces. PyTorch alinea las dimensiones desde la derecha y permite combinar tamaños iguales o tamaños uno.\n\n\n\n\n\n\nTipAuditar broadcasting\n\n\n\nAntes de una operación, escribe las formas una debajo de otra y alínealas a la derecha. En este caso, (4, 1, 4, 5) y (4, 1, 1, 1) son compatibles.\n\n\n\n\n1.6.2 Producto elemento a elemento y producto matricial\nEl operador * combina posiciones correspondientes. El operador @ realiza producto matricial.\n\nfeatures = torch.tensor([\n    [0.2, 1.0, -0.5],\n    [0.7, 0.3, 0.1],\n], dtype=torch.float32)\nweights = torch.tensor([\n    [0.4, -0.2],\n    [0.1, 0.8],\n    [-0.6, 0.3],\n], dtype=torch.float32)\n\nscores = features @ weights\nprint(\"Características:\", features.shape)\nprint(\"Pesos:\", weights.shape)\nprint(\"Scores:\", scores.shape)\nprint(scores)\n\nLa regla dimensional es\n[ (B,D)@(D,K)=(B,K), ]\ndonde \\(B\\) es el lote, \\(D\\) el número de características y \\(K\\) el número de salidas.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#mover-datos-al-dispositivo",
+    "href": "chapters/chapter01.html#mover-datos-al-dispositivo",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.7 Mover datos al dispositivo",
+    "text": "1.7 Mover datos al dispositivo\nMover el lote es explícito. La variable original permanece en CPU; to() devuelve un tensor en el dispositivo solicitado.\n\nimages_device = images.to(device)\nlabels_device = labels.to(device)\n\nprint(images_device.device)\nprint(labels_device.device)\n\nPara volver a NumPy se requiere CPU y un tensor desconectado del grafo:\n\nimages_numpy = images_device.detach().cpu().numpy()\nprint(images_numpy.shape)\n\nCopiar datos entre CPU y GPU tiene costo. En un ciclo de entrenamiento se mueven mini-batches completos, no escalares individuales.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#autograd-aprender-significa-diferenciar",
+    "href": "chapters/chapter01.html#autograd-aprender-significa-diferenciar",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.8 Autograd: aprender significa diferenciar",
+    "text": "1.8 Autograd: aprender significa diferenciar\nSupongamos un modelo lineal muy pequeño para estimar un score a partir de las dos características del resumen. Sus parámetros son un vector \\(\\mathbf{w}\\) y un intercepto \\(b\\):\n[ _i = _i^+b. ]\n\nX = summary\ny = labels.to(torch.float32)\n\nw = torch.zeros(2, requires_grad=True)\nb = torch.zeros(1, requires_grad=True)\n\npredictions = X @ w + b\nloss = ((predictions - y) ** 2).mean()\nloss.backward()\n\nprint(\"Pérdida:\", loss.item())\nprint(\"Gradiente de w:\", w.grad)\nprint(\"Gradiente de b:\", b.grad)\n\nrequires_grad=True indica que las operaciones sobre esos tensores deben registrarse. backward() aplica la regla de la cadena desde la pérdida escalar hasta cada parámetro hoja.\nPara el error cuadrático medio,\n[ _{} =^ (+b-). ]\nPodemos comprobar que el gradiente automático coincide con la expresión:\n\nmanual_gradient = 2 / len(X) * X.T @ (X @ w.detach() + b.detach() - y)\nprint(\"Gradiente manual:\", manual_gradient)\nprint(\"Coinciden:\", torch.allclose(w.grad, manual_gradient))\n\nLos gradientes se acumulan. Antes de calcular un nuevo gradiente debemos reiniciarlos. Los optimizadores realizan este paso mediante optimizer.zero_grad().\n\nwith torch.no_grad():\n    learning_rate = 0.001\n    w -= learning_rate * w.grad\n    b -= learning_rate * b.grad\n\nw.grad.zero_()\nb.grad.zero_()\n\ntorch.no_grad() evita registrar la actualización como parte del grafo. En los capítulos siguientes un optimizador reemplazará esta actualización manual.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#organizar-datos-con-dataset-y-dataloader",
+    "href": "chapters/chapter01.html#organizar-datos-con-dataset-y-dataloader",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.9 Organizar datos con Dataset y DataLoader",
+    "text": "1.9 Organizar datos con Dataset y DataLoader\nLos proyectos reales no entregan todos los datos en una lista escrita a mano. PyTorch separa dos responsabilidades:\n\nDataset define cómo obtener una observación y su etiqueta;\nDataLoader agrupa, mezcla y entrega mini-batches.\n\nPara tensores que ya caben en memoria podemos usar TensorDataset.\n\nfrom torch.utils.data import DataLoader, TensorDataset\n\ndataset = TensorDataset(normalized_images, labels)\nloader = DataLoader(\n    dataset,\n    batch_size=2,\n    shuffle=True,\n    generator=torch.Generator().manual_seed(SEED),\n)\n\nfor batch_id, (batch_images, batch_labels) in enumerate(loader):\n    print(\n        f\"Batch {batch_id}: \",\n        f\"X={tuple(batch_images.shape)}, \",\n        f\"y={tuple(batch_labels.shape)}\",\n    )\n\nshuffle=True altera el orden al comienzo de cada época. La semilla del generador hace reproducible este ejemplo, aunque en un entrenamiento completo también deben controlarse otras fuentes de aleatoriedad.\n\n1.9.1 Un ciclo mínimo de preparación\nEl patrón que reutilizaremos es:\n\nfor batch_images, batch_labels in loader:\n    batch_images = batch_images.to(device)\n    batch_labels = batch_labels.to(device)\n\n    assert batch_images.ndim == 4\n    assert batch_images.shape[0] == batch_labels.shape[0]\n\nLas aserciones convierten supuestos silenciosos en errores cercanos a su causa. En proyectos posteriores también validaremos rangos, valores faltantes y correspondencia de clases.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#diagnóstico-de-errores-frecuentes",
+    "href": "chapters/chapter01.html#diagnóstico-de-errores-frecuentes",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.10 Diagnóstico de errores frecuentes",
+    "text": "1.10 Diagnóstico de errores frecuentes\n\n1.10.1 Ejes en el orden incorrecto\nUna forma como (32, 224, 224, 3) puede parecer válida, pero una CNN de PyTorch la interpretaría como 224 canales. La corrección es tensor.permute(0, 3, 1, 2).\n\n\n1.10.2 Etiquetas con tipo incorrecto\nPara clasificación multiclase, CrossEntropyLoss espera normalmente índices de clase int64, no valores float32 ni vectores one-hot.\n\n\n1.10.3 Datos y modelo en dispositivos diferentes\nEl mensaje suele mencionar que se encontraron tensores en dos dispositivos. Centralizar la selección y mover cada mini-batch reduce este riesgo.\n\n\n1.10.4 Gradientes acumulados accidentalmente\nDos llamadas a backward() suman gradientes si no se reinician. El ciclo estándar es zero_grad(), forward, pérdida, backward() y step().\n\n\n1.10.5 Eliminar el eje del lote\nimages[0] y images[0:1] no tienen la misma forma. El segundo conserva un lote de tamaño uno.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#solución-integrada-del-problema",
+    "href": "chapters/chapter01.html#solución-integrada-del-problema",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.11 Solución integrada del problema",
+    "text": "1.11 Solución integrada del problema\nYa podemos construir una función que recibe un lote, valida su estructura, normaliza cada imagen y lo mueve al dispositivo.\n\ndef prepare_image_batch(batch, target_device):\n    if batch.ndim != 4:\n        raise ValueError(\n            \"Se esperaba un tensor (N, C, H, W); \"\n            f\"se recibió {tuple(batch.shape)}\"\n        )\n    if not batch.is_floating_point():\n        batch = batch.to(torch.float32)\n    if not torch.isfinite(batch).all():\n        raise ValueError(\"El lote contiene valores no finitos\")\n\n    means = batch.mean(dim=(1, 2, 3), keepdim=True)\n    stds = batch.std(dim=(1, 2, 3), keepdim=True)\n    normalized = (batch - means) / stds.clamp_min(1e-6)\n    return normalized.to(target_device)\n\n\nprepared_images = prepare_image_batch(images, device)\n\nassert prepared_images.shape == images.shape\nassert prepared_images.device.type == device.type\nassert torch.allclose(\n    prepared_images.mean(dim=(1, 2, 3)).cpu(),\n    torch.zeros(len(images)),\n    atol=1e-5,\n)\n\nprint(\"Lote preparado:\", prepared_images.shape, prepared_images.device)\n\nLa función no entrena todavía un clasificador. Resuelve una etapa previa y crítica: entrega al modelo un lote con contrato explícito, tipo apropiado, valores finitos, normalización por observación y dispositivo coherente.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#qué-hemos-aprendido",
+    "href": "chapters/chapter01.html#qué-hemos-aprendido",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.12 Qué hemos aprendido",
+    "text": "1.12 Qué hemos aprendido\n\nUn tensor se interpreta conjuntamente por sus valores, forma, tipo y dispositivo.\nEn visión, PyTorch usa normalmente el orden \\((N,C,H,W)\\).\nLa indexación puede conservar o eliminar ejes; esa diferencia afecta a las capas posteriores.\nreshape, flatten y permute resuelven problemas distintos.\nBroadcasting permite vectorizar operaciones sin copiar datos innecesarios.\n* opera elemento a elemento; @ contrae dimensiones compatibles.\nAutograd registra operaciones y aplica la regla de la cadena desde una pérdida escalar.\nDataset representa observaciones y DataLoader construye mini-batches.\nLas validaciones de forma, tipo, finitud y dispositivo deben ocurrir cerca de la entrada del sistema.\n\nEn el próximo capítulo estos elementos se usarán para aprender una relación a partir de datos y construir un ciclo de entrenamiento completo.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#ejercicios",
+    "href": "chapters/chapter01.html#ejercicios",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.13 Ejercicios",
+    "text": "1.13 Ejercicios\n\nCrea un tensor de diez imágenes RGB de \\(32\\times32\\). Explica cada eje y calcula el número total de escalares sin usar numel(); comprueba después el resultado con PyTorch.\nConvierte un lote con forma (N, H, W, C) a (N, C, H, W) y verifica que un píxel específico conserva sus tres canales.\nCalcula media y desviación estándar por canal para un lote RGB. Escribe las formas de los tensores antes de usar broadcasting.\nImplementa una estandarización global y compárala con la normalización por imagen de este capítulo. Explica qué información elimina cada estrategia.\nConstruye una matriz de 20 características por imagen y multiplícala por una matriz de pesos para obtener tres scores por observación. Justifica todas las dimensiones.\nModifica el ejemplo de autograd para usar error absoluto medio. ¿Qué ocurre con el gradiente cuando una predicción coincide exactamente con la etiqueta?\nCrea un DataLoader con cinco observaciones y batch_size=2. Registra el tamaño de cada mini-batch y explica el último resultado.\nExtiende prepare_image_batch() para aceptar un rango esperado de valores y producir un error informativo cuando el lote lo incumpla.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter01.html#reto",
+    "href": "chapters/chapter01.html#reto",
+    "title": "1  Del dato al tensor: fundamentos de PyTorch",
+    "section": "1.14 Reto",
+    "text": "1.14 Reto\nConstruye un Dataset que genere imágenes sintéticas de \\(16\\times16\\) con dos clases: imágenes con una franja vertical brillante e imágenes con una franja horizontal. Visualiza ejemplos, crea particiones de entrenamiento y validación, y entrega mini-batches normalizados. No entrenes todavía la red: documenta el contrato de datos que deberá recibir el modelo del Capítulo 3.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>1</span>  <span class='chapter-title'>Del dato al tensor: fundamentos de PyTorch</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html",
+    "href": "chapters/chapter02.html",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "",
+    "text": "2.1 Objetivos",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#objetivos",
+    "href": "chapters/chapter02.html#objetivos",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "",
+    "text": "formular regresión como minimización de una pérdida;\nimplementar regresión lineal con tensores y autograd;\ndistinguir parámetros, hiperparámetros, pérdida y métrica;\nconstruir el primer ciclo de entrenamiento con mini-batches;\ncomparar contra una predicción constante; y\nevaluar sin utilizar test para seleccionar el modelo.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#caso-y-datos",
+    "href": "chapters/chapter02.html#caso-y-datos",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.2 Caso y datos",
+    "text": "2.2 Caso y datos\nSe seleccionará un dataset abierto de consumo o demanda con licencia, fuente y diccionario documentados. La división respetará el mecanismo temporal cuando exista dependencia cronológica.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#ruta-de-desarrollo",
+    "href": "chapters/chapter02.html#ruta-de-desarrollo",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.3 Ruta de desarrollo",
+    "text": "2.3 Ruta de desarrollo\n\nLínea base por media o último valor observado.\nModelo lineal y error cuadrático.\nDerivación del gradiente.\nImplementación manual y con nn.Linear.\nDataset, DataLoader y ciclo de entrenamiento.\nCurvas de pérdida, residuos y evaluación final.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#experimento-central",
+    "href": "chapters/chapter02.html#experimento-central",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.4 Experimento central",
+    "text": "2.4 Experimento central\nComparar solución analítica, descenso por gradiente batch y mini-batch bajo distintas escalas y tasas de aprendizaje.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter02.html#referencia-conceptual",
+    "href": "chapters/chapter02.html#referencia-conceptual",
+    "title": "2  ¿Cómo aprende una máquina una relación desconocida?",
+    "section": "2.5 Referencia conceptual",
+    "text": "2.5 Referencia conceptual\nRedes lineales para regresión, generalización y weight decay en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>2</span>  <span class='chapter-title'>¿Cómo aprende una máquina una relación desconocida?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter03.html",
+    "href": "chapters/chapter03.html",
+    "title": "3  ¿Cómo aprender relaciones no lineales?",
+    "section": "",
+    "text": "3.1 Objetivos",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>¿Cómo aprender relaciones no lineales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter03.html#objetivos",
+    "href": "chapters/chapter03.html#objetivos",
+    "title": "3  ¿Cómo aprender relaciones no lineales?",
+    "section": "",
+    "text": "explicar por qué apilar funciones lineales no crea no linealidad;\nconstruir un perceptrón multicapa desde tensores;\ninterpretar ReLU, sigmoid y softmax;\nseguir forward, pérdida y backpropagation;\ncomparar regresión softmax y MLP; y\nanalizar errores mediante matriz de confusión y ejemplos concretos.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>¿Cómo aprender relaciones no lineales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter03.html#ruta-de-desarrollo",
+    "href": "chapters/chapter03.html#ruta-de-desarrollo",
+    "title": "3  ¿Cómo aprender relaciones no lineales?",
+    "section": "3.2 Ruta de desarrollo",
+    "text": "3.2 Ruta de desarrollo\n\nLínea base mayoritaria y regresión softmax.\nCapa oculta y función de activación.\nGrafo computacional y regla de la cadena.\nMLP desde cero y con nn.Sequential.\nSelección de capacidad con validación.\nDiagnóstico de pares de clases difíciles.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>¿Cómo aprender relaciones no lineales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter03.html#experimento-central",
+    "href": "chapters/chapter03.html#experimento-central",
+    "title": "3  ¿Cómo aprender relaciones no lineales?",
+    "section": "3.3 Experimento central",
+    "text": "3.3 Experimento central\nVariar profundidad, ancho y activación manteniendo fijo el protocolo de datos y el presupuesto de entrenamiento.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>¿Cómo aprender relaciones no lineales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter03.html#referencia-conceptual",
+    "href": "chapters/chapter03.html#referencia-conceptual",
+    "title": "3  ¿Cómo aprender relaciones no lineales?",
+    "section": "3.4 Referencia conceptual",
+    "text": "3.4 Referencia conceptual\nClasificación lineal, MLP y backpropagation en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>3</span>  <span class='chapter-title'>¿Cómo aprender relaciones no lineales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter04.html",
+    "href": "chapters/chapter04.html",
+    "title": "4  ¿Por qué una red entrena mal o no generaliza?",
+    "section": "",
+    "text": "4.1 Objetivos",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>¿Por qué una red entrena mal o no generaliza?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter04.html#objetivos",
+    "href": "chapters/chapter04.html#objetivos",
+    "title": "4  ¿Por qué una red entrena mal o no generaliza?",
+    "section": "",
+    "text": "reconocer gradientes que desaparecen o explotan;\nrelacionar inicialización, activaciones y profundidad;\ncomparar SGD, momentum y Adam bajo controles comunes;\nusar weight decay, dropout, normalización y early stopping;\ndiseñar schedules de tasa de aprendizaje; y\nseparar variación aleatoria de mejoras reproducibles.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>¿Por qué una red entrena mal o no generaliza?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter04.html#ruta-de-desarrollo",
+    "href": "chapters/chapter04.html#ruta-de-desarrollo",
+    "title": "4  ¿Por qué una red entrena mal o no generaliza?",
+    "section": "4.2 Ruta de desarrollo",
+    "text": "4.2 Ruta de desarrollo\n\nCaso deliberadamente inestable.\nInspección de activaciones y normas de gradiente.\nInicialización y normalización.\nOptimización y schedules.\nRegularización y early stopping.\nAblación y comparación con varias semillas.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>¿Por qué una red entrena mal o no generaliza?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter04.html#experimento-central",
+    "href": "chapters/chapter04.html#experimento-central",
+    "title": "4  ¿Por qué una red entrena mal o no generaliza?",
+    "section": "4.3 Experimento central",
+    "text": "4.3 Experimento central\nUna matriz de ablación cambia una decisión por vez y registra precisión, brecha de generalización, tiempo y estabilidad.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>¿Por qué una red entrena mal o no generaliza?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter04.html#referencia-conceptual",
+    "href": "chapters/chapter04.html#referencia-conceptual",
+    "title": "4  ¿Por qué una red entrena mal o no generaliza?",
+    "section": "4.4 Referencia conceptual",
+    "text": "4.4 Referencia conceptual\nEstabilidad numérica, dropout, generalización y optimización en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte I - Aprender representaciones",
+      "<span class='chapter-number'>4</span>  <span class='chapter-title'>¿Por qué una red entrena mal o no generaliza?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter05.html",
+    "href": "chapters/chapter05.html",
+    "title": "5  ¿Cómo reconocer patrones espaciales?",
+    "section": "",
+    "text": "5.1 Objetivos",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>¿Cómo reconocer patrones espaciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter05.html#objetivos",
+    "href": "chapters/chapter05.html#objetivos",
+    "title": "5  ¿Cómo reconocer patrones espaciales?",
+    "section": "",
+    "text": "calcular una convolución bidimensional;\nexplicar conectividad local y pesos compartidos;\nanticipar formas después de padding, stride y pooling;\nconstruir una CNN pequeña;\ncomparar CNN y MLP con un presupuesto razonable; y\nvisualizar filtros, mapas de activación y errores.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>¿Cómo reconocer patrones espaciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter05.html#caso-y-línea-base",
+    "href": "chapters/chapter05.html#caso-y-línea-base",
+    "title": "5  ¿Cómo reconocer patrones espaciales?",
+    "section": "5.2 Caso y línea base",
+    "text": "5.2 Caso y línea base\nCIFAR-10 o Fashion-MNIST permitirá comparar una regresión softmax, un MLP y una CNN pequeña con las mismas particiones.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>¿Cómo reconocer patrones espaciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter05.html#ruta-de-desarrollo",
+    "href": "chapters/chapter05.html#ruta-de-desarrollo",
+    "title": "5  ¿Cómo reconocer patrones espaciales?",
+    "section": "5.3 Ruta de desarrollo",
+    "text": "5.3 Ruta de desarrollo\n\nFiltros manuales sobre una imagen.\nOperación de correlación y dimensiones.\nCanales de entrada y salida.\nPooling y campo receptivo.\nCNN inspirada en LeNet.\nEvaluación por clase y costo computacional.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>¿Cómo reconocer patrones espaciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter05.html#referencia-conceptual",
+    "href": "chapters/chapter05.html#referencia-conceptual",
+    "title": "5  ¿Cómo reconocer patrones espaciales?",
+    "section": "5.4 Referencia conceptual",
+    "text": "5.4 Referencia conceptual\nRedes convolucionales en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>5</span>  <span class='chapter-title'>¿Cómo reconocer patrones espaciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter06.html",
+    "href": "chapters/chapter06.html",
+    "title": "6  ¿Cómo entrenar redes visuales profundas?",
+    "section": "",
+    "text": "6.1 Objetivos",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>¿Cómo entrenar redes visuales profundas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter06.html#objetivos",
+    "href": "chapters/chapter06.html#objetivos",
+    "title": "6  ¿Cómo entrenar redes visuales profundas?",
+    "section": "",
+    "text": "construir redes mediante bloques reutilizables;\nexplicar la función de conexiones residuales;\nrelacionar profundidad, campo receptivo y resolución;\nusar augmentación y normalización correctamente;\ncomparar modelos por desempeño y recursos; y\njustificar una arquitectura para una restricción concreta.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>¿Cómo entrenar redes visuales profundas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter06.html#ruta-de-desarrollo",
+    "href": "chapters/chapter06.html#ruta-de-desarrollo",
+    "title": "6  ¿Cómo entrenar redes visuales profundas?",
+    "section": "6.2 Ruta de desarrollo",
+    "text": "6.2 Ruta de desarrollo\n\nLimitaciones de una CNN pequeña.\nBloques VGG y diseño modular.\nBatch normalization.\nBloques residuales y flujo de gradiente.\nAugmentación solo en entrenamiento.\nFrontera precisión-costo.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>¿Cómo entrenar redes visuales profundas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter06.html#experimento-central",
+    "href": "chapters/chapter06.html#experimento-central",
+    "title": "6  ¿Cómo entrenar redes visuales profundas?",
+    "section": "6.3 Experimento central",
+    "text": "6.3 Experimento central\nComparar una CNN pequeña y una ResNet compacta con y sin augmentación, usando curvas, número de parámetros y tiempo por época.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>¿Cómo entrenar redes visuales profundas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter06.html#referencia-conceptual",
+    "href": "chapters/chapter06.html#referencia-conceptual",
+    "title": "6  ¿Cómo entrenar redes visuales profundas?",
+    "section": "6.4 Referencia conceptual",
+    "text": "6.4 Referencia conceptual\nCNN modernas y diseño de arquitecturas en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>6</span>  <span class='chapter-title'>¿Cómo entrenar redes visuales profundas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter07.html",
+    "href": "chapters/chapter07.html",
+    "title": "7  ¿Cómo aprender visión con pocas etiquetas?",
+    "section": "",
+    "text": "7.1 Objetivos",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>¿Cómo aprender visión con pocas etiquetas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter07.html#objetivos",
+    "href": "chapters/chapter07.html#objetivos",
+    "title": "7  ¿Cómo aprender visión con pocas etiquetas?",
+    "section": "",
+    "text": "explicar qué se transfiere desde un modelo preentrenado;\nsustituir y entrenar una cabeza de clasificación;\ncomparar extracción de características y fine-tuning;\ntratar desbalance y augmentación sin contaminar evaluación;\ninterpretar errores y sensibilidad al dominio; y\ndocumentar límites de uso.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>¿Cómo aprender visión con pocas etiquetas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter07.html#ruta-de-desarrollo",
+    "href": "chapters/chapter07.html#ruta-de-desarrollo",
+    "title": "7  ¿Cómo aprender visión con pocas etiquetas?",
+    "section": "7.2 Ruta de desarrollo",
+    "text": "7.2 Ruta de desarrollo\n\nAuditoría y línea base.\nModelo entrenado desde cero.\nBackbone congelado.\nFine-tuning gradual con tasas diferenciadas.\nMétricas por clase y calibración.\nShift y ejemplos fuera del dominio.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>¿Cómo aprender visión con pocas etiquetas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter07.html#referencia-conceptual",
+    "href": "chapters/chapter07.html#referencia-conceptual",
+    "title": "7  ¿Cómo aprender visión con pocas etiquetas?",
+    "section": "7.3 Referencia conceptual",
+    "text": "7.3 Referencia conceptual\nFine-tuning y visión aplicada en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte II - Aprender de imágenes",
+      "<span class='chapter-number'>7</span>  <span class='chapter-title'>¿Cómo aprender visión con pocas etiquetas?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter08.html",
+    "href": "chapters/chapter08.html",
+    "title": "8  ¿Cómo predecir el siguiente valor de una secuencia?",
+    "section": "",
+    "text": "8.1 Objetivos",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>¿Cómo predecir el siguiente valor de una secuencia?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter08.html#objetivos",
+    "href": "chapters/chapter08.html#objetivos",
+    "title": "8  ¿Cómo predecir el siguiente valor de una secuencia?",
+    "section": "",
+    "text": "construir ventanas sin usar información futura;\nformular un estado recurrente;\nimplementar una RNN y backpropagation through time;\ndistinguir pronóstico de un paso y multihorizonte;\nevaluar con backtesting temporal; y\ndiagnosticar error por horizonte y periodo.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>¿Cómo predecir el siguiente valor de una secuencia?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter08.html#ruta-de-desarrollo",
+    "href": "chapters/chapter08.html#ruta-de-desarrollo",
+    "title": "8  ¿Cómo predecir el siguiente valor de una secuencia?",
+    "section": "8.2 Ruta de desarrollo",
+    "text": "8.2 Ruta de desarrollo\n\nLínea base de persistencia.\nVentanas y partición temporal.\nRNN desde tensores.\nImplementación con nn.RNN.\nTeacher forcing y horizontes.\nEvaluación temporal y residuos.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>¿Cómo predecir el siguiente valor de una secuencia?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter08.html#referencia-conceptual",
+    "href": "chapters/chapter08.html#referencia-conceptual",
+    "title": "8  ¿Cómo predecir el siguiente valor de una secuencia?",
+    "section": "8.3 Referencia conceptual",
+    "text": "8.3 Referencia conceptual\nSecuencias, modelos de lenguaje y RNN en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>8</span>  <span class='chapter-title'>¿Cómo predecir el siguiente valor de una secuencia?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter09.html",
+    "href": "chapters/chapter09.html",
+    "title": "9  ¿Cómo conservar información durante más tiempo?",
+    "section": "",
+    "text": "9.1 Objetivos",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>¿Cómo conservar información durante más tiempo?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter09.html#objetivos",
+    "href": "chapters/chapter09.html#objetivos",
+    "title": "9  ¿Cómo conservar información durante más tiempo?",
+    "section": "",
+    "text": "relacionar recurrencia prolongada y gradientes inestables;\ninterpretar las compuertas de LSTM y GRU;\nusar secuencias de longitud variable y enmascaramiento;\ndistinguir redes causales y bidireccionales;\ncomparar RNN, GRU y LSTM con varias semillas; y\njustificar el modelo según latencia y desempeño.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>¿Cómo conservar información durante más tiempo?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter09.html#experimento-central",
+    "href": "chapters/chapter09.html#experimento-central",
+    "title": "9  ¿Cómo conservar información durante más tiempo?",
+    "section": "9.2 Experimento central",
+    "text": "9.2 Experimento central\nConstruir una tarea sintética de memoria y un caso real para observar cuándo las compuertas producen una mejora medible.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>¿Cómo conservar información durante más tiempo?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter09.html#referencia-conceptual",
+    "href": "chapters/chapter09.html#referencia-conceptual",
+    "title": "9  ¿Cómo conservar información durante más tiempo?",
+    "section": "9.3 Referencia conceptual",
+    "text": "9.3 Referencia conceptual\nRedes recurrentes modernas en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>9</span>  <span class='chapter-title'>¿Cómo conservar información durante más tiempo?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter10.html",
+    "href": "chapters/chapter10.html",
+    "title": "10  ¿Cómo seleccionar qué información atender?",
+    "section": "",
+    "text": "10.1 Objetivos",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>¿Cómo seleccionar qué información atender?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter10.html#objetivos",
+    "href": "chapters/chapter10.html#objetivos",
+    "title": "10  ¿Cómo seleccionar qué información atender?",
+    "section": "",
+    "text": "interpretar queries, keys y values;\ncalcular atención por producto punto;\naplicar máscaras de padding y causalidad;\nexplicar atención multi-head;\nintegrar atención en encoder-decoder; y\ninspeccionar alineaciones sin confundirlas con explicaciones causales.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>¿Cómo seleccionar qué información atender?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter10.html#ruta-de-desarrollo",
+    "href": "chapters/chapter10.html#ruta-de-desarrollo",
+    "title": "10  ¿Cómo seleccionar qué información atender?",
+    "section": "10.2 Ruta de desarrollo",
+    "text": "10.2 Ruta de desarrollo\n\nLímite del estado fijo.\nSimilitud y promedio ponderado.\nAtención de Bahdanau.\nProducto punto escalado.\nMulti-head attention.\nTraducción pequeña y visualización.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>¿Cómo seleccionar qué información atender?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter10.html#referencia-conceptual",
+    "href": "chapters/chapter10.html#referencia-conceptual",
+    "title": "10  ¿Cómo seleccionar qué información atender?",
+    "section": "10.3 Referencia conceptual",
+    "text": "10.3 Referencia conceptual\nAtención y encoder-decoder en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>10</span>  <span class='chapter-title'>¿Cómo seleccionar qué información atender?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter11.html",
+    "href": "chapters/chapter11.html",
+    "title": "11  ¿Cómo transferir representaciones del lenguaje?",
+    "section": "",
+    "text": "11.1 Objetivos",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>¿Cómo transferir representaciones del lenguaje?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter11.html#objetivos",
+    "href": "chapters/chapter11.html#objetivos",
+    "title": "11  ¿Cómo transferir representaciones del lenguaje?",
+    "section": "",
+    "text": "explicar tokenización, embeddings y posición;\nconstruir un bloque transformer pequeño;\ndistinguir encoder, decoder y máscaras;\nentender preentrenamiento y fine-tuning;\ncomparar una línea base léxica y un transformer; y\nanalizar truncamiento, sesgos y errores lingüísticos.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>¿Cómo transferir representaciones del lenguaje?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter11.html#ruta-de-desarrollo",
+    "href": "chapters/chapter11.html#ruta-de-desarrollo",
+    "title": "11  ¿Cómo transferir representaciones del lenguaje?",
+    "section": "11.2 Ruta de desarrollo",
+    "text": "11.2 Ruta de desarrollo\n\nLínea base TF-IDF.\nTokenización y secuencias.\nSelf-attention y posición.\nBloque transformer.\nFine-tuning de un encoder preentrenado.\nEvaluación por clase, longitud y fenómeno lingüístico.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>¿Cómo transferir representaciones del lenguaje?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter11.html#referencia-conceptual",
+    "href": "chapters/chapter11.html#referencia-conceptual",
+    "title": "11  ¿Cómo transferir representaciones del lenguaje?",
+    "section": "11.3 Referencia conceptual",
+    "text": "11.3 Referencia conceptual\nTransformers, preentrenamiento y aplicaciones NLP en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte III - Aprender de secuencias y lenguaje",
+      "<span class='chapter-number'>11</span>  <span class='chapter-title'>¿Cómo transferir representaciones del lenguaje?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter12.html",
+    "href": "chapters/chapter12.html",
+    "title": "12  ¿Cómo aprender sin etiquetas y generar nuevos datos?",
+    "section": "",
+    "text": "12.1 Objetivos",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>¿Cómo aprender sin etiquetas y generar nuevos datos?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter12.html#objetivos",
+    "href": "chapters/chapter12.html#objetivos",
+    "title": "12  ¿Cómo aprender sin etiquetas y generar nuevos datos?",
+    "section": "",
+    "text": "construir un autoencoder y analizar su espacio latente;\ndistinguir reconstrucción, compresión y generación;\nformular el juego generador-discriminador de una GAN;\nreconocer inestabilidad y mode collapse;\nevaluar más allá de ejemplos seleccionados; y\ndiscutir privacidad, sesgo y procedencia de datos.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>¿Cómo aprender sin etiquetas y generar nuevos datos?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter12.html#ruta-de-desarrollo",
+    "href": "chapters/chapter12.html#ruta-de-desarrollo",
+    "title": "12  ¿Cómo aprender sin etiquetas y generar nuevos datos?",
+    "section": "12.2 Ruta de desarrollo",
+    "text": "12.2 Ruta de desarrollo\n\nPCA como línea base de reconstrucción.\nAutoencoder denso y convolucional.\nInterpolación en espacio latente.\nObjetivo adversarial.\nDCGAN compacta.\nDiagnósticos y límites de evaluación.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>¿Cómo aprender sin etiquetas y generar nuevos datos?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter12.html#referencia-conceptual",
+    "href": "chapters/chapter12.html#referencia-conceptual",
+    "title": "12  ¿Cómo aprender sin etiquetas y generar nuevos datos?",
+    "section": "12.3 Referencia conceptual",
+    "text": "12.3 Referencia conceptual\nRedes generativas adversariales en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>12</span>  <span class='chapter-title'>¿Cómo aprender sin etiquetas y generar nuevos datos?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter13.html",
+    "href": "chapters/chapter13.html",
+    "title": "13  ¿Cómo construir un sistema reproducible?",
+    "section": "",
+    "text": "13.1 Objetivos",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>¿Cómo construir un sistema reproducible?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter13.html#objetivos",
+    "href": "chapters/chapter13.html#objetivos",
+    "title": "13  ¿Cómo construir un sistema reproducible?",
+    "section": "",
+    "text": "definir objetivo, métrica y condiciones de uso;\nversionar configuración, datos y semillas;\ndiseñar validación y búsqueda con presupuesto explícito;\nguardar y recuperar checkpoints completos;\nanalizar errores, subgrupos, calibración y shift;\nconstruir una función de inferencia validada; y\nproponer monitoreo, reentrenamiento y rollback.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>¿Cómo construir un sistema reproducible?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter13.html#flujo-del-proyecto",
+    "href": "chapters/chapter13.html#flujo-del-proyecto",
+    "title": "13  ¿Cómo construir un sistema reproducible?",
+    "section": "13.2 Flujo del proyecto",
+    "text": "13.2 Flujo del proyecto\n\nFormulación y auditoría de datos.\nParticiones y línea base.\nArquitectura y presupuesto.\nEntrenamiento trazable.\nSelección sin consultar test.\nDiagnóstico y evaluación final.\nPersistencia e inferencia.\nModel card y plan operacional.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>¿Cómo construir un sistema reproducible?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter13.html#entregables",
+    "href": "chapters/chapter13.html#entregables",
+    "title": "13  ¿Cómo construir un sistema reproducible?",
+    "section": "13.3 Entregables",
+    "text": "13.3 Entregables\nNotebook reproducible, configuración, checkpoint, reporte de evaluación, análisis de errores, model card y demostración de inferencia.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>¿Cómo construir un sistema reproducible?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter13.html#referencia-conceptual",
+    "href": "chapters/chapter13.html#referencia-conceptual",
+    "title": "13  ¿Cómo construir un sistema reproducible?",
+    "section": "13.4 Referencia conceptual",
+    "text": "13.4 Referencia conceptual\nRendimiento computacional e hiperparámetros en (Zhang et al. 2023), integrados con el protocolo metodológico del curso.\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>13</span>  <span class='chapter-title'>¿Cómo construir un sistema reproducible?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter14.html",
+    "href": "chapters/chapter14.html",
+    "title": "14  ¿Cómo aprender a tomar decisiones secuenciales?",
+    "section": "",
+    "text": "14.1 Objetivos",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>¿Cómo aprender a tomar decisiones secuenciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter14.html#objetivos",
+    "href": "chapters/chapter14.html#objetivos",
+    "title": "14  ¿Cómo aprender a tomar decisiones secuenciales?",
+    "section": "",
+    "text": "distinguir predicción supervisada y decisión secuencial;\nformular estados, acciones, transiciones y recompensas;\ninterpretar retorno y descuento;\naplicar ecuaciones de Bellman y value iteration;\naprender sin conocer la dinámica mediante Q-learning;\nexplicar exploración frente a explotación; y\nconectar una tabla Q con una aproximación neuronal.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>¿Cómo aprender a tomar decisiones secuenciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter14.html#ruta-de-desarrollo",
+    "href": "chapters/chapter14.html#ruta-de-desarrollo",
+    "title": "14  ¿Cómo aprender a tomar decisiones secuenciales?",
+    "section": "14.2 Ruta de desarrollo",
+    "text": "14.2 Ruta de desarrollo\n\nGridworld como proceso de decisión de Markov.\nPolítica, valor y retorno.\nValue iteration con dinámica conocida.\nQ-learning tabular en FrozenLake.\nExploración \\(\\varepsilon\\)-greedy.\nIntroducción a DQN con CartPole.\nVariabilidad, seguridad y límites de simulación.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>¿Cómo aprender a tomar decisiones secuenciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter14.html#experimento-central",
+    "href": "chapters/chapter14.html#experimento-central",
+    "title": "14  ¿Cómo aprender a tomar decisiones secuenciales?",
+    "section": "14.3 Experimento central",
+    "text": "14.3 Experimento central\nComparar una política aleatoria, una política obtenida por value iteration y Q-learning bajo varias semillas. La demostración DQN enfatizará replay buffer, red objetivo y estabilidad, no una competencia de puntaje.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>¿Cómo aprender a tomar decisiones secuenciales?</span>"
+    ]
+  },
+  {
+    "objectID": "chapters/chapter14.html#referencia-conceptual",
+    "href": "chapters/chapter14.html#referencia-conceptual",
+    "title": "14  ¿Cómo aprender a tomar decisiones secuenciales?",
+    "section": "14.4 Referencia conceptual",
+    "text": "14.4 Referencia conceptual\nMDP, value iteration y Q-learning en (Zhang et al. 2023).\n\n\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. Dive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Parte IV - Sistemas, generación y decisiones",
+      "<span class='chapter-number'>14</span>  <span class='chapter-title'>¿Cómo aprender a tomar decisiones secuenciales?</span>"
+    ]
+  },
+  {
+    "objectID": "appendix.html",
+    "href": "appendix.html",
+    "title": "Apéndices",
+    "section": "",
+    "text": "Notación mínima",
+    "crumbs": [
+      "Material adicional",
+      "Apéndices"
+    ]
+  },
+  {
+    "objectID": "appendix.html#notación-mínima",
+    "href": "appendix.html#notación-mínima",
+    "title": "Apéndices",
+    "section": "",
+    "text": "Símbolo\nSignificado\n\n\n\n\n\\(x\\)\nescalar\n\n\n\\(\\mathbf{x}\\)\nvector\n\n\n\\(\\mathbf{X}\\)\nmatriz o lote de observaciones\n\n\n\\(\\mathsf{X}\\)\ntensor de orden mayor que dos\n\n\n\\(\\theta\\)\nparámetros aprendidos\n\n\n\\(\\eta\\)\ntasa de aprendizaje\n\n\n\\(\\mathcal{L}\\)\nfunción de pérdida\n\n\n\\(B\\)\ntamaño del mini-batch",
+    "crumbs": [
+      "Material adicional",
+      "Apéndices"
+    ]
+  },
+  {
+    "objectID": "appendix.html#convención-de-dimensiones",
+    "href": "appendix.html#convención-de-dimensiones",
+    "title": "Apéndices",
+    "section": "Convención de dimensiones",
+    "text": "Convención de dimensiones\nEl libro explicita las dimensiones en el orden utilizado por PyTorch. Por ejemplo, un lote de imágenes suele tener forma (batch, channels, height, width), abreviada como \\((N,C,H,W)\\).",
+    "crumbs": [
+      "Material adicional",
+      "Apéndices"
+    ]
+  },
+  {
+    "objectID": "appendix.html#dispositivos",
+    "href": "appendix.html#dispositivos",
+    "title": "Apéndices",
+    "section": "Dispositivos",
+    "text": "Dispositivos\nLos notebooks seleccionan CUDA cuando está disponible, después MPS en equipos Apple compatibles y finalmente CPU. Los datos y el modelo deben residir en el mismo dispositivo.",
+    "crumbs": [
+      "Material adicional",
+      "Apéndices"
+    ]
+  },
+  {
+    "objectID": "appendix.html#glosario-en-construcción",
+    "href": "appendix.html#glosario-en-construcción",
+    "title": "Apéndices",
+    "section": "Glosario en construcción",
+    "text": "Glosario en construcción\nEl glosario se ampliará junto con los capítulos. Se conservarán algunos términos técnicos en inglés cuando sean la forma dominante en documentación y APIs, acompañados por su interpretación en español.",
+    "crumbs": [
+      "Material adicional",
+      "Apéndices"
+    ]
+  },
+  {
+    "objectID": "references.html",
+    "href": "references.html",
+    "title": "Referencias",
+    "section": "",
+    "text": "PyTorch Foundation. 2026. PyTorch Documentation. Online\ndocumentation. https://pytorch.org/docs/stable/.\n\n\nZhang, Aston, Zachary C. Lipton, Mu Li, and Alexander J. Smola. 2023.\nDive into Deep Learning. Cambridge University Press. https://doi.org/10.1017/9781009389433.",
+    "crumbs": [
+      "Material adicional",
+      "Referencias"
+    ]
+  }
+]
