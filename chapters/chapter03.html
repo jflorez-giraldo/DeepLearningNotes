@@ -27,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 /* CSS for citations */
 div.csl-bib-body { }
 div.csl-entry {
@@ -49,7 +84,7 @@ div.csl-indent {
 }</style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -95,7 +130,39 @@ div.csl-indent {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -309,10 +376,26 @@ div.csl-indent {
     <h2 id="toc-title">Contenido</h2>
    
   <ul>
-  <li><a href="#objetivos" id="toc-objetivos" class="nav-link active" data-scroll-target="#objetivos"><span class="header-section-number">3.1</span> Objetivos</a></li>
-  <li><a href="#ruta-de-desarrollo" id="toc-ruta-de-desarrollo" class="nav-link" data-scroll-target="#ruta-de-desarrollo"><span class="header-section-number">3.2</span> Ruta de desarrollo</a></li>
-  <li><a href="#experimento-central" id="toc-experimento-central" class="nav-link" data-scroll-target="#experimento-central"><span class="header-section-number">3.3</span> Experimento central</a></li>
-  <li><a href="#referencia-conceptual" id="toc-referencia-conceptual" class="nav-link" data-scroll-target="#referencia-conceptual"><span class="header-section-number">3.4</span> Referencia conceptual</a></li>
+  <li><a href="#del-clasificador-afín-a-una-red" id="toc-del-clasificador-afín-a-una-red" class="nav-link active" data-scroll-target="#del-clasificador-afín-a-una-red"><span class="header-section-number">3.1</span> Del clasificador afín a una red</a></li>
+  <li><a href="#preparar-el-entorno" id="toc-preparar-el-entorno" class="nav-link" data-scroll-target="#preparar-el-entorno"><span class="header-section-number">3.2</span> Preparar el entorno</a></li>
+  <li><a href="#obtener-y-validar-los-datos" id="toc-obtener-y-validar-los-datos" class="nav-link" data-scroll-target="#obtener-y-validar-los-datos"><span class="header-section-number">3.3</span> Obtener y validar los datos</a></li>
+  <li><a href="#crear-y-bloquear-las-particiones" id="toc-crear-y-bloquear-las-particiones" class="nav-link" data-scroll-target="#crear-y-bloquear-las-particiones"><span class="header-section-number">3.4</span> Crear y bloquear las particiones</a></li>
+  <li><a href="#explorar-únicamente-entrenamiento" id="toc-explorar-únicamente-entrenamiento" class="nav-link" data-scroll-target="#explorar-únicamente-entrenamiento"><span class="header-section-number">3.5</span> Explorar únicamente entrenamiento</a></li>
+  <li><a href="#preparar-tensores-sin-fuga-de-información" id="toc-preparar-tensores-sin-fuga-de-información" class="nav-link" data-scroll-target="#preparar-tensores-sin-fuga-de-información"><span class="header-section-number">3.6</span> Preparar tensores sin fuga de información</a></li>
+  <li><a href="#por-qué-dos-capas-lineales-no-son-una-red-no-lineal" id="toc-por-qué-dos-capas-lineales-no-son-una-red-no-lineal" class="nav-link" data-scroll-target="#por-qué-dos-capas-lineales-no-son-una-red-no-lineal"><span class="header-section-number">3.7</span> Por qué dos capas lineales no son una red no lineal</a></li>
+  <li><a href="#relu-crea-nuevas-regiones" id="toc-relu-crea-nuevas-regiones" class="nav-link" data-scroll-target="#relu-crea-nuevas-regiones"><span class="header-section-number">3.8</span> ReLU crea nuevas regiones</a></li>
+  <li><a href="#del-vector-de-entrada-a-los-logits" id="toc-del-vector-de-entrada-a-los-logits" class="nav-link" data-scroll-target="#del-vector-de-entrada-a-los-logits"><span class="header-section-number">3.9</span> Del vector de entrada a los logits</a></li>
+  <li><a href="#hacer-visible-la-retropropagación" id="toc-hacer-visible-la-retropropagación" class="nav-link" data-scroll-target="#hacer-visible-la-retropropagación"><span class="header-section-number">3.10</span> Hacer visible la retropropagación</a></li>
+  <li><a href="#tres-formas-de-expresar-la-misma-mlp" id="toc-tres-formas-de-expresar-la-misma-mlp" class="nav-link" data-scroll-target="#tres-formas-de-expresar-la-misma-mlp"><span class="header-section-number">3.11</span> Tres formas de expresar la misma MLP</a></li>
+  <li><a href="#protocolo-experimental" id="toc-protocolo-experimental" class="nav-link" data-scroll-target="#protocolo-experimental"><span class="header-section-number">3.12</span> Protocolo experimental</a></li>
+  <li><a href="#entrenar-el-modelo-lineal-y-la-mlp" id="toc-entrenar-el-modelo-lineal-y-la-mlp" class="nav-link" data-scroll-target="#entrenar-el-modelo-lineal-y-la-mlp"><span class="header-section-number">3.13</span> Entrenar el modelo lineal y la MLP</a></li>
+  <li><a href="#comparar-en-validación" id="toc-comparar-en-validación" class="nav-link" data-scroll-target="#comparar-en-validación"><span class="header-section-number">3.14</span> Comparar en validación</a></li>
+  <li><a href="#abrir-test-una-sola-vez" id="toc-abrir-test-una-sola-vez" class="nav-link" data-scroll-target="#abrir-test-una-sola-vez"><span class="header-section-number">3.15</span> Abrir test una sola vez</a></li>
+  <li><a href="#diagnosticar-errores-por-clase" id="toc-diagnosticar-errores-por-clase" class="nav-link" data-scroll-target="#diagnosticar-errores-por-clase"><span class="header-section-number">3.16</span> Diagnosticar errores por clase</a></li>
+  <li><a href="#qué-aporta-y-qué-no-aporta-la-no-linealidad" id="toc-qué-aporta-y-qué-no-aporta-la-no-linealidad" class="nav-link" data-scroll-target="#qué-aporta-y-qué-no-aporta-la-no-linealidad"><span class="header-section-number">3.17</span> Qué aporta y qué no aporta la no linealidad</a></li>
+  <li><a href="#qué-hemos-aprendido" id="toc-qué-hemos-aprendido" class="nav-link" data-scroll-target="#qué-hemos-aprendido"><span class="header-section-number">3.18</span> Qué hemos aprendido</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios"><span class="header-section-number">3.19</span> Ejercicios</a></li>
+  <li><a href="#reto" id="toc-reto" class="nav-link" data-scroll-target="#reto"><span class="header-section-number">3.20</span> Reto</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/edit/main/chapters/chapter03.qmd" class="toc-action"><i class="bi bi-github"></i>Editar esta página</a></li><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/issues/new" class="toc-action"><i class="bi empty"></i>Informar sobre problema</a></li></ul></div></nav>
     </div>
@@ -338,56 +421,1455 @@ div.csl-indent {
 </header>
 
 
-<div class="problem-banner">
-<strong>Problema:</strong> clasificar prendas de Fashion-MNIST cuando una frontera lineal no captura las diferencias entre clases visualmente similares.
+<div class="chapter-actions" aria-label="Recursos del capitulo">
+  <a class="chapter-action" href="../notebooks/chapter03.ipynb" download="">Descargar notebook</a>
+  <a class="chapter-action chapter-action-colab" href="https://colab.research.google.com/github/jflorez-giraldo/DeepLearningNotes/blob/main/notebooks/chapter03.ipynb" target="_blank" rel="noopener">Abrir en Colab</a>
 </div>
-<div class="callout callout-style-simple callout-warning callout-titled" title="Capítulo en desarrollo">
+
+<div class="problem-banner">
+<p><strong>Problema:</strong> clasificar siete variedades registradas de fríjol seco a partir de medidas geométricas extraídas por un sistema de visión. Las variedades comparten rangos de tamaño y forma; estudiaremos qué cambia cuando una capa oculta introduce una representación no lineal.</p>
+</div>
+<section id="del-clasificador-afín-a-una-red" class="level2" data-number="3.1">
+<h2 data-number="3.1" class="anchored" data-anchor-id="del-clasificador-afín-a-una-red"><span class="header-section-number">3.1</span> Del clasificador afín a una red</h2>
+<p>En el capítulo anterior, <code>nn.Linear</code> aprendió una transformación afín. Cambiar el algoritmo de optimización puede encontrar otros parámetros, pero no cambia la familia de funciones que el modelo puede representar. Si las clases ocupan regiones curvas o dependen de interacciones entre variables, una única frontera lineal puede ser insuficiente.</p>
+<p>El dataset <em>Dry Bean</em> parte de fotografías de granos ya segmentados. El sistema de visión calculó 16 medidas de tamaño y forma; nuestro modelo recibe esas medidas, no los píxeles originales. Por tanto, construiremos un clasificador de la etapa final de una tubería de visión, no un reconocedor de imágenes completo.</p>
+<div class="callout callout-style-simple callout-note callout-titled" title="Objetivos de aprendizaje">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Advertencia</span>Capítulo en desarrollo
+<span class="screen-reader-only">Nota</span>Objetivos de aprendizaje
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>La especificación guía la futura implementación y sus pruebas.</p>
-</div>
-</div>
-<section id="objetivos" class="level2" data-number="3.1">
-<h2 data-number="3.1" class="anchored" data-anchor-id="objetivos"><span class="header-section-number">3.1</span> Objetivos</h2>
+<p>Al terminar este capítulo podrás:</p>
 <ul>
-<li>explicar por qué apilar funciones lineales no crea no linealidad;</li>
-<li>construir un perceptrón multicapa desde tensores;</li>
-<li>interpretar ReLU, sigmoid y softmax;</li>
-<li>seguir forward, pérdida y backpropagation;</li>
-<li>comparar regresión softmax y MLP; y</li>
-<li>analizar errores mediante matriz de confusión y ejemplos concretos.</li>
+<li>demostrar por qué componer transformaciones afines no crea no linealidad;</li>
+<li>explicar el papel de una capa oculta y de una función de activación;</li>
+<li>distinguir logits, probabilidades, predicciones y entropía cruzada;</li>
+<li>seguir las dimensiones del forward y del backward de una MLP;</li>
+<li>verificar gradientes analíticos mediante autograd;</li>
+<li>construir una red con tensores, <code>nn.Module</code> y <code>nn.Sequential</code>;</li>
+<li>comparar una línea base mayoritaria, un clasificador lineal y una MLP bajo el mismo protocolo; y</li>
+<li>diagnosticar errores multiclase mediante macro-F1 y matrices de confusión.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="preparar-el-entorno" class="level2" data-number="3.2">
+<h2 data-number="3.2" class="anchored" data-anchor-id="preparar-el-entorno"><span class="header-section-number">3.2</span> Preparar el entorno</h2>
+<div id="071415e7" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> hashlib <span class="im">import</span> sha256</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> time <span class="im">import</span> perf_counter</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> urllib.request <span class="im">import</span> urlretrieve</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> zipfile <span class="im">import</span> ZipFile</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sklearn</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix, f1_score</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.nn <span class="im">import</span> functional <span class="im">as</span> F</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>SEED <span class="op">=</span> <span class="dv">42</span></span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>np.random.seed(SEED)</span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>torch.use_deterministic_algorithms(<span class="va">True</span>)</span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cpu"</span>)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"PyTorch </span><span class="sc">{</span>torch<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | NumPy </span><span class="sc">{</span>np<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | "</span></span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"pandas </span><span class="sc">{</span>pd<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | scikit-learn </span><span class="sc">{</span>sklearn<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dispositivo: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PyTorch 2.8.0 | NumPy 2.0.2 | pandas 2.3.3 | scikit-learn 1.6.1
+Dispositivo: cpu</code></pre>
+</div>
+</div>
+<p>El entrenamiento se realizará en CPU. El dataset es pequeño y esta decisión reduce diferencias entre CUDA, MPS y CPU. En problemas mayores, el mismo ciclo puede mover modelos y mini-batches a otro dispositivo.</p>
+</section>
+<section id="obtener-y-validar-los-datos" class="level2" data-number="3.3">
+<h2 data-number="3.3" class="anchored" data-anchor-id="obtener-y-validar-los-datos"><span class="header-section-number">3.3</span> Obtener y validar los datos</h2>
+<p><em>Dry Bean</em> contiene 13.611 granos de siete variedades. Sus 16 variables fueron obtenidas después de segmentar imágenes con una cámara de alta resolución <span class="citation" data-cites="koklu2020dataset koklu2020beans">(<a href="../references.html#ref-koklu2020dataset" role="doc-biblioref">Koklu y Ozkan 2020a</a>, <a href="../references.html#ref-koklu2020beans" role="doc-biblioref">2020b</a>)</span>. El repositorio UCI distribuye los datos con licencia CC BY 4.0.</p>
+<p>La descarga se guarda en caché y se valida mediante SHA-256. Leemos el archivo ARFF incluido en el ZIP sin añadir una dependencia para archivos de Excel.</p>
+<div id="397bc81d" class="cell" data-execution_count="2">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DATA_URL <span class="op">=</span> (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://archive.ics.uci.edu/static/public/602/"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"dry+bean+dataset.zip"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">".cache/chapter03"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ARCHIVE_PATH <span class="op">=</span> DATA_DIR <span class="op">/</span> <span class="st">"dry-bean-dataset.zip"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>ARFF_NAME <span class="op">=</span> <span class="st">"DryBeanDataset/Dry_Bean_Dataset.arff"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>EXPECTED_SHA256 <span class="op">=</span> (</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"0a64eff5be87f48c3dbbfc0a12a56c5"</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"d5b5167ef8e61cd45d69b3e7c7130c06f"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>FEATURE_NAMES <span class="op">=</span> [</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Area"</span>,</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Perimeter"</span>,</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MajorAxisLength"</span>,</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MinorAxisLength"</span>,</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"AspectRatio"</span>,</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Eccentricity"</span>,</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ConvexArea"</span>,</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"EquivDiameter"</span>,</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Extent"</span>,</span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Solidity"</span>,</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Roundness"</span>,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Compactness"</span>,</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ShapeFactor1"</span>,</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ShapeFactor2"</span>,</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ShapeFactor3"</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ShapeFactor4"</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>CLASS_NAMES <span class="op">=</span> [</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">"BARBUNYA"</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">"BOMBAY"</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>    <span class="st">"CALI"</span>,</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a>    <span class="st">"DERMASON"</span>,</span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a>    <span class="st">"HOROZ"</span>,</span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SEKER"</span>,</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    <span class="st">"SIRA"</span>,</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> load_dry_beans():</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>    DATA_DIR.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> ARCHIVE_PATH.exists():</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>        temporary_path <span class="op">=</span> ARCHIVE_PATH.with_suffix(<span class="st">".download"</span>)</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>        urlretrieve(DATA_URL, temporary_path)</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>        temporary_path.replace(ARCHIVE_PATH)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>    archive_hash <span class="op">=</span> sha256(ARCHIVE_PATH.read_bytes()).hexdigest()</span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> archive_hash <span class="op">!=</span> EXPECTED_SHA256:</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"SHA-256 inesperado: </span><span class="sc">{</span>archive_hash<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> ZipFile(ARCHIVE_PATH) <span class="im">as</span> archive:</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> ARFF_NAME <span class="kw">not</span> <span class="kw">in</span> archive.namelist():</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"No se encontró </span><span class="sc">{</span>ARFF_NAME<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> archive.testzip() <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El archivo descargado está corrupto"</span>)</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>        <span class="cf">with</span> archive.<span class="bu">open</span>(ARFF_NAME) <span class="im">as</span> arff_file:</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>            frame <span class="op">=</span> pd.read_csv(</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>                arff_file,</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>                skiprows<span class="op">=</span><span class="dv">25</span>,</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>                names<span class="op">=</span>FEATURE_NAMES <span class="op">+</span> [<span class="st">"Class"</span>],</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> frame.shape <span class="op">!=</span> (<span class="dv">13_611</span>, <span class="dv">17</span>):</span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Dimensiones inesperadas: </span><span class="sc">{</span>frame<span class="sc">.</span>shape<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">sorted</span>(frame[<span class="st">"Class"</span>].unique()) <span class="op">!=</span> CLASS_NAMES:</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Las etiquetas no coinciden con las siete esperadas"</span>)</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> frame.isna().<span class="bu">any</span>().<span class="bu">any</span>():</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El dataset contiene valores faltantes inesperados"</span>)</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="kw">not</span> np.isfinite(frame[FEATURE_NAMES].to_numpy()).<span class="bu">all</span>():</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Las características contienen valores no finitos"</span>)</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> frame</span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>beans <span class="op">=</span> load_dry_beans()</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>beans.head()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="2">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Area</th>
+<th data-quarto-table-cell-role="th">Perimeter</th>
+<th data-quarto-table-cell-role="th">MajorAxisLength</th>
+<th data-quarto-table-cell-role="th">MinorAxisLength</th>
+<th data-quarto-table-cell-role="th">AspectRatio</th>
+<th data-quarto-table-cell-role="th">Eccentricity</th>
+<th data-quarto-table-cell-role="th">ConvexArea</th>
+<th data-quarto-table-cell-role="th">EquivDiameter</th>
+<th data-quarto-table-cell-role="th">Extent</th>
+<th data-quarto-table-cell-role="th">Solidity</th>
+<th data-quarto-table-cell-role="th">Roundness</th>
+<th data-quarto-table-cell-role="th">Compactness</th>
+<th data-quarto-table-cell-role="th">ShapeFactor1</th>
+<th data-quarto-table-cell-role="th">ShapeFactor2</th>
+<th data-quarto-table-cell-role="th">ShapeFactor3</th>
+<th data-quarto-table-cell-role="th">ShapeFactor4</th>
+<th data-quarto-table-cell-role="th">Class</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>28395</td>
+<td>610.291</td>
+<td>208.178117</td>
+<td>173.888747</td>
+<td>1.197191</td>
+<td>0.549812</td>
+<td>28715</td>
+<td>190.141097</td>
+<td>0.763923</td>
+<td>0.988856</td>
+<td>0.958027</td>
+<td>0.913358</td>
+<td>0.007332</td>
+<td>0.003147</td>
+<td>0.834222</td>
+<td>0.998724</td>
+<td>SEKER</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>28734</td>
+<td>638.018</td>
+<td>200.524796</td>
+<td>182.734419</td>
+<td>1.097356</td>
+<td>0.411785</td>
+<td>29172</td>
+<td>191.272750</td>
+<td>0.783968</td>
+<td>0.984986</td>
+<td>0.887034</td>
+<td>0.953861</td>
+<td>0.006979</td>
+<td>0.003564</td>
+<td>0.909851</td>
+<td>0.998430</td>
+<td>SEKER</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>29380</td>
+<td>624.110</td>
+<td>212.826130</td>
+<td>175.931143</td>
+<td>1.209713</td>
+<td>0.562727</td>
+<td>29690</td>
+<td>193.410904</td>
+<td>0.778113</td>
+<td>0.989559</td>
+<td>0.947849</td>
+<td>0.908774</td>
+<td>0.007244</td>
+<td>0.003048</td>
+<td>0.825871</td>
+<td>0.999066</td>
+<td>SEKER</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>30008</td>
+<td>645.884</td>
+<td>210.557999</td>
+<td>182.516516</td>
+<td>1.153638</td>
+<td>0.498616</td>
+<td>30724</td>
+<td>195.467062</td>
+<td>0.782681</td>
+<td>0.976696</td>
+<td>0.903936</td>
+<td>0.928329</td>
+<td>0.007017</td>
+<td>0.003215</td>
+<td>0.861794</td>
+<td>0.994199</td>
+<td>SEKER</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>30140</td>
+<td>620.134</td>
+<td>201.847882</td>
+<td>190.279279</td>
+<td>1.060798</td>
+<td>0.333680</td>
+<td>30417</td>
+<td>195.896503</td>
+<td>0.773098</td>
+<td>0.990893</td>
+<td>0.984877</td>
+<td>0.970516</td>
+<td>0.006697</td>
+<td>0.003665</td>
+<td>0.941900</td>
+<td>0.999166</td>
+<td>SEKER</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Cada fila representa un grano. <code>Area</code> y <code>ConvexArea</code> se expresan en píxeles; las demás variables incluyen longitudes, razones y factores de forma. El objetivo <code>Class</code> identifica una variedad registrada.</p>
+<div id="9e59fe2b" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a>data_audit <span class="op">=</span> pd.Series({</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"observaciones"</span>: <span class="bu">len</span>(beans),</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"características"</span>: <span class="bu">len</span>(FEATURE_NAMES),</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"clases"</span>: beans[<span class="st">"Class"</span>].nunique(),</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"faltantes"</span>: <span class="bu">int</span>(beans.isna().<span class="bu">sum</span>().<span class="bu">sum</span>()),</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"filas duplicadas"</span>: <span class="bu">int</span>(beans.duplicated().<span class="bu">sum</span>()),</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>data_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>observaciones       13611
+características        16
+clases                  7
+faltantes               0
+filas duplicadas       68
+dtype: int64</code></pre>
+</div>
+</div>
+<p>Existen 68 filas exactamente duplicadas. Si copias idénticas quedan en particiones diferentes, la evaluación puede premiar memorización. Conservamos una sola copia de cada perfil antes de dividir y documentamos que el análisis usa 13.543 perfiles únicos.</p>
+<div id="ac75030f" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>beans_unique <span class="op">=</span> beans.drop_duplicates().reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">len</span>(beans_unique) <span class="op">==</span> <span class="dv">13_543</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="kw">not</span> beans_unique.duplicated().<span class="bu">any</span>()</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Perfiles únicos para modelar: </span><span class="sc">{</span><span class="bu">len</span>(beans_unique)<span class="sc">:,}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Perfiles únicos para modelar: 13,543</code></pre>
+</div>
+</div>
+</section>
+<section id="crear-y-bloquear-las-particiones" class="level2" data-number="3.4">
+<h2 data-number="3.4" class="anchored" data-anchor-id="crear-y-bloquear-las-particiones"><span class="header-section-number">3.4</span> Crear y bloquear las particiones</h2>
+<p>No hay un orden temporal ni grupos de captura declarados. Usaremos una división aleatoria estratificada: 70% para entrenamiento, 15% para validación y 15% para test. La estratificación conserva aproximadamente la proporción de cada clase.</p>
+<div id="f7877131" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>train_frame, remaining_frame <span class="op">=</span> train_test_split(</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a>    beans_unique,</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>    test_size<span class="op">=</span><span class="fl">0.30</span>,</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>beans_unique[<span class="st">"Class"</span>],</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span>SEED,</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a>validation_frame, test_frame <span class="op">=</span> train_test_split(</span>
+<span id="cb8-8"><a href="#cb8-8" aria-hidden="true" tabindex="-1"></a>    remaining_frame,</span>
+<span id="cb8-9"><a href="#cb8-9" aria-hidden="true" tabindex="-1"></a>    test_size<span class="op">=</span><span class="fl">0.50</span>,</span>
+<span id="cb8-10"><a href="#cb8-10" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>remaining_frame[<span class="st">"Class"</span>],</span>
+<span id="cb8-11"><a href="#cb8-11" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span>SEED,</span>
+<span id="cb8-12"><a href="#cb8-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb8-13"><a href="#cb8-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-14"><a href="#cb8-14" aria-hidden="true" tabindex="-1"></a>train_frame <span class="op">=</span> train_frame.reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-15"><a href="#cb8-15" aria-hidden="true" tabindex="-1"></a>validation_frame <span class="op">=</span> validation_frame.reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-16"><a href="#cb8-16" aria-hidden="true" tabindex="-1"></a>test_frame <span class="op">=</span> test_frame.reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb8-17"><a href="#cb8-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb8-18"><a href="#cb8-18" aria-hidden="true" tabindex="-1"></a>split_summary <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb8-19"><a href="#cb8-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"partición"</span>: [<span class="st">"entrenamiento"</span>, <span class="st">"validación"</span>, <span class="st">"test bloqueado"</span>],</span>
+<span id="cb8-20"><a href="#cb8-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"filas"</span>: [<span class="bu">len</span>(train_frame), <span class="bu">len</span>(validation_frame), <span class="bu">len</span>(test_frame)],</span>
+<span id="cb8-21"><a href="#cb8-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"porcentaje"</span>: [</span>
+<span id="cb8-22"><a href="#cb8-22" aria-hidden="true" tabindex="-1"></a>        <span class="dv">100</span> <span class="op">*</span> <span class="bu">len</span>(train_frame) <span class="op">/</span> <span class="bu">len</span>(beans_unique),</span>
+<span id="cb8-23"><a href="#cb8-23" aria-hidden="true" tabindex="-1"></a>        <span class="dv">100</span> <span class="op">*</span> <span class="bu">len</span>(validation_frame) <span class="op">/</span> <span class="bu">len</span>(beans_unique),</span>
+<span id="cb8-24"><a href="#cb8-24" aria-hidden="true" tabindex="-1"></a>        <span class="dv">100</span> <span class="op">*</span> <span class="bu">len</span>(test_frame) <span class="op">/</span> <span class="bu">len</span>(beans_unique),</span>
+<span id="cb8-25"><a href="#cb8-25" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb8-26"><a href="#cb8-26" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb8-27"><a href="#cb8-27" aria-hidden="true" tabindex="-1"></a>split_summary</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="5">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">partición</th>
+<th data-quarto-table-cell-role="th">filas</th>
+<th data-quarto-table-cell-role="th">porcentaje</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>entrenamiento</td>
+<td>9480</td>
+<td>69.999262</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>validación</td>
+<td>2031</td>
+<td>14.996677</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>test bloqueado</td>
+<td>2032</td>
+<td>15.004061</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="ec8f1963" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>split_counts <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"entrenamiento"</span>: train_frame[<span class="st">"Class"</span>].value_counts(),</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"validación"</span>: validation_frame[<span class="st">"Class"</span>].value_counts(),</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"test"</span>: test_frame[<span class="st">"Class"</span>].value_counts(),</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>}).loc[CLASS_NAMES]</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> (split_counts <span class="op">&gt;</span> <span class="dv">0</span>).<span class="bu">all</span>().<span class="bu">all</span>()</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>split_counts</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">entrenamiento</th>
+<th data-quarto-table-cell-role="th">validación</th>
+<th data-quarto-table-cell-role="th">test</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Class</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">BARBUNYA</th>
+<td>925</td>
+<td>199</td>
+<td>198</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">BOMBAY</th>
+<td>366</td>
+<td>78</td>
+<td>78</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">CALI</th>
+<td>1141</td>
+<td>244</td>
+<td>245</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">DERMASON</th>
+<td>2482</td>
+<td>532</td>
+<td>532</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">HOROZ</th>
+<td>1302</td>
+<td>279</td>
+<td>279</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">SEKER</th>
+<td>1419</td>
+<td>304</td>
+<td>304</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">SIRA</th>
+<td>1845</td>
+<td>395</td>
+<td>396</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Desde este punto, <code>test_frame</code> permanecerá bloqueado hasta fijar la arquitectura, el presupuesto de entrenamiento y la comparación en validación.</p>
+</section>
+<section id="explorar-únicamente-entrenamiento" class="level2" data-number="3.5">
+<h2 data-number="3.5" class="anchored" data-anchor-id="explorar-únicamente-entrenamiento"><span class="header-section-number">3.5</span> Explorar únicamente entrenamiento</h2>
+<p>La clase mayoritaria es <code>DERMASON</code>; <code>BOMBAY</code> tiene muchas menos observaciones. Por eso reportaremos macro-F1 además de accuracy. Macro-F1 calcula F1 por clase y después asigna el mismo peso a cada variedad.</p>
+<div id="cell-fig-bean-training" class="cell" data-fig-height="4" data-fig-width="10" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>class_counts <span class="op">=</span> train_frame[<span class="st">"Class"</span>].value_counts().reindex(CLASS_NAMES)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].bar(class_counts.index, class_counts.values, color<span class="op">=</span><span class="st">"#6042a6"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_ylabel(<span class="st">"Granos"</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].set_title(<span class="st">"Distribución de clases"</span>)</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].tick_params(axis<span class="op">=</span><span class="st">"x"</span>, rotation<span class="op">=</span><span class="dv">55</span>)</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> plt.cm.tab10(np.linspace(<span class="dv">0</span>, <span class="dv">1</span>, <span class="bu">len</span>(CLASS_NAMES)))</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> class_name, color <span class="kw">in</span> <span class="bu">zip</span>(CLASS_NAMES, colors):</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    class_rows <span class="op">=</span> train_frame[train_frame[<span class="st">"Class"</span>] <span class="op">==</span> class_name]</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].scatter(</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>        class_rows[<span class="st">"Area"</span>],</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>        class_rows[<span class="st">"Roundness"</span>],</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        s<span class="op">=</span><span class="dv">7</span>,</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>        alpha<span class="op">=</span><span class="fl">0.35</span>,</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>color,</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>class_name,</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_xlabel(<span class="st">"Área (píxeles)"</span>)</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylabel(<span class="st">"Redondez"</span>)</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_title(<span class="st">"Dos variables no separan todas las clases"</span>)</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].legend(fontsize<span class="op">=</span><span class="dv">7</span>, ncol<span class="op">=</span><span class="dv">2</span>, frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-bean-training" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Barras con siete frecuencias y dispersión de área frente a redondez por variedad.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bean-training-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter03_files/figure-html/fig-bean-training-output-1.png" alt="Barras con siete frecuencias y dispersión de área frente a redondez por variedad." width="948" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bean-training-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3.1: Frecuencia de clases y solapamiento de dos características en entrenamiento.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>La proyección bidimensional no demuestra qué ocurre en las 16 dimensiones, pero hace visible el solapamiento. Además, las variables tienen escalas muy diferentes: <code>Area</code> puede tomar decenas de miles, mientras varios factores de forma están cerca de cero o uno.</p>
+</section>
+<section id="preparar-tensores-sin-fuga-de-información" class="level2" data-number="3.6">
+<h2 data-number="3.6" class="anchored" data-anchor-id="preparar-tensores-sin-fuga-de-información"><span class="header-section-number">3.6</span> Preparar tensores sin fuga de información</h2>
+<p>Ajustamos media y desviación exclusivamente con entrenamiento. El orden de las clases también queda fijado antes de modelar.</p>
+<div id="577f56ef" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a>class_to_index <span class="op">=</span> {</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    class_name: index <span class="cf">for</span> index, class_name <span class="kw">in</span> <span class="bu">enumerate</span>(CLASS_NAMES)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>train_mean <span class="op">=</span> train_frame[FEATURE_NAMES].mean().to_numpy(dtype<span class="op">=</span>np.float32)</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>train_std <span class="op">=</span> train_frame[FEATURE_NAMES].std(ddof<span class="op">=</span><span class="dv">0</span>).to_numpy(dtype<span class="op">=</span>np.float32)</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> np.<span class="bu">any</span>(train_std <span class="op">==</span> <span class="dv">0</span>):</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Existe una característica constante en entrenamiento"</span>)</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> frame_to_tensors(frame):</span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>    features <span class="op">=</span> frame[FEATURE_NAMES].to_numpy(dtype<span class="op">=</span>np.float32)</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>    standardized <span class="op">=</span> (features <span class="op">-</span> train_mean) <span class="op">/</span> train_std</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>    labels <span class="op">=</span> frame[<span class="st">"Class"</span>].<span class="bu">map</span>(class_to_index).to_numpy(dtype<span class="op">=</span>np.int64)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> torch.from_numpy(standardized), torch.from_numpy(labels)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a>X_train, y_train <span class="op">=</span> frame_to_tensors(train_frame)</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>X_validation, y_validation <span class="op">=</span> frame_to_tensors(validation_frame)</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>X_test, y_test <span class="op">=</span> frame_to_tensors(test_frame)</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> X_train.shape <span class="op">==</span> (<span class="bu">len</span>(train_frame), <span class="dv">16</span>)</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> y_train.shape <span class="op">==</span> (<span class="bu">len</span>(train_frame),)</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> X_train.dtype <span class="op">==</span> torch.float32</span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> y_train.dtype <span class="op">==</span> torch.int64</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.isfinite(X_train).<span class="bu">all</span>()</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> y_train.<span class="bu">min</span>() <span class="op">==</span> <span class="dv">0</span> <span class="kw">and</span> y_train.<span class="bu">max</span>() <span class="op">==</span> <span class="dv">6</span></span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Entradas de entrenamiento:"</span>, X_train.shape, X_train.dtype)</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Etiquetas de entrenamiento:"</span>, y_train.shape, y_train.dtype)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Entradas de entrenamiento: torch.Size([9480, 16]) torch.float32
+Etiquetas de entrenamiento: torch.Size([9480]) torch.int64</code></pre>
+</div>
+</div>
+</section>
+<section id="por-qué-dos-capas-lineales-no-son-una-red-no-lineal" class="level2" data-number="3.7">
+<h2 data-number="3.7" class="anchored" data-anchor-id="por-qué-dos-capas-lineales-no-son-una-red-no-lineal"><span class="header-section-number">3.7</span> Por qué dos capas lineales no son una red no lineal</h2>
+<p>Para un lote <span class="math inline">\(\mathbf{X}\)</span>, consideremos dos transformaciones afines sin una activación entre ellas:</p>
+<p><span class="math display">\[
+\mathbf{H}=\mathbf{X}\mathbf{W}_1+\mathbf{b}_1,
+\qquad
+\mathbf{Z}=\mathbf{H}\mathbf{W}_2+\mathbf{b}_2.
+\]</span></p>
+<p>Al sustituir <span class="math inline">\(\mathbf{H}\)</span>,</p>
+<p><span class="math display">\[
+\mathbf{Z}
+=\mathbf{X}(\mathbf{W}_1\mathbf{W}_2)
++(\mathbf{b}_1\mathbf{W}_2+\mathbf{b}_2).
+\]</span></p>
+<p>El producto de pesos y la combinación de sesgos forman otra transformación afín. La profundidad, por sí sola, no amplía esta familia funcional.</p>
+<div id="7b73f1ed" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>X_demo <span class="op">=</span> torch.randn(<span class="dv">5</span>, <span class="dv">3</span>)</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>W1 <span class="op">=</span> torch.randn(<span class="dv">3</span>, <span class="dv">4</span>)</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>b1 <span class="op">=</span> torch.randn(<span class="dv">4</span>)</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>W2 <span class="op">=</span> torch.randn(<span class="dv">4</span>, <span class="dv">2</span>)</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>b2 <span class="op">=</span> torch.randn(<span class="dv">2</span>)</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>two_layer_logits <span class="op">=</span> (X_demo <span class="op">@</span> W1 <span class="op">+</span> b1) <span class="op">@</span> W2 <span class="op">+</span> b2</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>equivalent_W <span class="op">=</span> W1 <span class="op">@</span> W2</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>equivalent_b <span class="op">=</span> b1 <span class="op">@</span> W2 <span class="op">+</span> b2</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>one_layer_logits <span class="op">=</span> X_demo <span class="op">@</span> equivalent_W <span class="op">+</span> equivalent_b</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Máxima diferencia:"</span>, (two_layer_logits <span class="op">-</span> one_layer_logits).<span class="bu">abs</span>().<span class="bu">max</span>().item())</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Son equivalentes:"</span>, torch.allclose(two_layer_logits, one_layer_logits))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Máxima diferencia: 2.384185791015625e-07
+Son equivalentes: True</code></pre>
+</div>
+</div>
+</section>
+<section id="relu-crea-nuevas-regiones" class="level2" data-number="3.8">
+<h2 data-number="3.8" class="anchored" data-anchor-id="relu-crea-nuevas-regiones"><span class="header-section-number">3.8</span> ReLU crea nuevas regiones</h2>
+<p>Una función de activación rompe ese colapso. Para ReLU,</p>
+<p><span class="math display">\[
+\operatorname{ReLU}(z)=\max(0,z).
+\]</span></p>
+<p>Cada unidad puede activar una región y anular otra. Como ejemplo mínimo, ninguna recta separa XOR, pero dos activaciones ReLU construyen exactamente su patrón. Si <span class="math inline">\(s=x_1+x_2\)</span>,</p>
+<p><span class="math display">\[
+f(\mathbf{x})=\operatorname{ReLU}(s)
+-2\operatorname{ReLU}(s-1).
+\]</span></p>
+<div id="5fc6bd64" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a>xor_X <span class="op">=</span> torch.tensor([</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.0</span>, <span class="fl">0.0</span>],</span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">0.0</span>],</span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>xor_y <span class="op">=</span> torch.tensor([<span class="dv">0</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="dv">0</span>])</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>xor_sum <span class="op">=</span> xor_X.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>xor_hidden <span class="op">=</span> torch.stack([</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>    torch.relu(xor_sum),</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    torch.relu(xor_sum <span class="op">-</span> <span class="dv">1</span>),</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>xor_score <span class="op">=</span> xor_hidden <span class="op">@</span> torch.tensor([<span class="fl">1.0</span>, <span class="op">-</span><span class="fl">2.0</span>])</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>xor_prediction <span class="op">=</span> (xor_score <span class="op">&gt;</span> <span class="fl">0.5</span>).to(torch.int64)</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>xor_table <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb15-18"><a href="#cb15-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"x1"</span>: xor_X[:, <span class="dv">0</span>],</span>
+<span id="cb15-19"><a href="#cb15-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"x2"</span>: xor_X[:, <span class="dv">1</span>],</span>
+<span id="cb15-20"><a href="#cb15-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"clase"</span>: xor_y,</span>
+<span id="cb15-21"><a href="#cb15-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"score ReLU"</span>: xor_score,</span>
+<span id="cb15-22"><a href="#cb15-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"predicción"</span>: xor_prediction,</span>
+<span id="cb15-23"><a href="#cb15-23" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb15-24"><a href="#cb15-24" aria-hidden="true" tabindex="-1"></a>xor_table</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">x1</th>
+<th data-quarto-table-cell-role="th">x2</th>
+<th data-quarto-table-cell-role="th">clase</th>
+<th data-quarto-table-cell-role="th">score ReLU</th>
+<th data-quarto-table-cell-role="th">predicción</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>0.0</td>
+<td>0.0</td>
+<td>0</td>
+<td>0.0</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>0.0</td>
+<td>1.0</td>
+<td>1</td>
+<td>1.0</td>
+<td>1</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>1.0</td>
+<td>0.0</td>
+<td>1</td>
+<td>1.0</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>1.0</td>
+<td>1.0</td>
+<td>0</td>
+<td>0.0</td>
+<td>0</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-xor-relu" class="cell" data-fig-height="4" data-fig-width="5" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">5</span>, <span class="dv">4</span>))</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> class_index, marker, color <span class="kw">in</span> [(<span class="dv">0</span>, <span class="st">"o"</span>, <span class="st">"#6042a6"</span>), (<span class="dv">1</span>, <span class="st">"s"</span>, <span class="st">"#327c78"</span>)]:</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>    mask <span class="op">=</span> xor_y <span class="op">==</span> class_index</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>    ax.scatter(</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>        xor_X[mask, <span class="dv">0</span>],</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>        xor_X[mask, <span class="dv">1</span>],</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>        s<span class="op">=</span><span class="dv">110</span>,</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span>marker,</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>color,</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span><span class="ss">f"Clase </span><span class="sc">{</span>class_index<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> row, score <span class="kw">in</span> <span class="bu">zip</span>(xor_X, xor_score):</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    ax.annotate(<span class="ss">f"f=</span><span class="sc">{</span>score<span class="sc">.</span>item()<span class="sc">:.0f}</span><span class="ss">"</span>, row.numpy() <span class="op">+</span> np.array([<span class="fl">0.04</span>, <span class="fl">0.04</span>]))</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>ax.<span class="bu">set</span>(xlim<span class="op">=</span>(<span class="op">-</span><span class="fl">0.2</span>, <span class="fl">1.3</span>), ylim<span class="op">=</span>(<span class="op">-</span><span class="fl">0.2</span>, <span class="fl">1.3</span>), xlabel<span class="op">=</span><span class="st">"$x_1$"</span>, ylabel<span class="op">=</span><span class="st">"$x_2$"</span>)</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>ax.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb16-16"><a href="#cb16-16" aria-hidden="true" tabindex="-1"></a>ax.set_title(<span class="st">"Relación XOR"</span>)</span>
+<span id="cb16-17"><a href="#cb16-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb16-18"><a href="#cb16-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-xor-relu" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Cuatro puntos de XOR con clases alternadas en las esquinas de un cuadrado.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-xor-relu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter03_files/figure-html/fig-xor-relu-output-1.png" alt="Cuatro puntos de XOR con clases alternadas en las esquinas de un cuadrado." width="470" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-xor-relu-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3.2: XOR no es separable por una recta, pero una combinación de ReLU reproduce sus etiquetas.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Sigmoid, <span class="math inline">\(\sigma(z)=1/(1+e^{-z})\)</span>, también introduce no linealidad, pero se satura para valores de gran magnitud. Usaremos ReLU en la capa oculta. El capítulo siguiente estudiará cómo las activaciones afectan la estabilidad del entrenamiento.</p>
+</section>
+<section id="del-vector-de-entrada-a-los-logits" class="level2" data-number="3.9">
+<h2 data-number="3.9" class="anchored" data-anchor-id="del-vector-de-entrada-a-los-logits"><span class="header-section-number">3.9</span> Del vector de entrada a los logits</h2>
+<p>Nuestra MLP tendrá una capa oculta de 64 unidades:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\mathbf{Z}_1 &amp;= \mathbf{X}\mathbf{W}_1+\mathbf{b}_1,\\
+\mathbf{H} &amp;= \operatorname{ReLU}(\mathbf{Z}_1),\\
+\mathbf{Z}_2 &amp;= \mathbf{H}\mathbf{W}_2+\mathbf{b}_2.
+\end{aligned}
+\]</span></p>
+<p>Para un mini-batch de tamaño <span class="math inline">\(B\)</span>, las dimensiones son:</p>
+<table class="caption-top table">
+<thead>
+<tr class="header">
+<th>Tensor</th>
+<th style="text-align: right;">Dimensión</th>
+<th>Significado</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{X}\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(B\times16\)</span></td>
+<td>características estandarizadas</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{W}_1\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(16\times64\)</span></td>
+<td>pesos de entrada a capa oculta</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{H}\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(B\times64\)</span></td>
+<td>representación no lineal</td>
+</tr>
+<tr class="even">
+<td><span class="math inline">\(\mathbf{W}_2\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(64\times7\)</span></td>
+<td>pesos de capa oculta a clases</td>
+</tr>
+<tr class="odd">
+<td><span class="math inline">\(\mathbf{Z}_2\)</span></td>
+<td style="text-align: right;"><span class="math inline">\(B\times7\)</span></td>
+<td>logits por clase</td>
+</tr>
+</tbody>
+</table>
+<p>Los logits son scores sin normalizar. Softmax los convierte en probabilidades:</p>
+<p><span class="math display">\[
+p_{ik}=\frac{\exp(z_{ik})}{\sum_{j=1}^{7}\exp(z_{ij})}.
+\]</span></p>
+<div id="f934d54c" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a>example_logits <span class="op">=</span> torch.tensor([[<span class="fl">2.1</span>, <span class="op">-</span><span class="fl">0.3</span>, <span class="fl">0.4</span>, <span class="fl">1.2</span>, <span class="op">-</span><span class="fl">1.0</span>, <span class="fl">0.7</span>, <span class="fl">0.0</span>]])</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>example_probabilities <span class="op">=</span> torch.softmax(example_logits, dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Suma de probabilidades:"</span>, example_probabilities.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">1</span>).item())</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Argmax de logits:"</span>, example_logits.argmax(dim<span class="op">=</span><span class="dv">1</span>).item())</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Argmax de probabilidades:"</span>, example_probabilities.argmax(dim<span class="op">=</span><span class="dv">1</span>).item())</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Suma de probabilidades: 1.0000001192092896
+Argmax de logits: 0
+Argmax de probabilidades: 0</code></pre>
+</div>
+</div>
+<p>Softmax preserva el orden de los logits. Solo lo necesitaremos para interpretar predicciones; <code>CrossEntropyLoss</code> recibe logits directamente y aplica una forma numéricamente estable de log-softmax.</p>
+<p>Para una observación cuya clase real es <span class="math inline">\(y_i\)</span>, la pérdida es</p>
+<p><span class="math display">\[
+\ell_i=-\log p_{i,y_i}
+=-z_{i,y_i}+\log\sum_k\exp(z_{ik}).
+\]</span></p>
+<p>Etiquetas con forma <code>(B,)</code> y tipo <code>int64</code> seleccionan la clase correcta sin crear vectores one-hot en la interfaz de PyTorch.</p>
+</section>
+<section id="hacer-visible-la-retropropagación" class="level2" data-number="3.10">
+<h2 data-number="3.10" class="anchored" data-anchor-id="hacer-visible-la-retropropagación"><span class="header-section-number">3.10</span> Hacer visible la retropropagación</h2>
+<p>Para un lote de tamaño <span class="math inline">\(B\)</span>, sea <span class="math inline">\(\mathbf{P}\)</span> la matriz de probabilidades y <span class="math inline">\(\mathbf{Y}\)</span> la codificación one-hot usada solo en la derivación. La combinación softmax-entropía cruzada produce</p>
+<p><span class="math display">\[
+\mathbf{G}_2=\frac{\mathbf{P}-\mathbf{Y}}{B}.
+\]</span></p>
+<p>La regla de la cadena continúa hacia atrás:</p>
+<p><span class="math display">\[
+\begin{aligned}
+\nabla_{\mathbf{W}_2}\mathcal{L} &amp;= \mathbf{H}^{\mathsf T}\mathbf{G}_2,\\
+\nabla_{\mathbf{b}_2}\mathcal{L} &amp;= \sum_i \mathbf{G}_{2i},\\
+\mathbf{G}_1 &amp;= (\mathbf{G}_2\mathbf{W}_2^{\mathsf T})
+\odot \mathbb{1}[\mathbf{Z}_1&gt;0],\\
+\nabla_{\mathbf{W}_1}\mathcal{L} &amp;= \mathbf{X}^{\mathsf T}\mathbf{G}_1,\\
+\nabla_{\mathbf{b}_1}\mathcal{L} &amp;= \sum_i \mathbf{G}_{1i}.
+\end{aligned}
+\]</span></p>
+<p>El producto <span class="math inline">\(\odot\)</span> es elemento a elemento: la derivada local de ReLU bloquea el gradiente donde la preactivación fue negativa. Verificaremos estas expresiones con un mini-batch en <code>float64</code>.</p>
+<div id="8ead5417" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>X_check <span class="op">=</span> X_train[:<span class="dv">8</span>].to(torch.float64)</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>y_check <span class="op">=</span> y_train[:<span class="dv">8</span>]</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a>W1_check <span class="op">=</span> (<span class="fl">0.1</span> <span class="op">*</span> torch.randn(<span class="dv">16</span>, <span class="dv">5</span>, dtype<span class="op">=</span>torch.float64)).requires_grad_()</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a>b1_check <span class="op">=</span> torch.zeros(<span class="dv">5</span>, dtype<span class="op">=</span>torch.float64, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a>W2_check <span class="op">=</span> (<span class="fl">0.1</span> <span class="op">*</span> torch.randn(<span class="dv">5</span>, <span class="dv">7</span>, dtype<span class="op">=</span>torch.float64)).requires_grad_()</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>b2_check <span class="op">=</span> torch.zeros(<span class="dv">7</span>, dtype<span class="op">=</span>torch.float64, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>Z1_check <span class="op">=</span> X_check <span class="op">@</span> W1_check <span class="op">+</span> b1_check</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a>H_check <span class="op">=</span> torch.relu(Z1_check)</span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a>logits_check <span class="op">=</span> H_check <span class="op">@</span> W2_check <span class="op">+</span> b2_check</span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a>loss_check <span class="op">=</span> F.cross_entropy(logits_check, y_check)</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>loss_check.backward()</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>Y_check <span class="op">=</span> F.one_hot(y_check, num_classes<span class="op">=</span><span class="dv">7</span>).to(torch.float64)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>G2_check <span class="op">=</span> (torch.softmax(logits_check.detach(), dim<span class="op">=</span><span class="dv">1</span>) <span class="op">-</span> Y_check) <span class="op">/</span> <span class="bu">len</span>(X_check)</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>manual_W2 <span class="op">=</span> H_check.detach().T <span class="op">@</span> G2_check</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>manual_b2 <span class="op">=</span> G2_check.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>G1_check <span class="op">=</span> (G2_check <span class="op">@</span> W2_check.detach().T) <span class="op">*</span> (Z1_check.detach() <span class="op">&gt;</span> <span class="dv">0</span>)</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>manual_W1 <span class="op">=</span> X_check.T <span class="op">@</span> G1_check</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>manual_b1 <span class="op">=</span> G1_check.<span class="bu">sum</span>(dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>gradient_check <span class="op">=</span> pd.Series({</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"W1"</span>: (W1_check.grad <span class="op">-</span> manual_W1).<span class="bu">abs</span>().<span class="bu">max</span>().item(),</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"b1"</span>: (b1_check.grad <span class="op">-</span> manual_b1).<span class="bu">abs</span>().<span class="bu">max</span>().item(),</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"W2"</span>: (W2_check.grad <span class="op">-</span> manual_W2).<span class="bu">abs</span>().<span class="bu">max</span>().item(),</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"b2"</span>: (b2_check.grad <span class="op">-</span> manual_b2).<span class="bu">abs</span>().<span class="bu">max</span>().item(),</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>}, name<span class="op">=</span><span class="st">"máxima diferencia absoluta"</span>)</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> gradient_check.<span class="bu">max</span>() <span class="op">&lt;</span> <span class="fl">1e-12</span></span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>gradient_check</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="13">
+<pre><code>W1    1.387779e-17
+b1    3.469447e-18
+W2    1.387779e-17
+b2    2.775558e-17
+Name: máxima diferencia absoluta, dtype: float64</code></pre>
+</div>
+</div>
+<p>Autograd no cambia la matemática: registra las operaciones del forward y aplica estas derivadas locales en orden inverso.</p>
+</section>
+<section id="tres-formas-de-expresar-la-misma-mlp" class="level2" data-number="3.11">
+<h2 data-number="3.11" class="anchored" data-anchor-id="tres-formas-de-expresar-la-misma-mlp"><span class="header-section-number">3.11</span> Tres formas de expresar la misma MLP</h2>
+<p>Con tensores explícitos, el forward esencial es:</p>
+<div id="5de296e1" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> tensor_forward(X, W1, b1, W2, b2):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    hidden <span class="op">=</span> torch.relu(X <span class="op">@</span> W1 <span class="op">+</span> b1)</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> hidden <span class="op">@</span> W2 <span class="op">+</span> b2</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Una subclase de <code>nn.Module</code> registra parámetros y define cómo se conectan:</p>
+<div id="6a9524a2" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> BeanMLP(nn.Module):</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, input_features<span class="op">=</span><span class="dv">16</span>, hidden_features<span class="op">=</span><span class="dv">64</span>, classes<span class="op">=</span><span class="dv">7</span>):</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.hidden <span class="op">=</span> nn.Linear(input_features, hidden_features)</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.output <span class="op">=</span> nn.Linear(hidden_features, classes)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, X):</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.output(torch.relu(<span class="va">self</span>.hidden(X)))</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>module_example <span class="op">=</span> BeanMLP()</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(module_example)</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Forma de logits:"</span>, module_example(X_train[:<span class="dv">32</span>]).shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>BeanMLP(
+  (hidden): Linear(in_features=16, out_features=64, bias=True)
+  (output): Linear(in_features=64, out_features=7, bias=True)
+)
+Forma de logits: torch.Size([32, 7])</code></pre>
+</div>
+</div>
+<p>Cuando el flujo es secuencial, <code>nn.Sequential</code> expresa la misma arquitectura con menos código:</p>
+<div id="333ff287" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_mlp():</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    torch.manual_seed(SEED)</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> nn.Sequential(</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">16</span>, <span class="dv">64</span>),</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        nn.ReLU(),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        nn.Linear(<span class="dv">64</span>, <span class="dv">7</span>),</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>mlp_example <span class="op">=</span> make_mlp()</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>parameter_count <span class="op">=</span> <span class="bu">sum</span>(parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> mlp_example.parameters())</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Parámetros registrados:"</span>, <span class="bu">list</span>(mlp_example.state_dict().keys()))</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Número de parámetros:"</span>, parameter_count)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Parámetros registrados: ['0.weight', '0.bias', '2.weight', '2.bias']
+Número de parámetros: 1543</code></pre>
+</div>
+</div>
+<p>El conteo es</p>
+<p><span class="math display">\[
+(16\times64+64)+(64\times7+7)=1.543.
+\]</span></p>
+<p>Un clasificador lineal tiene solo <span class="math inline">\(16\times7+7=119\)</span> parámetros. La MLP compra capacidad adicional con más parámetros y más operaciones.</p>
+</section>
+<section id="protocolo-experimental" class="level2" data-number="3.12">
+<h2 data-number="3.12" class="anchored" data-anchor-id="protocolo-experimental"><span class="header-section-number">3.12</span> Protocolo experimental</h2>
+<p>Compararemos tres modelos:</p>
+<ol type="1">
+<li><strong>Mayoría:</strong> siempre predice la clase más frecuente de entrenamiento.</li>
+<li><strong>Lineal:</strong> <code>Linear(16, 7)</code>, equivalente a regresión softmax.</li>
+<li><strong>MLP:</strong> <code>Linear(16, 64)</code>, ReLU y <code>Linear(64, 7)</code>.</li>
+</ol>
+<p>Los dos modelos aprendidos usarán exactamente las mismas particiones, estandarización, mini-batches, entropía cruzada, SGD, tasa de aprendizaje 0,1, 40 épocas y semilla. No buscaremos optimizadores, regularización ni arquitecturas alternativas: esas decisiones pertenecen al Capítulo 4.</p>
+<p>Esta es una comparación controlada con una sola semilla, no una estimación de variabilidad. Igualar tasa y número de actualizaciones controla el presupuesto, pero no demuestra que ambos modelos estén igualmente optimizados.</p>
+<div id="8fd9dd9b" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>LEARNING_RATE <span class="op">=</span> <span class="fl">0.1</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>EPOCHS <span class="op">=</span> <span class="dv">40</span></span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> classification_metrics(y_true, y_pred):</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>    true_values <span class="op">=</span> np.asarray(y_true)</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    predicted_values <span class="op">=</span> np.asarray(y_pred)</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Accuracy"</span>: (true_values <span class="op">==</span> predicted_values).mean(),</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Macro-F1"</span>: f1_score(</span>
+<span id="cb26-12"><a href="#cb26-12" aria-hidden="true" tabindex="-1"></a>            true_values,</span>
+<span id="cb26-13"><a href="#cb26-13" aria-hidden="true" tabindex="-1"></a>            predicted_values,</span>
+<span id="cb26-14"><a href="#cb26-14" aria-hidden="true" tabindex="-1"></a>            labels<span class="op">=</span>np.arange(<span class="bu">len</span>(CLASS_NAMES)),</span>
+<span id="cb26-15"><a href="#cb26-15" aria-hidden="true" tabindex="-1"></a>            average<span class="op">=</span><span class="st">"macro"</span>,</span>
+<span id="cb26-16"><a href="#cb26-16" aria-hidden="true" tabindex="-1"></a>            zero_division<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb26-17"><a href="#cb26-17" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb26-18"><a href="#cb26-18" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb26-19"><a href="#cb26-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-20"><a href="#cb26-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-21"><a href="#cb26-21" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> predict_logits(model, X):</span>
+<span id="cb26-22"><a href="#cb26-22" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb26-23"><a href="#cb26-23" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb26-24"><a href="#cb26-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> model(X.to(device)).cpu()</span>
+<span id="cb26-25"><a href="#cb26-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-26"><a href="#cb26-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-27"><a href="#cb26-27" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_classifier(model):</span>
+<span id="cb26-28"><a href="#cb26-28" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> model.to(device)</span>
+<span id="cb26-29"><a href="#cb26-29" aria-hidden="true" tabindex="-1"></a>    loader <span class="op">=</span> DataLoader(</span>
+<span id="cb26-30"><a href="#cb26-30" aria-hidden="true" tabindex="-1"></a>        TensorDataset(X_train, y_train),</span>
+<span id="cb26-31"><a href="#cb26-31" aria-hidden="true" tabindex="-1"></a>        batch_size<span class="op">=</span>BATCH_SIZE,</span>
+<span id="cb26-32"><a href="#cb26-32" aria-hidden="true" tabindex="-1"></a>        shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb26-33"><a href="#cb26-33" aria-hidden="true" tabindex="-1"></a>        generator<span class="op">=</span>torch.Generator().manual_seed(SEED),</span>
+<span id="cb26-34"><a href="#cb26-34" aria-hidden="true" tabindex="-1"></a>        num_workers<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb26-35"><a href="#cb26-35" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb26-36"><a href="#cb26-36" aria-hidden="true" tabindex="-1"></a>    criterion <span class="op">=</span> nn.CrossEntropyLoss()</span>
+<span id="cb26-37"><a href="#cb26-37" aria-hidden="true" tabindex="-1"></a>    optimizer <span class="op">=</span> torch.optim.SGD(model.parameters(), lr<span class="op">=</span>LEARNING_RATE)</span>
+<span id="cb26-38"><a href="#cb26-38" aria-hidden="true" tabindex="-1"></a>    history_rows <span class="op">=</span> []</span>
+<span id="cb26-39"><a href="#cb26-39" aria-hidden="true" tabindex="-1"></a>    started_at <span class="op">=</span> perf_counter()</span>
+<span id="cb26-40"><a href="#cb26-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-41"><a href="#cb26-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, EPOCHS <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb26-42"><a href="#cb26-42" aria-hidden="true" tabindex="-1"></a>        model.train()</span>
+<span id="cb26-43"><a href="#cb26-43" aria-hidden="true" tabindex="-1"></a>        training_loss_sum <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb26-44"><a href="#cb26-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-45"><a href="#cb26-45" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> batch_X, batch_y <span class="kw">in</span> loader:</span>
+<span id="cb26-46"><a href="#cb26-46" aria-hidden="true" tabindex="-1"></a>            batch_X <span class="op">=</span> batch_X.to(device)</span>
+<span id="cb26-47"><a href="#cb26-47" aria-hidden="true" tabindex="-1"></a>            batch_y <span class="op">=</span> batch_y.to(device)</span>
+<span id="cb26-48"><a href="#cb26-48" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-49"><a href="#cb26-49" aria-hidden="true" tabindex="-1"></a>            optimizer.zero_grad()</span>
+<span id="cb26-50"><a href="#cb26-50" aria-hidden="true" tabindex="-1"></a>            logits <span class="op">=</span> model(batch_X)</span>
+<span id="cb26-51"><a href="#cb26-51" aria-hidden="true" tabindex="-1"></a>            loss <span class="op">=</span> criterion(logits, batch_y)</span>
+<span id="cb26-52"><a href="#cb26-52" aria-hidden="true" tabindex="-1"></a>            loss.backward()</span>
+<span id="cb26-53"><a href="#cb26-53" aria-hidden="true" tabindex="-1"></a>            optimizer.step()</span>
+<span id="cb26-54"><a href="#cb26-54" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-55"><a href="#cb26-55" aria-hidden="true" tabindex="-1"></a>            training_loss_sum <span class="op">+=</span> loss.item() <span class="op">*</span> <span class="bu">len</span>(batch_y)</span>
+<span id="cb26-56"><a href="#cb26-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-57"><a href="#cb26-57" aria-hidden="true" tabindex="-1"></a>        validation_logits <span class="op">=</span> predict_logits(model, X_validation)</span>
+<span id="cb26-58"><a href="#cb26-58" aria-hidden="true" tabindex="-1"></a>        validation_predictions <span class="op">=</span> validation_logits.argmax(dim<span class="op">=</span><span class="dv">1</span>).numpy()</span>
+<span id="cb26-59"><a href="#cb26-59" aria-hidden="true" tabindex="-1"></a>        validation_metrics <span class="op">=</span> classification_metrics(</span>
+<span id="cb26-60"><a href="#cb26-60" aria-hidden="true" tabindex="-1"></a>            y_validation.numpy(), validation_predictions</span>
+<span id="cb26-61"><a href="#cb26-61" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb26-62"><a href="#cb26-62" aria-hidden="true" tabindex="-1"></a>        history_rows.append({</span>
+<span id="cb26-63"><a href="#cb26-63" aria-hidden="true" tabindex="-1"></a>            <span class="st">"epoch"</span>: epoch,</span>
+<span id="cb26-64"><a href="#cb26-64" aria-hidden="true" tabindex="-1"></a>            <span class="st">"training_loss"</span>: training_loss_sum <span class="op">/</span> <span class="bu">len</span>(y_train),</span>
+<span id="cb26-65"><a href="#cb26-65" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_loss"</span>: criterion(</span>
+<span id="cb26-66"><a href="#cb26-66" aria-hidden="true" tabindex="-1"></a>                validation_logits, y_validation</span>
+<span id="cb26-67"><a href="#cb26-67" aria-hidden="true" tabindex="-1"></a>            ).item(),</span>
+<span id="cb26-68"><a href="#cb26-68" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_macro_f1"</span>: validation_metrics[<span class="st">"Macro-F1"</span>],</span>
+<span id="cb26-69"><a href="#cb26-69" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb26-70"><a href="#cb26-70" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb26-71"><a href="#cb26-71" aria-hidden="true" tabindex="-1"></a>    elapsed_seconds <span class="op">=</span> perf_counter() <span class="op">-</span> started_at</span>
+<span id="cb26-72"><a href="#cb26-72" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> model, pd.DataFrame(history_rows), elapsed_seconds</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="entrenar-el-modelo-lineal-y-la-mlp" class="level2" data-number="3.13">
+<h2 data-number="3.13" class="anchored" data-anchor-id="entrenar-el-modelo-lineal-y-la-mlp"><span class="header-section-number">3.13</span> Entrenar el modelo lineal y la MLP</h2>
+<div id="1831765f" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a>linear_model <span class="op">=</span> nn.Linear(<span class="dv">16</span>, <span class="dv">7</span>)</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>linear_model, linear_history, linear_seconds <span class="op">=</span> train_classifier(linear_model)</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>mlp_model <span class="op">=</span> make_mlp()</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>mlp_model, mlp_history, mlp_seconds <span class="op">=</span> train_classifier(mlp_model)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Modelo lineal: </span><span class="sc">{</span>linear_seconds<span class="sc">:.2f}</span><span class="ss"> s"</span>)</span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"MLP: </span><span class="sc">{</span>mlp_seconds<span class="sc">:.2f}</span><span class="ss"> s"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Modelo lineal: 0.76 s
+MLP: 0.76 s</code></pre>
+</div>
+</div>
+<div id="cell-fig-bean-training-curves" class="cell" data-fig-height="4" data-fig-width="10" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, history, color <span class="kw">in</span> [</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"Lineal"</span>, linear_history, <span class="st">"#6042a6"</span>),</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"MLP"</span>, mlp_history, <span class="st">"#327c78"</span>),</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].plot(history[<span class="st">"epoch"</span>], history[<span class="st">"training_loss"</span>], label<span class="op">=</span>name, color<span class="op">=</span>color)</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].plot(</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>],</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"validation_macro_f1"</span>],</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>name,</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>color,</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Entropía cruzada"</span>, title<span class="op">=</span><span class="st">"Entrenamiento"</span>)</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Macro-F1"</span>, title<span class="op">=</span><span class="st">"Validación"</span>)</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].set_ylim(<span class="fl">0.70</span>, <span class="fl">0.96</span>)</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> ax <span class="kw">in</span> axes:</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>    ax.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>    ax.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-bean-training-curves" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Curvas de pérdida de entrenamiento y macro-F1 de validación para modelos lineal y MLP.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bean-training-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter03_files/figure-html/fig-bean-training-curves-output-1.png" alt="Curvas de pérdida de entrenamiento y macro-F1 de validación para modelos lineal y MLP." width="951" height="375" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bean-training-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3.3: Evolución de la pérdida y de macro-F1 bajo el mismo presupuesto de entrenamiento.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Las curvas sirven para comprobar que ambos modelos aprenden bajo el protocolo fijado. No escogeremos una época observando el máximo de validación: comparamos el estado final de la época 40 definido antes de abrir test.</p>
+</section>
+<section id="comparar-en-validación" class="level2" data-number="3.14">
+<h2 data-number="3.14" class="anchored" data-anchor-id="comparar-en-validación"><span class="header-section-number">3.14</span> Comparar en validación</h2>
+<div id="1da0b119" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>majority_class <span class="op">=</span> <span class="bu">int</span>(torch.bincount(y_train).argmax())</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>majority_validation <span class="op">=</span> np.full(<span class="bu">len</span>(y_validation), majority_class)</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>validation_logits <span class="op">=</span> {</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal"</span>: predict_logits(linear_model, X_validation),</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MLP"</span>: predict_logits(mlp_model, X_validation),</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>validation_predictions <span class="op">=</span> {</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mayoría"</span>: majority_validation,</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal"</span>: validation_logits[<span class="st">"Lineal"</span>].argmax(dim<span class="op">=</span><span class="dv">1</span>).numpy(),</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MLP"</span>: validation_logits[<span class="st">"MLP"</span>].argmax(dim<span class="op">=</span><span class="dv">1</span>).numpy(),</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>validation_results <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    name: classification_metrics(y_validation.numpy(), predictions)</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, predictions <span class="kw">in</span> validation_predictions.items()</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>}).T</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>validation_results[<span class="st">"Parámetros"</span>] <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">119</span>, <span class="dv">1_543</span>]</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>validation_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Accuracy</th>
+<th data-quarto-table-cell-role="th">Macro-F1</th>
+<th data-quarto-table-cell-role="th">Parámetros</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Mayoría</th>
+<td>0.261940</td>
+<td>0.059306</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Lineal</th>
+<td>0.912358</td>
+<td>0.923906</td>
+<td>119</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">MLP</th>
+<td>0.913836</td>
+<td>0.924436</td>
+<td>1543</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>La línea base mayoritaria acierta una fracción apreciable por el desbalance, pero su macro-F1 revela que abandona seis clases. El clasificador lineal ya resuelve gran parte del problema. La MLP obtiene una ventaja muy pequeña en validación: la capacidad adicional no transforma radicalmente el resultado.</p>
+<p>Identificamos en validación el par de variedades con mayor confusión mutua. Esta decisión se toma antes de consultar test.</p>
+<div id="a03d3460" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>validation_confusion <span class="op">=</span> confusion_matrix(</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a>    y_validation.numpy(),</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    validation_predictions[<span class="st">"MLP"</span>],</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>np.arange(<span class="bu">len</span>(CLASS_NAMES)),</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>mutual_confusion <span class="op">=</span> validation_confusion <span class="op">+</span> validation_confusion.T</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>mutual_confusion[np.diag_indices_from(mutual_confusion)] <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>upper_triangle <span class="op">=</span> np.triu(mutual_confusion, k<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>pair_indices <span class="op">=</span> np.unravel_index(upper_triangle.argmax(), upper_triangle.shape)</span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>confused_pair <span class="op">=</span> (CLASS_NAMES[pair_indices[<span class="dv">0</span>]], CLASS_NAMES[pair_indices[<span class="dv">1</span>]])</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Par más confundido en validación:"</span>, confused_pair)</span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Errores mutuos:"</span>, upper_triangle[pair_indices])</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Par más confundido en validación: ('DERMASON', 'SIRA')
+Errores mutuos: 68</code></pre>
+</div>
+</div>
+</section>
+<section id="abrir-test-una-sola-vez" class="level2" data-number="3.15">
+<h2 data-number="3.15" class="anchored" data-anchor-id="abrir-test-una-sola-vez"><span class="header-section-number">3.15</span> Abrir test una sola vez</h2>
+<p>Las decisiones están cerradas. Evaluamos los tres modelos en el test bloqueado.</p>
+<div id="a7161dd3" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>test_logits <span class="op">=</span> {</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal"</span>: predict_logits(linear_model, X_test),</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MLP"</span>: predict_logits(mlp_model, X_test),</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>test_predictions <span class="op">=</span> {</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mayoría"</span>: np.full(<span class="bu">len</span>(y_test), majority_class),</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal"</span>: test_logits[<span class="st">"Lineal"</span>].argmax(dim<span class="op">=</span><span class="dv">1</span>).numpy(),</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"MLP"</span>: test_logits[<span class="st">"MLP"</span>].argmax(dim<span class="op">=</span><span class="dv">1</span>).numpy(),</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>test_results <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>    name: classification_metrics(y_test.numpy(), predictions)</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> name, predictions <span class="kw">in</span> test_predictions.items()</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>}).T</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>test_results[<span class="st">"Parámetros"</span>] <span class="op">=</span> [<span class="dv">0</span>, <span class="dv">119</span>, <span class="dv">1_543</span>]</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>test_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">Accuracy</th>
+<th data-quarto-table-cell-role="th">Macro-F1</th>
+<th data-quarto-table-cell-role="th">Parámetros</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Mayoría</th>
+<td>0.261811</td>
+<td>0.059282</td>
+<td>0</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Lineal</th>
+<td>0.918307</td>
+<td>0.931318</td>
+<td>119</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">MLP</th>
+<td>0.915354</td>
+<td>0.929162</td>
+<td>1543</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>El test no confirma la pequeña ventaja observada en validación: el modelo lineal obtiene un macro-F1 ligeramente mayor. En esta ejecución no observamos una ventaja de generalización para la capacidad adicional, pese a que la MLP reduce más la pérdida de entrenamiento. No atribuimos una diferencia tan pequeña exclusivamente a la arquitectura; para ello necesitaríamos repetir semillas y particiones. El resultado también debe interpretarse junto con el aumento de 119 a 1.543 parámetros.</p>
+</section>
+<section id="diagnosticar-errores-por-clase" class="level2" data-number="3.16">
+<h2 data-number="3.16" class="anchored" data-anchor-id="diagnosticar-errores-por-clase"><span class="header-section-number">3.16</span> Diagnosticar errores por clase</h2>
+<p>Una métrica agregada no muestra qué variedades concentran los errores. Normalizamos cada fila de la matriz de confusión para leerla como proporción de la clase real.</p>
+<div id="cell-fig-bean-test-confusion" class="cell" data-fig-height="6" data-fig-width="7" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>test_confusion <span class="op">=</span> confusion_matrix(</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>    y_test.numpy(),</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>    test_predictions[<span class="st">"MLP"</span>],</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    labels<span class="op">=</span>np.arange(<span class="bu">len</span>(CLASS_NAMES)),</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>normalized_confusion <span class="op">=</span> test_confusion <span class="op">/</span> test_confusion.<span class="bu">sum</span>(axis<span class="op">=</span><span class="dv">1</span>, keepdims<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">6</span>))</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>image <span class="op">=</span> ax.imshow(normalized_confusion, cmap<span class="op">=</span><span class="st">"Purples"</span>, vmin<span class="op">=</span><span class="dv">0</span>, vmax<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a>ax.set_xticks(<span class="bu">range</span>(<span class="bu">len</span>(CLASS_NAMES)), CLASS_NAMES, rotation<span class="op">=</span><span class="dv">45</span>, ha<span class="op">=</span><span class="st">"right"</span>)</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>ax.set_yticks(<span class="bu">range</span>(<span class="bu">len</span>(CLASS_NAMES)), CLASS_NAMES)</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>ax.set_xlabel(<span class="st">"Clase predicha"</span>)</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Clase real"</span>)</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> row <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(CLASS_NAMES)):</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> column <span class="kw">in</span> <span class="bu">range</span>(<span class="bu">len</span>(CLASS_NAMES)):</span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>        value <span class="op">=</span> normalized_confusion[row, column]</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> value <span class="op">&gt;=</span> <span class="fl">0.02</span> <span class="kw">or</span> row <span class="op">==</span> column:</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>            ax.text(</span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>                column,</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>                row,</span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>                <span class="ss">f"</span><span class="sc">{</span>value<span class="sc">:.2f}</span><span class="ss">"</span>,</span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>                ha<span class="op">=</span><span class="st">"center"</span>,</span>
+<span id="cb34-24"><a href="#cb34-24" aria-hidden="true" tabindex="-1"></a>                va<span class="op">=</span><span class="st">"center"</span>,</span>
+<span id="cb34-25"><a href="#cb34-25" aria-hidden="true" tabindex="-1"></a>                color<span class="op">=</span><span class="st">"white"</span> <span class="cf">if</span> value <span class="op">&gt;</span> <span class="fl">0.55</span> <span class="cf">else</span> <span class="st">"#242535"</span>,</span>
+<span id="cb34-26"><a href="#cb34-26" aria-hidden="true" tabindex="-1"></a>                fontsize<span class="op">=</span><span class="dv">8</span>,</span>
+<span id="cb34-27"><a href="#cb34-27" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb34-28"><a href="#cb34-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-29"><a href="#cb34-29" aria-hidden="true" tabindex="-1"></a>fig.colorbar(image, ax<span class="op">=</span>ax, label<span class="op">=</span><span class="st">"Proporción de la clase real"</span>)</span>
+<span id="cb34-30"><a href="#cb34-30" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb34-31"><a href="#cb34-31" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-bean-test-confusion" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Matriz de siete por siete con proporciones por clase real.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bean-test-confusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter03_files/figure-html/fig-bean-test-confusion-output-1.png" alt="Matriz de siete por siete con proporciones por clase real." width="655" height="563" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bean-test-confusion-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;3.4: Matriz de confusión normalizada de la MLP en el test bloqueado.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div id="accf59e6" class="cell" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>per_class_recall <span class="op">=</span> pd.Series(</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>    np.diag(normalized_confusion),</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    index<span class="op">=</span>CLASS_NAMES,</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    name<span class="op">=</span><span class="st">"Recall en test"</span>,</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>).sort_values()</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>per_class_recall</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="24">
+<pre><code>SIRA        0.830808
+DERMASON    0.900376
+BARBUNYA    0.924242
+CALI        0.934694
+HOROZ       0.960573
+SEKER       0.970395
+BOMBAY      0.987179
+Name: Recall en test, dtype: float64</code></pre>
+</div>
+</div>
+<p>Finalmente inspeccionamos errores del par fijado en validación. La confianza es la mayor probabilidad softmax y el margen es la diferencia entre las dos probabilidades principales. No interpretamos confianza como calibración: eso requeriría otro protocolo.</p>
+<div id="73595fa7" class="cell" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>mlp_test_probabilities <span class="op">=</span> torch.softmax(test_logits[<span class="st">"MLP"</span>], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>top_probabilities, top_indices <span class="op">=</span> mlp_test_probabilities.topk(<span class="dv">2</span>, dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>pair_index_set <span class="op">=</span> {class_to_index[name] <span class="cf">for</span> name <span class="kw">in</span> confused_pair}</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>error_mask <span class="op">=</span> np.array([</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>    true_index <span class="kw">in</span> pair_index_set</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">and</span> predicted_index <span class="kw">in</span> pair_index_set</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">and</span> true_index <span class="op">!=</span> predicted_index</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> true_index, predicted_index <span class="kw">in</span> <span class="bu">zip</span>(y_test.numpy(), test_predictions[<span class="st">"MLP"</span>])</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb37-11"><a href="#cb37-11" aria-hidden="true" tabindex="-1"></a>error_positions <span class="op">=</span> np.flatnonzero(error_mask)</span>
+<span id="cb37-12"><a href="#cb37-12" aria-hidden="true" tabindex="-1"></a>error_positions <span class="op">=</span> error_positions[</span>
+<span id="cb37-13"><a href="#cb37-13" aria-hidden="true" tabindex="-1"></a>    np.argsort(top_probabilities[error_positions, <span class="dv">0</span>].numpy())[::<span class="op">-</span><span class="dv">1</span>]</span>
+<span id="cb37-14"><a href="#cb37-14" aria-hidden="true" tabindex="-1"></a>][:<span class="dv">8</span>]</span>
+<span id="cb37-15"><a href="#cb37-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb37-16"><a href="#cb37-16" aria-hidden="true" tabindex="-1"></a>error_examples <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb37-17"><a href="#cb37-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"clase real"</span>: [CLASS_NAMES[index] <span class="cf">for</span> index <span class="kw">in</span> y_test[error_positions]],</span>
+<span id="cb37-18"><a href="#cb37-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"predicción"</span>: [</span>
+<span id="cb37-19"><a href="#cb37-19" aria-hidden="true" tabindex="-1"></a>        CLASS_NAMES[index] <span class="cf">for</span> index <span class="kw">in</span> test_predictions[<span class="st">"MLP"</span>][error_positions]</span>
+<span id="cb37-20"><a href="#cb37-20" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb37-21"><a href="#cb37-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"confianza"</span>: top_probabilities[error_positions, <span class="dv">0</span>].numpy(),</span>
+<span id="cb37-22"><a href="#cb37-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"margen"</span>: (</span>
+<span id="cb37-23"><a href="#cb37-23" aria-hidden="true" tabindex="-1"></a>        top_probabilities[error_positions, <span class="dv">0</span>]</span>
+<span id="cb37-24"><a href="#cb37-24" aria-hidden="true" tabindex="-1"></a>        <span class="op">-</span> top_probabilities[error_positions, <span class="dv">1</span>]</span>
+<span id="cb37-25"><a href="#cb37-25" aria-hidden="true" tabindex="-1"></a>    ).numpy(),</span>
+<span id="cb37-26"><a href="#cb37-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Area"</span>: test_frame.loc[error_positions, <span class="st">"Area"</span>].to_numpy(),</span>
+<span id="cb37-27"><a href="#cb37-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Roundness"</span>: test_frame.loc[error_positions, <span class="st">"Roundness"</span>].to_numpy(),</span>
+<span id="cb37-28"><a href="#cb37-28" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb37-29"><a href="#cb37-29" aria-hidden="true" tabindex="-1"></a>error_examples</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">clase real</th>
+<th data-quarto-table-cell-role="th">predicción</th>
+<th data-quarto-table-cell-role="th">confianza</th>
+<th data-quarto-table-cell-role="th">margen</th>
+<th data-quarto-table-cell-role="th">Area</th>
+<th data-quarto-table-cell-role="th">Roundness</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.982392</td>
+<td>0.965483</td>
+<td>33605</td>
+<td>0.894242</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.981167</td>
+<td>0.963326</td>
+<td>33739</td>
+<td>0.898569</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.980890</td>
+<td>0.963263</td>
+<td>35827</td>
+<td>0.908969</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.961153</td>
+<td>0.932133</td>
+<td>34892</td>
+<td>0.868974</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.951148</td>
+<td>0.903733</td>
+<td>33493</td>
+<td>0.900956</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.948204</td>
+<td>0.899083</td>
+<td>35215</td>
+<td>0.874601</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.947883</td>
+<td>0.897723</td>
+<td>35129</td>
+<td>0.892591</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>SIRA</td>
+<td>DERMASON</td>
+<td>0.941858</td>
+<td>0.887270</td>
+<td>36007</td>
+<td>0.909022</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Los errores con margen alto son especialmente importantes: el modelo no solo se equivoca, sino que asigna una probabilidad softmax mucho mayor a la clase incorrecta. Este margen depende de la escala de los logits y no mide distancia geométrica a una frontera. Una revisión real debería recuperar las imágenes originales y auditar segmentación, iluminación y etiquetas; esas evidencias no están incluidas en este dataset tabular.</p>
+<p>Esta auditoría cierra el test para el experimento actual. Si sus errores motivan cambios en variables, arquitectura o entrenamiento, la siguiente iteración necesitará un nuevo holdout o un protocolo anidado; no sería válido presentar de nuevo este mismo test como una evaluación independiente.</p>
+</section>
+<section id="qué-aporta-y-qué-no-aporta-la-no-linealidad" class="level2" data-number="3.17">
+<h2 data-number="3.17" class="anchored" data-anchor-id="qué-aporta-y-qué-no-aporta-la-no-linealidad"><span class="header-section-number">3.17</span> Qué aporta y qué no aporta la no linealidad</h2>
+<p>La capa oculta permite combinar variables en regiones lineales por partes. Esa capacidad explica por qué una MLP puede superar una frontera afín, pero no garantiza que:</p>
+<ul>
+<li>el optimizador encuentre buenos parámetros;</li>
+<li>más capas o unidades siempre mejoren;</li>
+<li>las probabilidades estén calibradas;</li>
+<li>el modelo generalice a otra cámara, iluminación, cosecha o país;</li>
+<li>una de las siete clases sea adecuada para una variedad desconocida; ni</li>
+<li>las asociaciones aprendidas tengan interpretación causal.</li>
+</ul>
+<p>La división aleatoria evalúa nuevas observaciones del mismo dominio. Además, el modelo depende de una segmentación y extracción de características previas. El Capítulo 5 retomará imágenes para estudiar qué aporta una arquitectura que conserva estructura espacial.</p>
+<div class="callout callout-style-simple callout-important callout-titled" title="Frontera con el próximo capítulo">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Frontera con el próximo capítulo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Aquí aislamos <strong>qué puede representar</strong> una MLP y cómo fluye su gradiente. El Capítulo 4 estudiará por qué una red puede divergir, aprender lentamente o sobreajustar, comparando inicialización, optimizadores, normalización, regularización y varias semillas.</p>
+</div>
+</div>
+</section>
+<section id="qué-hemos-aprendido" class="level2" data-number="3.18">
+<h2 data-number="3.18" class="anchored" data-anchor-id="qué-hemos-aprendido"><span class="header-section-number">3.18</span> Qué hemos aprendido</h2>
+<ul>
+<li>Una composición de transformaciones afines sigue siendo afín.</li>
+<li>ReLU introduce regiones y permite representar relaciones como XOR.</li>
+<li>Una MLP transforma entradas en representaciones ocultas y después en logits.</li>
+<li>Softmax convierte logits en probabilidades, pero no debe aplicarse antes de <code>CrossEntropyLoss</code>.</li>
+<li>Backpropagation combina productos matriciales, derivadas locales y la regla de la cadena.</li>
+<li>Autograd coincide con los gradientes analíticos cuando el grafo representa la misma función.</li>
+<li>Accuracy debe acompañarse de métricas por clase cuando hay desbalance.</li>
+<li>En <em>Dry Bean</em>, la ligera ventaja de la MLP en validación no se sostiene en test; más capacidad no implica automáticamente mejor generalización.</li>
 </ul>
 </section>
-<section id="ruta-de-desarrollo" class="level2" data-number="3.2">
-<h2 data-number="3.2" class="anchored" data-anchor-id="ruta-de-desarrollo"><span class="header-section-number">3.2</span> Ruta de desarrollo</h2>
+<section id="ejercicios" class="level2" data-number="3.19">
+<h2 data-number="3.19" class="anchored" data-anchor-id="ejercicios"><span class="header-section-number">3.19</span> Ejercicios</h2>
 <ol type="1">
-<li>Línea base mayoritaria y regresión softmax.</li>
-<li>Capa oculta y función de activación.</li>
-<li>Grafo computacional y regla de la cadena.</li>
-<li>MLP desde cero y con <code>nn.Sequential</code>.</li>
-<li>Selección de capacidad con validación.</li>
-<li>Diagnóstico de pares de clases difíciles.</li>
+<li>Demuestra que tres capas afines sin activación equivalen a una sola y compruébalo con tensores de dimensiones elegidas por ti.</li>
+<li>Implementa <code>BeanMLP</code> usando <code>nn.Parameter</code> y operaciones matriciales, sin <code>nn.Linear</code>. Compara el número y las formas de sus parámetros.</li>
+<li>Cambia ReLU por sigmoid manteniendo fijo todo el protocolo. Describe el resultado sin buscar una nueva tasa de aprendizaje.</li>
+<li>Implementa softmax estable restando el máximo logit de cada fila y comprueba que coincide con <code>torch.softmax</code>.</li>
+<li>Calcula accuracy, precisión, recall y macro-F1 desde la matriz de confusión, sin usar funciones de scikit-learn.</li>
+<li>Explica por qué la línea base mayoritaria puede tener accuracy mayor que cero y recall cero en seis clases.</li>
+<li>Calcula el número de parámetros para anchos ocultos 8, 32, 128 y 512 sin entrenarlos. ¿Cómo crece el costo respecto al ancho?</li>
+<li>Repite la comprobación de gradientes cuando todas las preactivaciones de una unidad ReLU son negativas. Explica el resultado.</li>
+<li>Identifica en validación las observaciones con menor margen y formula una hipótesis sobre su ambigüedad geométrica.</li>
+<li>Diseña validaciones para rechazar una entrada con valores faltantes, infinitos o muy alejados de los rangos de entrenamiento.</li>
 </ol>
 </section>
-<section id="experimento-central" class="level2" data-number="3.3">
-<h2 data-number="3.3" class="anchored" data-anchor-id="experimento-central"><span class="header-section-number">3.3</span> Experimento central</h2>
-<p>Variar profundidad, ancho y activación manteniendo fijo el protocolo de datos y el presupuesto de entrenamiento.</p>
-</section>
-<section id="referencia-conceptual" class="level2" data-number="3.4">
-<h2 data-number="3.4" class="anchored" data-anchor-id="referencia-conceptual"><span class="header-section-number">3.4</span> Referencia conceptual</h2>
-<p>Clasificación lineal, MLP y backpropagation en <span class="citation" data-cites="zhang2023dive">(<a href="../references.html#ref-zhang2023dive" role="doc-biblioref">Zhang et&nbsp;al. 2023</a>)</span>.</p>
+<section id="reto" class="level2" data-number="3.20">
+<h2 data-number="3.20" class="anchored" data-anchor-id="reto"><span class="header-section-number">3.20</span> Reto</h2>
+<p>Una softmax cerrada siempre asigna una de las siete variedades, incluso si recibe un grano de una clase desconocida. Construye entradas fuera de los rangos observados, registra la clase y confianza asignadas por la MLP y explica por qué una confianza baja no constituye por sí sola un detector confiable de novedad. Propón datos, métricas y un protocolo que sí permitirían evaluar rechazo de clases desconocidas.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-zhang2023dive" class="csl-entry" role="listitem">
-Zhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. <em>Dive into Deep Learning</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781009389433">https://doi.org/10.1017/9781009389433</a>.
+<div id="ref-koklu2020dataset" class="csl-entry" role="listitem">
+Koklu, Murat, y Ilker Ali Ozkan. 2020a. <span>«Dry Bean»</span>. UCI Machine Learning Repository. <a href="https://doi.org/10.24432/C50S4B">https://doi.org/10.24432/C50S4B</a>.
+</div>
+<div id="ref-koklu2020beans" class="csl-entry" role="listitem">
+Koklu, Murat, y Ilker Ali Ozkan. 2020b. <span>«Multiclass classification of dry beans using computer vision and machine learning techniques»</span>. <em>Computers and Electronics in Agriculture</em> 174: 105507. <a href="https://doi.org/10.1016/j.compag.2020.105507">https://doi.org/10.1016/j.compag.2020.105507</a>.
 </div>
 </div>
 </section>
