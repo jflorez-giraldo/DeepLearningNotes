@@ -1,38 +1,1435 @@
 ---
 title: "¿Cómo entrenar redes visuales profundas?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> aumentar capacidad sin
-volver frágil el entrenamiento ni perder control sobre memoria y tiempo.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-Las arquitecturas históricas se estudiarán por la idea que introducen, no para
-reproducir competencias de escala completa.
+<div class="problem-banner">
+<strong>Problema:</strong> reconocer objetos en fotografías pequeñas cuando una
+CNN de pocas capas ya no ofrece suficiente capacidad. Aumentar profundidad puede
+mejorar la representación, pero también eleva costo, complica la optimización y
+facilita aprender detalles accidentales. Debemos elegir entre una CNN modular y
+una CNN residual compacta, con o sin augmentación, bajo un presupuesto corto de
+CPU.
+</div>
+
+## De una CNN pequeña a una decisión de ingeniería
+
+El capítulo anterior mostró que localidad y pesos compartidos aprovechan la
+estructura de una imagen. Dos convoluciones bastaban para Fashion-MNIST, cuyas
+prendas aparecen centradas, en escala de grises y sobre un fondo uniforme. Ahora
+usaremos CIFAR-10: fotografías RGB de $32\times32$ con objetos, fondos, poses e
+iluminaciones variables [@krizhevsky2009learning].
+
+Una red más profunda puede combinar bordes en texturas, partes y configuraciones
+de objetos. Sin embargo, "más profunda" no significa automáticamente "mejor":
+
+- cada resolución espacial multiplica el costo de una convolución;
+- Batch Normalization cambia entre entrenamiento e inferencia;
+- reducir resolución demasiado pronto puede borrar objetos pequeños;
+- una conexión residual facilita el flujo de información, pero no crea datos;
+- augmentar puede regularizar y, a la vez, ralentizar el ajuste; y
+- elegir por test convertiría el benchmark en parte del entrenamiento.
+
+La pregunta no será qué arquitectura es universalmente superior. Buscaremos una
+solución defendible para un presupuesto concreto mediante una comparación
+pareada de precisión y costo.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- construir redes visuales mediante bloques modulares reutilizables;
+- explicar el estado de entrenamiento e inferencia de Batch Normalization;
+- derivar el aporte de una conexión residual al flujo de gradientes;
+- seguir resolución y campo receptivo a través de una red profunda;
+- implementar augmentación reproducible solo sobre mini-batches de ajuste;
+- contar parámetros, convoluciones y multiplicaciones-acumulaciones;
+- comparar cuatro brazos mediante semillas pareadas y checkpoints;
+- seleccionar una configuración con una regla declarada antes de abrir test; y
+- analizar recall, confusiones, errores y límites del benchmark.
 :::
 
-## Objetivos
+## Preparar un laboratorio reproducible
 
-- construir redes mediante bloques reutilizables;
-- explicar la función de conexiones residuales;
-- relacionar profundidad, campo receptivo y resolución;
-- usar augmentación y normalización correctamente;
-- comparar modelos por desempeño y recursos; y
-- justificar una arquitectura para una restricción concreta.
+```{python}
+from copy import deepcopy
+from hashlib import md5, sha256
+from io import BytesIO
+import math
+from pathlib import Path
+import pickle
+import random
+import tarfile
+from time import perf_counter
+from urllib.request import urlretrieve
 
-## Ruta de desarrollo
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import torch
+from sklearn.metrics import confusion_matrix
+from torch import nn
+from torch.nn import functional as F
 
-1. Limitaciones de una CNN pequeña.
-2. Bloques VGG y diseño modular.
-3. Batch normalization.
-4. Bloques residuales y flujo de gradiente.
-5. Augmentación solo en entrenamiento.
-6. Frontera precisión-costo.
+SPLIT_SEED = 2_026
+PAIR_SEEDS = [17, 29, 43]
+REPRESENTATIVE_SEED = 29
 
-## Experimento central
+random.seed(SPLIT_SEED)
+np.random.seed(SPLIT_SEED)
+torch.manual_seed(SPLIT_SEED)
+torch.set_num_threads(1)
+torch.set_num_interop_threads(1)
+torch.use_deterministic_algorithms(True)
+device = torch.device("cpu")
 
-Comparar una CNN pequeña y una ResNet compacta con y sin augmentación, usando
-curvas, número de parámetros y tiempo por época.
+print(f"PyTorch {torch.__version__} | NumPy {np.__version__}")
+print(f"Dispositivo: {device} | hilos: {torch.get_num_threads()}")
+```
 
-## Referencia conceptual
+Fijamos CPU, un hilo y algoritmos deterministas porque el tiempo forma parte del
+criterio. Los segundos seguirán dependiendo del procesador, la versión de las
+bibliotecas y la carga del sistema. Parámetros, formas y MACs son comparaciones
+más portables.
 
-CNN modernas y diseño de arquitecturas en [@zhang2023dive].
+## Obtener CIFAR-10 sin torchvision
+
+CIFAR-10 contiene 50.000 imágenes oficiales de entrenamiento y 10.000 de test,
+con 6.000 imágenes por clase en total. El informe técnico describe su
+construcción a partir de *80 million tiny images* [@krizhevsky2009learning]. La
+página oficial distribuye un archivo para Python, pero no declara una licencia
+específica para el dataset. El servidor original puede ser muy lento; por eso
+usamos primero una copia byte a byte en GitHub LFS, fijada a un commit, y
+conservamos la fuente oficial como respaldo. Este repositorio no redistribuye
+sus imágenes.
+
+Verificamos SHA-256 como control criptográfico y también el MD5 publicado en la
+página oficial. MD5 se conserva solo para compatibilidad con ese dato oficial;
+no lo tratamos como garantía criptográfica suficiente.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar descarga y lector restringido de CIFAR-10"
+
+CIFAR_URLS = [
+    (
+        "espejo GitHub LFS fijado",
+        "https://media.githubusercontent.com/media/"
+        "fancyerii/fancyerii.github.io/"
+        "a4afa6cc0cbfe92a49c12054807395d56e897521/"
+        "assets/cifar-10-python.tar.gz",
+    ),
+    (
+        "fuente oficial de Toronto",
+        "https://www.cs.toronto.edu/~kriz/cifar-10-python.tar.gz",
+    ),
+]
+DATA_DIR = Path(".cache/chapter06")
+ARCHIVE_PATH = DATA_DIR / "cifar-10-python.tar.gz"
+EXPECTED_SHA256 = (
+    "6d958be074577803d12ecdefd02955f39262c83c16fe9348329d7fe0b5c001ce"
+)
+OFFICIAL_MD5 = "c58f30108f718f92721af3b95e74349a"
+ROOT = "cifar-10-batches-py"
+EXPECTED_MEMBERS = {
+    f"{ROOT}/batches.meta",
+    f"{ROOT}/data_batch_1",
+    f"{ROOT}/data_batch_2",
+    f"{ROOT}/data_batch_3",
+    f"{ROOT}/data_batch_4",
+    f"{ROOT}/data_batch_5",
+    f"{ROOT}/readme.html",
+    f"{ROOT}/test_batch",
+}
+
+
+def file_digest(path, constructor, chunk_size=1 << 20):
+    digest = constructor()
+    with path.open("rb") as source:
+        while chunk := source.read(chunk_size):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def download_cifar10():
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    valid = (
+        ARCHIVE_PATH.exists()
+        and file_digest(ARCHIVE_PATH, sha256) == EXPECTED_SHA256
+        and file_digest(ARCHIVE_PATH, md5) == OFFICIAL_MD5
+    )
+    source_name = "caché local verificada"
+    if not valid:
+        errors = []
+        temporary_path = ARCHIVE_PATH.with_suffix(".download")
+        for source_name, url in CIFAR_URLS:
+            temporary_path.unlink(missing_ok=True)
+            try:
+                urlretrieve(url, temporary_path)
+                actual_sha256 = file_digest(temporary_path, sha256)
+                actual_md5 = file_digest(temporary_path, md5)
+                if actual_sha256 != EXPECTED_SHA256 or actual_md5 != OFFICIAL_MD5:
+                    raise ValueError(
+                        f"SHA-256={actual_sha256}, MD5={actual_md5}"
+                    )
+                temporary_path.replace(ARCHIVE_PATH)
+                break
+            except Exception as error:
+                temporary_path.unlink(missing_ok=True)
+                errors.append(f"{source_name}: {error}")
+        else:
+            raise RuntimeError(
+                "No fue posible obtener el archivo verificado. " + " | ".join(errors)
+            )
+    return {
+        "origen de esta descarga": source_name,
+        "SHA-256": file_digest(ARCHIVE_PATH, sha256),
+        "MD5 oficial": file_digest(ARCHIVE_PATH, md5),
+    }
+
+
+class RestrictedCifarUnpickler(pickle.Unpickler):
+    """Permite únicamente los constructores requeridos por los lotes oficiales."""
+
+    ALLOWED_GLOBALS = {
+        ("numpy", "dtype"),
+        ("numpy", "ndarray"),
+        ("numpy.core.multiarray", "_reconstruct"),
+        ("numpy._core.multiarray", "_reconstruct"),
+    }
+
+    def find_class(self, module, name):
+        if (module, name) not in self.ALLOWED_GLOBALS:
+            raise pickle.UnpicklingError(f"Global no permitido: {module}.{name}")
+        return super().find_class(module, name)
+
+
+def read_verified_archive():
+    with tarfile.open(ARCHIVE_PATH, mode="r:gz") as archive:
+        members = archive.getmembers()
+        names = [member.name.rstrip("/") for member in members if member.isfile()]
+        if len(names) != len(set(names)) or set(names) != EXPECTED_MEMBERS:
+            raise ValueError("El TAR no contiene exactamente los archivos esperados")
+        if any(not member.isfile() and not member.isdir() for member in members):
+            raise ValueError("El TAR contiene enlaces u otro tipo de entrada")
+        if any(member.size > 40_000_000 for member in members):
+            raise ValueError("Un miembro del TAR excede el tamaño esperado")
+
+        batches = {}
+        for name in sorted(EXPECTED_MEMBERS - {f"{ROOT}/readme.html"}):
+            member = archive.getmember(name)
+            source = archive.extractfile(member)
+            if source is None:
+                raise ValueError(f"No se pudo leer {name}")
+            payload = source.read()
+            batches[name] = RestrictedCifarUnpickler(
+                BytesIO(payload), encoding="bytes"
+            ).load()
+    return batches
+
+
+integrity = download_cifar10()
+cifar_batches = read_verified_archive()
+pd.Series(integrity, name="digest")
+```
+
+El espejo solo cambia el transporte: los dos digests exigen identidad binaria
+con el archivo publicado por Toronto. No extraemos el TAR al sistema de archivos.
+La lista cerrada de miembros,
+límites de tamaño, rechazo de enlaces y `Unpickler` restringido reducen la
+superficie de ataque. El hash fija además el contenido exacto antes de abrir el
+pickle. En general, nunca debe abrirse un pickle de procedencia desconocida.
+
+## Reconstruir y auditar el benchmark
+
+Cada fila del formato Python concatena los tres canales aplanados. Restauramos
+NCHW y validamos el contrato antes de construir particiones.
+
+```{python}
+CLASS_NAMES = [
+    "avión", "automóvil", "ave", "gato", "ciervo",
+    "perro", "rana", "caballo", "barco", "camión",
+]
+
+
+def decode_batch(batch, expected_count):
+    if not isinstance(batch, dict) or b"data" not in batch or b"labels" not in batch:
+        raise ValueError("Lote CIFAR sin claves obligatorias")
+    data = np.asarray(batch[b"data"])
+    labels = np.asarray(batch[b"labels"], dtype=np.int64)
+    if data.shape != (expected_count, 3_072) or data.dtype != np.uint8:
+        raise ValueError(f"Matriz de imágenes inesperada: {data.shape}, {data.dtype}")
+    if labels.shape != (expected_count,) or not np.isin(labels, range(10)).all():
+        raise ValueError("Etiquetas inesperadas")
+    return data.reshape(-1, 3, 32, 32).copy(), labels.copy()
+
+
+train_parts = [
+    decode_batch(cifar_batches[f"{ROOT}/data_batch_{index}"], 10_000)
+    for index in range(1, 6)
+]
+official_train_images = np.concatenate([part[0] for part in train_parts])
+official_train_labels = np.concatenate([part[1] for part in train_parts])
+official_test_images, official_test_labels = decode_batch(
+    cifar_batches[f"{ROOT}/test_batch"], 10_000
+)
+
+meta_names = cifar_batches[f"{ROOT}/batches.meta"].get(b"label_names")
+decoded_names = [name.decode("ascii") for name in meta_names]
+if decoded_names != [
+    "airplane", "automobile", "bird", "cat", "deer",
+    "dog", "frog", "horse", "ship", "truck",
+]:
+    raise ValueError("Metadatos de clases inesperados")
+```
+
+```{python}
+train_hashes = [sha256(image.tobytes()).digest() for image in official_train_images]
+test_hashes = [sha256(image.tobytes()).digest() for image in official_test_images]
+
+data_audit = pd.Series({
+    "imágenes oficiales de entrenamiento": len(official_train_images),
+    "imágenes oficiales de test": len(official_test_images),
+    "forma por imagen": str(tuple(official_train_images.shape[1:])),
+    "tipo": str(official_train_images.dtype),
+    "mínimo": int(official_train_images.min()),
+    "máximo": int(official_train_images.max()),
+    "clases": len(np.unique(official_train_labels)),
+    "mínimo por clase en entrenamiento": int(
+        np.bincount(official_train_labels).min()
+    ),
+    "máximo por clase en entrenamiento": int(
+        np.bincount(official_train_labels).max()
+    ),
+    "duplicados exactos internos en entrenamiento": (
+        len(train_hashes) - len(set(train_hashes))
+    ),
+    "duplicados exactos internos en test": len(test_hashes) - len(set(test_hashes)),
+    "imágenes exactas compartidas entre conjuntos oficiales": len(
+        set(train_hashes) & set(test_hashes)
+    ),
+})
+data_audit
+```
+
+Los duplicados, si aparecen, se reportan como propiedad del benchmark y no se
+eliminan después de mirar test. El hash de píxeles detecta igualdad exacta, no
+escenas casi duplicadas, reescaladas o recortadas.
+
+## Fijar ajuste, validación y test bloqueado
+
+El presupuesto usa 1.000 imágenes por clase para ajuste y 250 por clase para
+validación. Los 37.500 ejemplos oficiales restantes no intervienen. La semilla
+de partición es independiente de las semillas de optimización.
+
+```{python}
+split_generator = np.random.default_rng(SPLIT_SEED)
+fit_indices = []
+validation_indices = []
+unused_indices = []
+
+for class_index in range(10):
+    class_indices = np.flatnonzero(official_train_labels == class_index)
+    split_generator.shuffle(class_indices)
+    fit_indices.extend(class_indices[:1_000])
+    validation_indices.extend(class_indices[1_000:1_250])
+    unused_indices.extend(class_indices[1_250:])
+
+fit_indices = np.asarray(fit_indices)
+validation_indices = np.asarray(validation_indices)
+unused_indices = np.asarray(unused_indices)
+split_generator.shuffle(fit_indices)
+split_generator.shuffle(validation_indices)
+split_generator.shuffle(unused_indices)
+
+if set(fit_indices) & set(validation_indices):
+    raise ValueError("Ajuste y validación se solapan")
+if len(set(fit_indices) | set(validation_indices) | set(unused_indices)) != 50_000:
+    raise ValueError("La partición no cubre el entrenamiento oficial")
+
+split_summary = pd.DataFrame({
+    "partición": ["ajuste", "validación", "no utilizada", "test oficial bloqueado"],
+    "imágenes": [10_000, 2_500, 37_500, 10_000],
+    "por clase": [1_000, 250, 3_750, 1_000],
+    "uso": ["gradientes", "checkpoint y selección", "ninguno", "evaluación final"],
+})
+split_summary
+```
+
+Aunque el archivo de test ya fue validado, sus etiquetas no se consultarán para
+modelar, seleccionar épocas ni elegir el brazo. En particular, todavía no
+creamos `X_test` ni calculamos predicciones de test.
+
+## Calcular estadísticas solo con ajuste
+
+La normalización se estima por canal sobre las 10.000 imágenes de ajuste. Usar
+validación o test produciría una fuga pequeña pero innecesaria.
+
+```{python}
+fit_images_uint8 = torch.from_numpy(official_train_images[fit_indices].copy())
+fit_labels = torch.from_numpy(official_train_labels[fit_indices].copy())
+validation_images_uint8 = torch.from_numpy(
+    official_train_images[validation_indices].copy()
+)
+validation_labels = torch.from_numpy(official_train_labels[validation_indices].copy())
+
+fit_images_float = fit_images_uint8.to(torch.float32).div(255.0)
+fit_mean = fit_images_float.mean(dim=(0, 2, 3), keepdim=True)
+fit_std = fit_images_float.std(dim=(0, 2, 3), keepdim=True)
+del fit_images_float
+
+if (fit_std <= 0).any() or not torch.isfinite(fit_std).all():
+    raise ValueError("Estadísticas de ajuste inválidas")
+
+channel_statistics = pd.DataFrame({
+    "canal": ["R", "G", "B"],
+    "media de ajuste": fit_mean.flatten().numpy(),
+    "desviación de ajuste": fit_std.flatten().numpy(),
+})
+channel_statistics
+```
+
+```{python}
+#| label: fig-cifar-examples
+#| fig-cap: "Dos imágenes de ajuste por clase de CIFAR-10."
+#| fig-alt: "Cuadrícula con veinte fotografías pequeñas, dos por cada una de diez clases."
+#| fig-width: 11
+#| fig-height: 4
+
+fig, axes = plt.subplots(2, 10, figsize=(11, 4))
+for class_index, class_name in enumerate(CLASS_NAMES):
+    positions = torch.where(fit_labels == class_index)[0][:2]
+    for row, position in enumerate(positions):
+        image = fit_images_uint8[position].permute(1, 2, 0).numpy()
+        axes[row, class_index].imshow(image)
+        axes[row, class_index].axis("off")
+        if row == 0:
+            axes[row, class_index].set_title(class_name, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+A $32\times32$, varias clases comparten siluetas y fondos. La clase describe el
+objeto principal, no cada píxel. El benchmark tampoco informa cajas, poses ni
+condiciones de captura que permitan auditar subgrupos.
+
+## Diseñar con bloques al estilo VGG
+
+VGG mostró que repetir convoluciones $3\times3$ permite construir redes profundas
+con una regla modular sencilla [@simonyan2015very]. Dos convoluciones $3\times3$
+con stride uno abarcan un campo receptivo de $5\times5$ e intercalan una no
+linealidad adicional. No reproduciremos VGG-16: trasladamos su idea de bloques a
+un presupuesto mucho menor.
+
+Nuestro bloque hace:
+
+$$
+\operatorname{Pool}\left(
+\operatorname{ReLU}(\operatorname{BN}(W_2 *
+\operatorname{ReLU}(\operatorname{BN}(W_1 * X)))))\right).
+$$
+
+Cada bloque duplica canales y divide alto y ancho por dos. La cabeza usa promedio
+global, que evita una capa densa grande dependiente de la resolución.
+
+```{python}
+class ConvBlock(nn.Sequential):
+    def __init__(self, in_channels, out_channels):
+        super().__init__(
+            nn.Conv2d(in_channels, out_channels, 3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.Conv2d(out_channels, out_channels, 3, padding=1, bias=False),
+            nn.BatchNorm2d(out_channels),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),
+        )
+
+
+class ModularCNN(nn.Sequential):
+    def __init__(self):
+        super().__init__(
+            ConvBlock(3, 8),
+            ConvBlock(8, 16),
+            ConvBlock(16, 32),
+            nn.AdaptiveAvgPool2d(1),
+            nn.Flatten(),
+            nn.Linear(32, 10),
+        )
+```
+
+## Batch Normalization tiene dos estados
+
+Para un canal y un mini-batch $B$, Batch Normalization calcula
+
+$$
+\widehat{x}=\frac{x-\mu_B}{\sqrt{\sigma_B^2+\varepsilon}},
+\qquad y=\gamma\widehat{x}+\beta,
+$$
+
+y aprende $\gamma$ y $\beta$ [@ioffe2015batch]. En `train()` usa estadísticas
+del mini-batch y actualiza medias móviles. En `eval()` usa esas medias acumuladas.
+Por eso una misma imagen puede depender de sus compañeras durante entrenamiento,
+pero no debe depender de ellas durante inferencia.
+
+```{python}
+torch.manual_seed(101)
+bn_demo = nn.BatchNorm2d(3, affine=False, momentum=0.1)
+anchor = torch.rand(1, 3, 4, 4)
+batch_dark = torch.cat([anchor, torch.zeros(7, 3, 4, 4)])
+batch_bright = torch.cat([anchor, torch.ones(7, 3, 4, 4)])
+
+bn_demo.train()
+anchor_train_dark = bn_demo(batch_dark)[0]
+anchor_train_bright = bn_demo(batch_bright)[0]
+running_mean_after_training = bn_demo.running_mean.clone()
+
+bn_demo.eval()
+anchor_eval_dark = bn_demo(batch_dark)[0]
+anchor_eval_bright = bn_demo(batch_bright)[0]
+
+bn_state_demo = pd.Series({
+    "diferencia train() para la misma imagen": (
+        anchor_train_dark - anchor_train_bright
+    ).abs().max().item(),
+    "diferencia eval() para la misma imagen": (
+        anchor_eval_dark - anchor_eval_bright
+    ).abs().max().item(),
+    "media móvil absoluta": running_mean_after_training.abs().mean().item(),
+})
+bn_state_demo
+```
+
+`eval()` no desactiva gradientes; cambia módulos con comportamiento de estado,
+como BatchNorm y dropout. `torch.inference_mode()` sí evita construir el grafo.
+Durante ajuste llamaremos explícitamente `model.train()` y, antes de validar,
+`model.eval()`.
+
+## Añadir una ruta residual
+
+Una red residual aprende una transformación $F(X)$ y devuelve
+
+$$
+Y=\operatorname{ReLU}(F(X)+S(X)),
+$$
+
+donde $S$ es identidad cuando las formas coinciden o una proyección cuando
+cambian canales o resolución [@he2016deep]. Antes de la activación final,
+
+$$
+\frac{\partial Y}{\partial X}
+\supseteq
+\frac{\partial S(X)}{\partial X}.
+$$
+
+Si $S(X)=X$, existe una contribución identidad al gradiente además de la ruta
+aprendida. Esto facilita representar una corrección cercana a cero y transportar
+información. No garantiza que el gradiente total sea uno, que toda red profunda
+optimice bien ni que el modelo generalice.
+
+```{python}
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride=1):
+        super().__init__()
+        self.conv1 = nn.Conv2d(
+            in_channels, out_channels, 3, stride=stride, padding=1, bias=False
+        )
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(
+            out_channels, out_channels, 3, padding=1, bias=False
+        )
+        self.bn2 = nn.BatchNorm2d(out_channels)
+        self.skip = (
+            nn.Identity()
+            if stride == 1 and in_channels == out_channels
+            else nn.Sequential(
+                nn.Conv2d(in_channels, out_channels, 1, stride=stride, bias=False),
+                nn.BatchNorm2d(out_channels),
+            )
+        )
+
+    def forward(self, inputs):
+        residual = self.skip(inputs)
+        outputs = F.relu(self.bn1(self.conv1(inputs)), inplace=True)
+        outputs = self.bn2(self.conv2(outputs))
+        return F.relu(outputs + residual, inplace=True)
+
+
+class CompactResNet(nn.Module):
+    def __init__(self):
+        super().__init__()
+        self.stem = nn.Sequential(
+            nn.Conv2d(3, 8, 3, padding=1, bias=False),
+            nn.BatchNorm2d(8),
+            nn.ReLU(inplace=True),
+            nn.MaxPool2d(2),
+        )
+        self.blocks = nn.Sequential(
+            ResidualBlock(8, 8),
+            ResidualBlock(8, 16, stride=2),
+            ResidualBlock(16, 32, stride=2),
+        )
+        self.classifier = nn.Linear(32, 10)
+
+    def forward(self, inputs):
+        outputs = self.blocks(self.stem(inputs))
+        return self.classifier(outputs.mean(dim=(2, 3)))
+```
+
+Esta ResNet es deliberadamente atípica y pequeña. El pooling temprano reduce
+costo, pero puede descartar detalle. Sirve para estudiar la conexión residual y
+la frontera precisión-costo, no para afirmar que reproduce una ResNet estándar.
+
+## Resolución y campo receptivo
+
+El campo receptivo teórico $r_l$ y el salto $j_l$ se actualizan para kernel
+$k_l$ y stride $s_l$ mediante
+
+$$
+r_l=r_{l-1}+(k_l-1)j_{l-1},
+\qquad j_l=j_{l-1}s_l.
+$$
+
+La tabla sigue la ruta convolucional más larga. Una suma residual combina rutas
+con campos distintos; reportamos el máximo.
+
+| Modelo | Etapa | Resolución | Canales | Campo receptivo | Salto |
+|---|---|---:|---:|---:|---:|
+| Modular | Entrada | 32 | 3 | 1 | 1 |
+| Modular | Bloque 1 | 16 | 8 | 6 | 2 |
+| Modular | Bloque 2 | 8 | 16 | 16 | 4 |
+| Modular | Bloque 3 | 4 | 32 | 36 | 8 |
+| Residual | Stem + pool | 16 | 8 | 4 | 2 |
+| Residual | Bloque 8 | 16 | 8 | 12 | 2 |
+| Residual | Bloque 16 | 8 | 16 | 24 | 4 |
+| Residual | Bloque 32 | 4 | 32 | 48 | 8 |
+
+Un campo teórico mayor que la imagen significa que una unidad puede depender de
+toda ella, incluyendo padding; no significa que todos los píxeles influyan por
+igual. El campo receptivo efectivo suele concentrarse cerca del centro
+[@luo2016receptive].
+
+## Auditar formas y recursos antes de entrenar
+
+Los parámetros miden almacenamiento entrenable. Los MACs cuentan, de manera
+aproximada, multiplicaciones-acumulaciones de convoluciones y capas lineales para
+una imagen. No incluyen BN, ReLU, pooling ni movimiento de memoria y no son
+sinónimo de segundos.
+
+```{python}
+def model_resources(model):
+    macs = 0
+    convolution_count = 0
+    hooks = []
+
+    def count_operations(module, _inputs, output):
+        nonlocal macs, convolution_count
+        if isinstance(module, nn.Conv2d):
+            convolution_count += 1
+            kernel_operations = (
+                module.kernel_size[0]
+                * module.kernel_size[1]
+                * module.in_channels
+                // module.groups
+            )
+            macs += output.numel() * kernel_operations
+        elif isinstance(module, nn.Linear):
+            macs += module.in_features * module.out_features
+
+    for module in model.modules():
+        if isinstance(module, (nn.Conv2d, nn.Linear)):
+            hooks.append(module.register_forward_hook(count_operations))
+    model.eval()
+    with torch.inference_mode():
+        output = model(torch.zeros(1, 3, 32, 32))
+    for hook in hooks:
+        hook.remove()
+    if output.shape != (1, 10):
+        raise ValueError(f"Salida inesperada: {output.shape}")
+    return {
+        "parámetros": sum(parameter.numel() for parameter in model.parameters()),
+        "MACs por imagen": macs,
+        "convoluciones": convolution_count,
+    }
+
+
+MODEL_CLASSES = {
+    "ModularCNN": ModularCNN,
+    "CompactResNet": CompactResNet,
+}
+resource_rows = []
+for model_name, model_class in MODEL_CLASSES.items():
+    resources = model_resources(model_class())
+    resource_rows.append({"modelo": model_name, **resources})
+
+resource_results = pd.DataFrame(resource_rows)
+resource_results["MACs (millones)"] = resource_results["MACs por imagen"] / 1e6
+resource_results
+```
+
+La proyección $1\times1$ cuenta como convolución. Que la arquitectura residual
+tenga más parámetros no obliga a que tenga más MACs: sus convoluciones ocurren
+principalmente después del pooling inicial.
+
+## Augmentar solo el conjunto de ajuste
+
+Usaremos una transformación estándar para CIFAR-10:
+
+1. padding de reflexión de cuatro píxeles por lado;
+2. crop aleatorio de $32\times32$ entre 81 posiciones; y
+3. flip horizontal con probabilidad 0,5.
+
+La reflexión evita introducir un marco negro constante. No crea observaciones
+independientes ni garantiza que la etiqueta sea correcta bajo cualquier
+transformación. Un flip horizontal es plausible para estas diez clases; un flip
+vertical no lo sería en general.
+
+```{python}
+def augment_cifar_batch(images, generator):
+    padded = F.pad(images, (4, 4, 4, 4), mode="reflect")
+    offsets = torch.randint(0, 9, (len(images), 2), generator=generator)
+    windows = padded.unfold(2, 32, 1).unfold(3, 32, 1)
+    cropped = windows[
+        torch.arange(len(images)), :, offsets[:, 0], offsets[:, 1]
+    ]
+    flip_mask = torch.rand(len(images), generator=generator) < 0.5
+    cropped[flip_mask] = cropped[flip_mask].flip(-1)
+    return cropped
+
+
+def normalize_images(images_uint8, augment=False, generator=None):
+    images = images_uint8.to(torch.float32).div(255.0)
+    if augment:
+        if generator is None:
+            raise ValueError("La augmentación requiere un generador explícito")
+        images = augment_cifar_batch(images, generator)
+    images = (images - fit_mean) / fit_std
+    return images.contiguous(memory_format=torch.channels_last)
+```
+
+```{python}
+#| label: fig-cifar-augmentation
+#| fig-cap: "Padding reflectivo, crops y flips generados solo para ajuste."
+#| fig-alt: "Una imagen original y cinco transformaciones aleatorias que conservan su clase."
+#| fig-width: 10
+#| fig-height: 2.5
+
+augmentation_generator_demo = torch.Generator().manual_seed(7_001)
+example_uint8 = fit_images_uint8[:1].repeat(5, 1, 1, 1)
+example_float = example_uint8.to(torch.float32).div(255.0)
+augmented_examples = augment_cifar_batch(
+    example_float, augmentation_generator_demo
+)
+
+fig, axes = plt.subplots(1, 6, figsize=(10, 2.5))
+axes[0].imshow(example_float[0].permute(1, 2, 0))
+axes[0].set_title("Original")
+for index in range(5):
+    axes[index + 1].imshow(augmented_examples[index].permute(1, 2, 0))
+    axes[index + 1].set_title(f"Vista {index + 1}")
+for axis in axes:
+    axis.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+Validación y test llaman `normalize_images(..., augment=False)`. No guardamos
+versiones augmentadas ni transformamos de forma aleatoria durante evaluación.
+
+## Predeclarar el experimento 2x2
+
+La comparación cruza arquitectura y augmentación:
+
+| Brazo | Arquitectura | Augmentación |
+|---|---|---|
+| ModularCNN / sin aug | modular | no |
+| ModularCNN / con aug | modular | sí |
+| CompactResNet / sin aug | residual | no |
+| CompactResNet / con aug | residual | sí |
+
+Todos los brazos comparten:
+
+- semillas 17, 29 y 43;
+- cinco épocas y batch 128;
+- AdamW con tasa máxima 0,003 y weight decay 0,0005;
+- una época de warmup lineal y decaimiento coseno por paso;
+- entropía cruzada, CPU, un hilo y determinismo;
+- checkpoint de mayor exactitud de validación; y
+- en empates de exactitud, menor pérdida y luego época más temprana.
+
+Cinco épocas son un presupuesto de laboratorio, no convergencia garantizada.
+AdamW ofrece progreso útil con pocas actualizaciones y desacopla weight decay
+[@kingma2015adam; @loshchilov2019decoupled]. El warmup limita actualizaciones
+tempranas mientras BatchNorm construye estadísticas; el coseno evita decidir la
+tasa mirando validación.
+
+### Regla de decisión
+
+Antes de ejecutar declaramos:
+
+1. se calcula la mediana de exactitud de validación de cada brazo;
+2. el máximo define la referencia;
+3. todo brazo a menos de 0,01 del máximo se considera empatado; y
+4. entre empatados se elige el de menor mediana de segundos.
+
+La tolerancia es estricta: una diferencia exactamente igual a 0,01 no empata.
+No se consulta test para resolver la decisión.
+
+## Implementar evaluación y checkpoints
+
+Evaluamos por mini-batches para controlar memoria. La función devuelve logits
+solo cuando se necesitan para análisis posterior.
+
+```{python}
+EPOCHS = 5
+BATCH_SIZE = 128
+MAX_LEARNING_RATE = 3e-3
+WEIGHT_DECAY = 5e-4
+STEPS_PER_EPOCH = math.ceil(len(fit_labels) / BATCH_SIZE)
+TOTAL_STEPS = EPOCHS * STEPS_PER_EPOCH
+
+
+@torch.inference_mode()
+def evaluate_model(model, images_uint8, labels, return_outputs=False):
+    model.eval()
+    loss_sum = 0.0
+    correct = 0
+    prediction_parts = []
+    logit_parts = []
+    for start in range(0, len(labels), BATCH_SIZE):
+        end = start + BATCH_SIZE
+        images = normalize_images(images_uint8[start:end], augment=False)
+        batch_labels = labels[start:end]
+        logits = model(images)
+        loss_sum += F.cross_entropy(
+            logits, batch_labels, reduction="sum"
+        ).item()
+        predictions = logits.argmax(dim=1)
+        correct += (predictions == batch_labels).sum().item()
+        if return_outputs:
+            prediction_parts.append(predictions.cpu())
+            logit_parts.append(logits.cpu())
+    result = {
+        "loss": loss_sum / len(labels),
+        "accuracy": correct / len(labels),
+    }
+    if return_outputs:
+        result["predictions"] = torch.cat(prediction_parts)
+        result["logits"] = torch.cat(logit_parts)
+    return result
+
+
+def learning_rate_factor(step):
+    if step < STEPS_PER_EPOCH:
+        return (step + 1) / STEPS_PER_EPOCH
+    progress = (step - STEPS_PER_EPOCH) / max(
+        1, TOTAL_STEPS - STEPS_PER_EPOCH - 1
+    )
+    return 0.01 + 0.99 * 0.5 * (1 + math.cos(math.pi * progress))
+```
+
+```{python}
+def train_arm(model_class, use_augmentation, seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    model = model_class().to(
+        device=device, memory_format=torch.channels_last
+    )
+    optimizer = torch.optim.AdamW(
+        model.parameters(),
+        lr=MAX_LEARNING_RATE,
+        weight_decay=WEIGHT_DECAY,
+    )
+    scheduler = torch.optim.lr_scheduler.LambdaLR(
+        optimizer, learning_rate_factor
+    )
+    order_generator = torch.Generator().manual_seed(seed + 10_000)
+    augmentation_generator = torch.Generator().manual_seed(seed + 20_000)
+
+    best_accuracy = -math.inf
+    best_loss = math.inf
+    best_epoch = None
+    best_state = None
+    history_rows = []
+    started_at = perf_counter()
+
+    for epoch in range(1, EPOCHS + 1):
+        model.train()
+        order = torch.randperm(len(fit_labels), generator=order_generator)
+        train_loss_sum = 0.0
+        train_correct = 0
+
+        for start in range(0, len(order), BATCH_SIZE):
+            indices = order[start:start + BATCH_SIZE]
+            images = normalize_images(
+                fit_images_uint8[indices],
+                augment=use_augmentation,
+                generator=augmentation_generator,
+            )
+            labels = fit_labels[indices]
+
+            optimizer.zero_grad(set_to_none=True)
+            logits = model(images)
+            loss = F.cross_entropy(logits, labels)
+            loss.backward()
+            optimizer.step()
+            scheduler.step()
+
+            train_loss_sum += loss.item() * len(labels)
+            train_correct += (logits.argmax(dim=1) == labels).sum().item()
+
+        validation_metrics = evaluate_model(
+            model, validation_images_uint8, validation_labels
+        )
+        history_rows.append({
+            "época": epoch,
+            "loss ajuste": train_loss_sum / len(fit_labels),
+            "exactitud ajuste": train_correct / len(fit_labels),
+            "loss validación": validation_metrics["loss"],
+            "exactitud validación": validation_metrics["accuracy"],
+            "tasa final": optimizer.param_groups[0]["lr"],
+        })
+
+        accuracy_improved = validation_metrics["accuracy"] > best_accuracy
+        accuracy_tied = validation_metrics["accuracy"] == best_accuracy
+        loss_improved = validation_metrics["loss"] < best_loss
+        if accuracy_improved or (accuracy_tied and loss_improved):
+            best_accuracy = validation_metrics["accuracy"]
+            best_loss = validation_metrics["loss"]
+            best_epoch = epoch
+            best_state = deepcopy(model.state_dict())
+
+    elapsed_seconds = perf_counter() - started_at
+    if best_state is None:
+        raise RuntimeError("No se capturó un checkpoint")
+    model.load_state_dict(best_state)
+    checkpoint_metrics = evaluate_model(
+        model, validation_images_uint8, validation_labels
+    )
+    return {
+        "model": model,
+        "history": pd.DataFrame(history_rows),
+        "best_epoch": best_epoch,
+        "validation_loss": checkpoint_metrics["loss"],
+        "validation_accuracy": checkpoint_metrics["accuracy"],
+        "seconds": elapsed_seconds,
+    }
+```
+
+Los generadores separan orden y augmentación. Para una arquitectura y semilla,
+los brazos con y sin augmentación parten de los mismos pesos y reciben el mismo
+orden de índices. La aleatoriedad de un crop no desplaza la secuencia de batches.
+
+## Ejecutar doce entrenamientos
+
+Esta es la celda costosa. En CPU de un hilo debe tomar alrededor de cinco minutos
+en un equipo moderno, pero el tiempo no es una promesa de portabilidad.
+
+```{python}
+ARM_CONFIGURATIONS = [
+    {
+        "arm": "ModularCNN / sin aug",
+        "model_name": "ModularCNN",
+        "model_class": ModularCNN,
+        "augmentation": False,
+    },
+    {
+        "arm": "ModularCNN / con aug",
+        "model_name": "ModularCNN",
+        "model_class": ModularCNN,
+        "augmentation": True,
+    },
+    {
+        "arm": "CompactResNet / sin aug",
+        "model_name": "CompactResNet",
+        "model_class": CompactResNet,
+        "augmentation": False,
+    },
+    {
+        "arm": "CompactResNet / con aug",
+        "model_name": "CompactResNet",
+        "model_class": CompactResNet,
+        "augmentation": True,
+    },
+]
+
+runs = {}
+validation_rows = []
+
+for configuration in ARM_CONFIGURATIONS:
+    resources = resource_results.set_index("modelo").loc[
+        configuration["model_name"]
+    ]
+    for seed in PAIR_SEEDS:
+        run = train_arm(
+            configuration["model_class"],
+            configuration["augmentation"],
+            seed,
+        )
+        runs[(configuration["arm"], seed)] = run
+        validation_rows.append({
+            "brazo": configuration["arm"],
+            "semilla": seed,
+            "mejor época": run["best_epoch"],
+            "loss validación": run["validation_loss"],
+            "exactitud validación": run["validation_accuracy"],
+            "segundos": run["seconds"],
+            "parámetros": int(resources["parámetros"]),
+            "MACs (millones)": resources["MACs (millones)"],
+            "convoluciones": int(resources["convoluciones"]),
+        })
+
+validation_results = pd.DataFrame(validation_rows)
+validation_results
+```
+
+La tabla es el primer lugar donde observamos resultados del 2x2. Una diferencia
+entre brazos puede venir de arquitectura, regularización o interacción entre
+ambas; tres semillas no justifican una afirmación universal.
+
+## Leer curvas, no solo checkpoints
+
+La semilla 29 fue fijada como representativa antes de entrenar. Mostramos todos
+los brazos, sin escoger la curva más atractiva.
+
+```{python}
+#| label: fig-cifar-training-curves
+#| fig-cap: "Curvas de los cuatro brazos para la semilla representativa 29."
+#| fig-alt: "Cuatro paneles comparan pérdida y exactitud de ajuste y validación por época."
+#| fig-width: 11
+#| fig-height: 7
+
+arm_colors = {
+    "ModularCNN / sin aug": "#2f6f9f",
+    "ModularCNN / con aug": "#62a8d1",
+    "CompactResNet / sin aug": "#a44a3f",
+    "CompactResNet / con aug": "#d98b73",
+}
+
+fig, axes = plt.subplots(2, 2, figsize=(11, 7), sharex=True)
+for arm, color in arm_colors.items():
+    history = runs[(arm, REPRESENTATIVE_SEED)]["history"]
+    axes[0, 0].plot(history["época"], history["loss ajuste"], color=color, label=arm)
+    axes[0, 1].plot(
+        history["época"], history["loss validación"], color=color, label=arm
+    )
+    axes[1, 0].plot(
+        history["época"], history["exactitud ajuste"], color=color, label=arm
+    )
+    axes[1, 1].plot(
+        history["época"], history["exactitud validación"], color=color, label=arm
+    )
+
+axes[0, 0].set_title("Pérdida de ajuste")
+axes[0, 1].set_title("Pérdida de validación")
+axes[1, 0].set_title("Exactitud de ajuste")
+axes[1, 1].set_title("Exactitud de validación")
+for axis in axes.flat:
+    axis.set_xlabel("Época")
+    axis.grid(alpha=0.2)
+axes[0, 0].legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+Augmentación puede elevar la pérdida de ajuste porque cada época presenta vistas
+más difíciles. Eso no es por sí solo un fallo. También puede requerir más épocas
+para compensar su regularización; el presupuesto común favorece al brazo que
+aprende más rápido, coherente con el problema planteado.
+
+## Comparar semillas y variabilidad
+
+```{python}
+#| label: fig-cifar-seed-results
+#| fig-cap: "Exactitud de validación por brazo y semilla pareada."
+#| fig-alt: "Puntos de tres semillas para cada uno de cuatro brazos visuales."
+#| fig-width: 10
+#| fig-height: 4.5
+
+arm_order = [configuration["arm"] for configuration in ARM_CONFIGURATIONS]
+fig, ax = plt.subplots(figsize=(10, 4.5))
+offsets = {17: -0.15, 29: 0.0, 43: 0.15}
+for seed in PAIR_SEEDS:
+    seed_rows = validation_results[validation_results["semilla"] == seed].set_index(
+        "brazo"
+    ).loc[arm_order]
+    ax.scatter(
+        np.arange(len(arm_order)) + offsets[seed],
+        seed_rows["exactitud validación"],
+        label=f"Semilla {seed}",
+        s=55,
+    )
+ax.set_xticks(range(len(arm_order)), arm_order, rotation=15, ha="right")
+ax.set_ylabel("Exactitud de validación")
+ax.grid(axis="y", alpha=0.2)
+ax.legend(frameon=False, ncol=3)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+validation_summary = (
+    validation_results.groupby("brazo", sort=False)
+    .agg(
+        mediana_exactitud=("exactitud validación", "median"),
+        mínimo_exactitud=("exactitud validación", "min"),
+        máximo_exactitud=("exactitud validación", "max"),
+        mediana_segundos=("segundos", "median"),
+        parámetros=("parámetros", "first"),
+        MACs_millones=("MACs (millones)", "first"),
+        convoluciones=("convoluciones", "first"),
+    )
+    .reset_index()
+)
+validation_summary
+```
+
+La CNN modular sin augmentación alcanza una mediana de 0,5596. Encender
+augmentación la reduce a 0,5500 bajo el mismo horizonte. La ResNet compacta pasa
+de 0,5116 sin augmentación a 0,4948 con ella. El signo coincide en las tres
+semillas de cada arquitectura: durante cinco épocas, la variación adicional
+ralentiza el ajuste más de lo que mejora la generalización.
+
+El rango entre semillas describe sensibilidad algorítmica para una partición
+fija. No es un intervalo de confianza poblacional y no incorpora incertidumbre
+por otra selección de imágenes.
+
+## Construir la frontera precisión-costo
+
+Un brazo está dominado si existe otro al menos tan rápido y al menos tan exacto,
+con mejora estricta en una dimensión. La frontera no convierte segundos de este
+equipo en una propiedad universal, pero hace visible el compromiso observado.
+
+```{python}
+def is_pareto_efficient(row, frame):
+    competitors = frame.drop(index=row.name)
+    dominates = (
+        (competitors["mediana_segundos"] <= row["mediana_segundos"])
+        & (competitors["mediana_exactitud"] >= row["mediana_exactitud"])
+        & (
+            (competitors["mediana_segundos"] < row["mediana_segundos"])
+            | (competitors["mediana_exactitud"] > row["mediana_exactitud"])
+        )
+    )
+    return not dominates.any()
+
+
+validation_summary["en frontera"] = validation_summary.apply(
+    lambda row: is_pareto_efficient(row, validation_summary), axis=1
+)
+```
+
+```{python}
+#| label: fig-cifar-precision-cost
+#| fig-cap: "Frontera observada entre exactitud mediana y tiempo mediano de entrenamiento."
+#| fig-alt: "Diagrama de dispersión con exactitud vertical, segundos horizontales y brazos anotados."
+#| fig-width: 8
+#| fig-height: 5
+
+fig, ax = plt.subplots(figsize=(8, 5))
+for _, row in validation_summary.iterrows():
+    marker = "o" if row["en frontera"] else "x"
+    color = arm_colors[row["brazo"]]
+    ax.scatter(
+        row["mediana_segundos"],
+        row["mediana_exactitud"],
+        marker=marker,
+        color=color,
+        s=90,
+    )
+    ax.annotate(
+        row["brazo"],
+        (row["mediana_segundos"], row["mediana_exactitud"]),
+        xytext=(5, 5),
+        textcoords="offset points",
+        fontsize=8,
+    )
+ax.set(xlabel="Segundos medianos", ylabel="Exactitud mediana de validación")
+ax.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+Parámetros no sustituyen esta gráfica: un modelo puede almacenar pocos pesos y
+reutilizarlos en muchas posiciones. MACs tampoco capturan optimizaciones del
+backend, ancho de memoria ni costo de augmentar.
+
+La ResNet sin augmentación usa 0,98 millones de MACs por imagen frente a 2,58
+millones de la CNN, una reducción de 62%, y tarda 18,6 frente a 35,0 segundos de
+mediana, cerca de 47% menos. A cambio pierde 0,048 de exactitud. Por eso ambos
+quedan en la frontera observada; los brazos augmentados están dominados dentro
+de este presupuesto.
+
+## Aplicar la regla predeclarada
+
+```{python}
+best_median_accuracy = validation_summary["mediana_exactitud"].max()
+eligible_arms = validation_summary[
+    (best_median_accuracy - validation_summary["mediana_exactitud"]) < 0.01
+].copy()
+decision_row = eligible_arms.sort_values(
+    ["mediana_segundos", "brazo"], ascending=[True, True]
+).iloc[0]
+selected_arm = decision_row["brazo"]
+
+decision_audit = pd.Series({
+    "máxima mediana de exactitud": best_median_accuracy,
+    "brazos a menos de 0.01": ", ".join(eligible_arms["brazo"]),
+    "brazo seleccionado": selected_arm,
+    "mediana de exactitud seleccionada": decision_row["mediana_exactitud"],
+    "mediana de segundos seleccionada": decision_row["mediana_segundos"],
+})
+decision_audit
+```
+
+La regla puede escoger un brazo ligeramente menos exacto si cae dentro de la
+tolerancia y es más rápido. Eso no contradice el protocolo: formaliza que menos
+de un punto porcentual no compensa cualquier costo adicional en este problema.
+
+::: {.callout-important title="La frontera de test permanece cerrada"}
+Hasta esta celda solo se usaron ajuste y validación. El brazo, las tres semillas,
+los checkpoints y la regla de análisis de errores ya están cerrados. A partir de
+la siguiente sección, test sirve para estimar desempeño final, no para reajustar
+el capítulo.
+:::
+
+## Abrir una vez el test oficial
+
+Evaluamos exclusivamente los tres checkpoints del brazo seleccionado. No
+calculamos resultados de test para los otros brazos.
+
+```{python}
+test_images_uint8 = torch.from_numpy(official_test_images.copy())
+test_labels = torch.from_numpy(official_test_labels.copy())
+
+test_rows = []
+test_outputs = {}
+for seed in PAIR_SEEDS:
+    selected_model = runs[(selected_arm, seed)]["model"]
+    outputs = evaluate_model(
+        selected_model,
+        test_images_uint8,
+        test_labels,
+        return_outputs=True,
+    )
+    test_outputs[seed] = outputs
+    test_rows.append({
+        "brazo": selected_arm,
+        "semilla": seed,
+        "loss test": outputs["loss"],
+        "exactitud test": outputs["accuracy"],
+    })
+
+test_results = pd.DataFrame(test_rows)
+test_results
+```
+
+```{python}
+test_summary = pd.Series({
+    "brazo evaluado": selected_arm,
+    "mediana exactitud test": test_results["exactitud test"].median(),
+    "mínimo exactitud test": test_results["exactitud test"].min(),
+    "máximo exactitud test": test_results["exactitud test"].max(),
+})
+test_summary
+```
+
+La exactitud mediana de test es 0,5709 y las tres corridas quedan entre 0,5689 y
+0,5723. El rango estrecho no corrige la incertidumbre del único split, pero
+muestra que el resultado final no depende de una sola inicialización afortunada.
+
+Estas cifras son una evaluación final condicionada a CIFAR-10. No se usa su
+resultado para cambiar arquitectura, augmentación, tasa, épocas o semilla. Una
+nueva decisión motivada por test necesitaría otro conjunto independiente.
+
+## Examinar confusión y recall por clase
+
+La semilla 29 fue predeclarada como representativa, no elegida por su resultado.
+La matriz se normaliza por clase real; su diagonal coincide con recall.
+
+```{python}
+representative_predictions = test_outputs[REPRESENTATIVE_SEED]["predictions"]
+representative_logits = test_outputs[REPRESENTATIVE_SEED]["logits"]
+representative_confusion = confusion_matrix(
+    test_labels.numpy(),
+    representative_predictions.numpy(),
+    labels=np.arange(10),
+    normalize="true",
+)
+class_recall = pd.DataFrame({
+    "clase": CLASS_NAMES,
+    "recall": np.diag(representative_confusion),
+}).sort_values("recall")
+class_recall
+```
+
+`gato` y `ave` obtienen los recalls más bajos, 0,273 y 0,353; `automóvil` y
+`camión` alcanzan 0,718 y 0,714. La brecha advierte que una exactitud cercana a
+0,57 no representa por igual las diez categorías.
+
+```{python}
+#| label: fig-cifar-confusion
+#| fig-cap: "Confusión normalizada del brazo seleccionado en test, semilla predeclarada 29."
+#| fig-alt: "Matriz de diez clases con proporciones por clase real."
+#| fig-width: 7
+#| fig-height: 6
+
+fig, ax = plt.subplots(figsize=(7, 6))
+image = ax.imshow(representative_confusion, cmap="Blues", vmin=0, vmax=1)
+ax.set_xticks(range(10), CLASS_NAMES, rotation=45, ha="right")
+ax.set_yticks(range(10), CLASS_NAMES)
+ax.set(xlabel="Predicha", ylabel="Real")
+fig.colorbar(image, ax=ax, label="Proporción de la clase real")
+fig.tight_layout()
+plt.show()
+```
+
+La exactitud agregada puede ocultar clases con recall bajo. Confundir dos
+animales visualmente próximos no tiene el mismo significado aplicado que
+confundir un automóvil con un ave, aunque ambos resten una observación.
+
+## Inspeccionar errores sin escoger los más convenientes
+
+Antes de abrir test fijamos la semilla 29 y una regla simple: mostrar los primeros
+doce errores según el orden oficial. No ordenamos por confianza ni buscamos casos
+que apoyen una narrativa.
+
+```{python}
+error_indices = torch.where(representative_predictions != test_labels)[0]
+display_error_indices = error_indices[:12]
+error_confidences = representative_logits.softmax(dim=1).max(dim=1).values
+```
+
+```{python}
+#| label: fig-cifar-errors
+#| fig-cap: "Primeros doce errores en el orden oficial de test para la semilla 29."
+#| fig-alt: "Doce imágenes con clase real, clase predicha y confianza máxima."
+#| fig-width: 10
+#| fig-height: 7
+
+fig, axes = plt.subplots(3, 4, figsize=(10, 7))
+for axis, position in zip(axes.flat, display_error_indices):
+    axis.imshow(official_test_images[position].transpose(1, 2, 0))
+    axis.set_title(
+        f"Real: {CLASS_NAMES[test_labels[position]]}\n"
+        f"Pred: {CLASS_NAMES[representative_predictions[position]]}\n"
+        f"p={error_confidences[position]:.2f}",
+        fontsize=8,
+    )
+    axis.axis("off")
+for axis in axes.flat[len(display_error_indices):]:
+    axis.axis("off")
+fig.tight_layout()
+plt.show()
+```
+
+La probabilidad máxima es confianza interna, no probabilidad calibrada de estar
+correcto. Los ejemplos tampoco explican causalmente qué píxeles usó la red. Son
+insumos para formular hipótesis sobre resolución, fondo, pose y ambigüedad.
+
+## Qué permite concluir el experimento
+
+Las tablas ejecutadas permiten responder cuatro preguntas distintas:
+
+- **capacidad observada:** qué brazo alcanza mayor mediana de validación;
+- **estabilidad:** cuánto cambian checkpoints entre las tres semillas;
+- **costo:** qué arquitectura consume más tiempo y MACs;
+- **generalización final:** cómo se comporta solo el brazo seleccionado en test.
+
+La regla de selección integra las dos primeras dimensiones con tiempo. No debe
+reemplazarse después de ver test por una explicación retrospectiva. Si la
+augmentación no mejora en cinco épocas, la conclusión correcta se limita a este
+presupuesto; no demuestra que augmentar sea inútil. Si una red residual no gana,
+no refuta las conexiones residuales: también cambian ancho, pooling, campo
+receptivo y número de operaciones.
+
+## Limitaciones
+
+- CIFAR-10 tiene baja resolución y diez categorías; no representa visión en
+  producción ni imágenes médicas, satelitales o documentales.
+- La página oficial no declara una licencia del dataset. El capítulo descarga
+  desde la fuente y el repositorio no redistribuye imágenes.
+- El subconjunto fijo usa solo una cuarta parte del entrenamiento oficial. Más
+  datos podrían alterar el orden de los brazos.
+- Tres semillas miden variabilidad de optimización, no incertidumbre por splits,
+  poblaciones o cambios de dominio.
+- Cinco épocas favorecen aprendizaje rápido y pueden perjudicar regularizadores
+  cuyo beneficio aparece tarde.
+- BatchNorm con batch 128 no anticipa su comportamiento con batches pequeños.
+- AdamW y su schedule son una receta común, no el óptimo de cada arquitectura.
+- El weight decay se aplica también a parámetros de BatchNorm y sesgos.
+- MACs omiten operaciones y acceso a memoria; el tiempo depende del hardware.
+- El pooling inicial de `CompactResNet` abarata cómputo sacrificando detalle.
+- Reflection padding y flips expresan invariancias supuestas, no verificadas para
+  cada imagen.
+- El test oficial puede contener duplicados o similitudes no capturadas por hashes
+  exactos y no garantiza independencia del proceso histórico de construcción.
+- Exactitud trata todos los errores por igual y no evalúa calibración, robustez,
+  equidad, latencia por solicitud ni consumo energético.
+
+## Qué hemos aprendido
+
+- Los bloques convierten una arquitectura en una regla verificable y reutilizable.
+- Repetir kernels $3\times3$ aumenta no linealidad y campo receptivo.
+- BatchNorm usa el mini-batch en `train()` y medias móviles en `eval()`.
+- Una ruta identidad añade un camino directo para activaciones y gradientes.
+- Resolución, canales y campo receptivo deben seguirse conjuntamente.
+- La augmentación pertenece exclusivamente al conjunto de ajuste.
+- Parámetros, convoluciones, MACs y segundos describen costos diferentes.
+- Checkpoints y semillas deben fijarse antes de abrir test.
+- Una tolerancia explícita permite tratar precisión y costo como una decisión, no
+  como una carrera por decimales.
+- Confusiones, recall y errores revelan límites que la exactitud promedio oculta.
+
+## Ejercicios
+
+1. Calcula parámetros y MACs de cada convolución de `ModularCNN` a mano y
+   compáralos con `model_resources()`.
+2. Deriva el campo receptivo de ambas arquitecturas sin consultar la tabla.
+3. Elimina el segundo `Conv2d` de cada bloque modular. Predice antes de entrenar
+   cómo cambiarán parámetros, MACs y campo receptivo.
+4. Demuestra con autograd que $Y=F(X)+X$ contiene una contribución identidad en
+   $\partial Y/\partial X$ para un bloque lineal sin ReLU.
+5. Repite el demo de BatchNorm con batches de 2, 8 y 128. Explica qué cambia y
+   por qué `eval()` debe permanecer fijo.
+6. Sustituye max pooling del stem residual por stride dos en su convolución y
+   vuelve a calcular resolución y campo receptivo.
+7. Implementa padding con ceros y compara visualmente sus crops con reflexión.
+8. Añade una transformación vertical y argumenta, antes de entrenar, por qué
+   puede violar la etiqueta.
+9. Ejecuta diez épocas sin cambiar la regla de decisión y estudia si el efecto de
+   augmentación depende del horizonte.
+10. Sustituye AdamW por SGD con momentum. Ajusta la tasa solo con validación y
+    documenta cuántas decisiones adicionales realizaste.
+11. Excluye BatchNorm y sesgos del weight decay. Explica por qué esta comparación
+    ya no modifica una sola variable.
+12. Calcula macro-F1 además de exactitud y define una nueva regla antes de mirar
+    los resultados.
+13. Construye intervalos bootstrap sobre las imágenes de validación y explica por
+    qué no reemplazan semillas ni nuevos splits.
+14. Mide imágenes por segundo en inferencia con batches 1, 32 y 128. Separa
+    latencia de throughput.
+15. Identifica las dos clases con menor recall y propone una recolección de datos,
+    no solo una modificación del modelo.
+
+## Reto
+
+Diseña una comparación que permita estudiar conexiones residuales sin confundir
+su efecto con costo. Construye una CNN modular y una residual con resolución,
+canales, número de convoluciones y MACs tan próximos como sea posible. Mantén el
+split, las tres semillas y el protocolo de test bloqueado. Antes de ejecutar,
+define una diferencia mínima relevante, una tolerancia de costo y qué conclusión
+aceptarás si no aparece ventaja residual. Reporta curvas, gradientes tempranos,
+variabilidad y la frontera precisión-costo; no abras test para ambos diseños.
+
+::: {.callout-important title="Puente al Capítulo 7"}
+Aquí aprendimos representaciones desde cero con etiquetas limitadas y CPU. El
+Capítulo 7 preguntará cuándo conviene reutilizar una red visual preentrenada,
+cómo adaptar su cabeza sin contaminar evaluación y qué cambia cuando la fuente y
+el dominio objetivo no coinciden.
+:::

@@ -23,11 +23,11 @@ bash scripts/build_notebooks.sh
 
 ## Estado
 
-La arquitectura completa del libro y los capitulos 1 y 2 forman la primera
-version desarrollada. El segundo capitulo incluye resultados congelados de un
-proyecto de regresion sobre consumo energetico. Los capitulos restantes
-muestran el problema articulador, los resultados de aprendizaje y la ruta de
-desarrollo.
+La arquitectura completa del libro y los capitulos 1 a 6 forman la version
+desarrollada actual. Cubren tensores, regresion, clasificacion con MLP,
+entrenamiento estable, convoluciones y redes visuales profundas. Los capitulos
+restantes muestran el problema articulador, los resultados de aprendizaje y la
+ruta de desarrollo.
 
 ## Licencia
 

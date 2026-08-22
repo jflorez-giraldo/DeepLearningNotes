@@ -39,3 +39,12 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+CIFAR-10, used in Chapter 6, was assembled by Alex Krizhevsky, Vinod Nair, and
+Geoffrey Hinton and is obtained from the official University of Toronto page:
+<https://www.cs.toronto.edu/~kriz/cifar.html>. That page provides the archive
+and an MD5 checksum but does not state a dataset license. This repository does
+not redistribute the CIFAR-10 archive or images. The chapter uses an immutable
+GitHub LFS mirror with the official source as fallback, then verifies the
+official MD5 and a SHA-256 digest before reading data. The mirror must therefore
+be byte-identical to the official archive.
