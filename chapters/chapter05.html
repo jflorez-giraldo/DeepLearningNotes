@@ -27,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 /* CSS for citations */
 div.csl-bib-body { }
 div.csl-entry {
@@ -49,7 +84,7 @@ div.csl-indent {
 }</style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -95,7 +130,39 @@ div.csl-indent {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -309,10 +376,28 @@ div.csl-indent {
     <h2 id="toc-title">Contenido</h2>
    
   <ul>
-  <li><a href="#objetivos" id="toc-objetivos" class="nav-link active" data-scroll-target="#objetivos"><span class="header-section-number">5.1</span> Objetivos</a></li>
-  <li><a href="#caso-y-línea-base" id="toc-caso-y-línea-base" class="nav-link" data-scroll-target="#caso-y-línea-base"><span class="header-section-number">5.2</span> Caso y línea base</a></li>
-  <li><a href="#ruta-de-desarrollo" id="toc-ruta-de-desarrollo" class="nav-link" data-scroll-target="#ruta-de-desarrollo"><span class="header-section-number">5.3</span> Ruta de desarrollo</a></li>
-  <li><a href="#referencia-conceptual" id="toc-referencia-conceptual" class="nav-link" data-scroll-target="#referencia-conceptual"><span class="header-section-number">5.4</span> Referencia conceptual</a></li>
+  <li><a href="#del-píxel-aislado-a-la-vecindad" id="toc-del-píxel-aislado-a-la-vecindad" class="nav-link active" data-scroll-target="#del-píxel-aislado-a-la-vecindad"><span class="header-section-number">5.1</span> Del píxel aislado a la vecindad</a></li>
+  <li><a href="#preparar-el-entorno" id="toc-preparar-el-entorno" class="nav-link" data-scroll-target="#preparar-el-entorno"><span class="header-section-number">5.2</span> Preparar el entorno</a></li>
+  <li><a href="#obtener-fashion-mnist-sin-depender-de-torchvision" id="toc-obtener-fashion-mnist-sin-depender-de-torchvision" class="nav-link" data-scroll-target="#obtener-fashion-mnist-sin-depender-de-torchvision"><span class="header-section-number">5.3</span> Obtener Fashion-MNIST sin depender de torchvision</a></li>
+  <li><a href="#fijar-un-presupuesto-y-bloquear-test" id="toc-fijar-un-presupuesto-y-bloquear-test" class="nav-link" data-scroll-target="#fijar-un-presupuesto-y-bloquear-test"><span class="header-section-number">5.4</span> Fijar un presupuesto y bloquear test</a></li>
+  <li><a href="#observar-un-filtro-antes-de-aprenderlo" id="toc-observar-un-filtro-antes-de-aprenderlo" class="nav-link" data-scroll-target="#observar-un-filtro-antes-de-aprenderlo"><span class="header-section-number">5.5</span> Observar un filtro antes de aprenderlo</a></li>
+  <li><a href="#aplicar-detectores-manuales-a-una-prenda" id="toc-aplicar-detectores-manuales-a-una-prenda" class="nav-link" data-scroll-target="#aplicar-detectores-manuales-a-una-prenda"><span class="header-section-number">5.6</span> Aplicar detectores manuales a una prenda</a></li>
+  <li><a href="#padding-stride-y-forma-de-salida" id="toc-padding-stride-y-forma-de-salida" class="nav-link" data-scroll-target="#padding-stride-y-forma-de-salida"><span class="header-section-number">5.7</span> Padding, stride y forma de salida</a></li>
+  <li><a href="#canales-y-parámetros-compartidos" id="toc-canales-y-parámetros-compartidos" class="nav-link" data-scroll-target="#canales-y-parámetros-compartidos"><span class="header-section-number">5.8</span> Canales y parámetros compartidos</a></li>
+  <li><a href="#pooling-resume-vecindarios" id="toc-pooling-resume-vecindarios" class="nav-link" data-scroll-target="#pooling-resume-vecindarios"><span class="header-section-number">5.9</span> Pooling resume vecindarios</a></li>
+  <li><a href="#campo-receptivo" id="toc-campo-receptivo" class="nav-link" data-scroll-target="#campo-receptivo"><span class="header-section-number">5.10</span> Campo receptivo</a></li>
+  <li><a href="#construir-modelos-comparables" id="toc-construir-modelos-comparables" class="nav-link" data-scroll-target="#construir-modelos-comparables"><span class="header-section-number">5.11</span> Construir modelos comparables</a></li>
+  <li><a href="#protocolo-controlado-mlp-cnn" id="toc-protocolo-controlado-mlp-cnn" class="nav-link" data-scroll-target="#protocolo-controlado-mlp-cnn"><span class="header-section-number">5.12</span> Protocolo controlado MLP-CNN</a></li>
+  <li><a href="#entrenar-cinco-semillas-pareadas" id="toc-entrenar-cinco-semillas-pareadas" class="nav-link" data-scroll-target="#entrenar-cinco-semillas-pareadas"><span class="header-section-number">5.13</span> Entrenar cinco semillas pareadas</a></li>
+  <li><a href="#destruir-la-vecindad-sin-destruir-la-información" id="toc-destruir-la-vecindad-sin-destruir-la-información" class="nav-link" data-scroll-target="#destruir-la-vecindad-sin-destruir-la-información"><span class="header-section-number">5.14</span> Destruir la vecindad sin destruir la información</a></li>
+  <li><a href="#abrir-el-test-oficial" id="toc-abrir-el-test-oficial" class="nav-link" data-scroll-target="#abrir-el-test-oficial"><span class="header-section-number">5.15</span> Abrir el test oficial</a></li>
+  <li><a href="#parámetros-tiempo-e-inferencia" id="toc-parámetros-tiempo-e-inferencia" class="nav-link" data-scroll-target="#parámetros-tiempo-e-inferencia"><span class="header-section-number">5.16</span> Parámetros, tiempo e inferencia</a></li>
+  <li><a href="#qué-aprendió-la-primera-capa" id="toc-qué-aprendió-la-primera-capa" class="nav-link" data-scroll-target="#qué-aprendió-la-primera-capa"><span class="header-section-number">5.17</span> Qué aprendió la primera capa</a></li>
+  <li><a href="#diagnosticar-clases-y-ejemplos" id="toc-diagnosticar-clases-y-ejemplos" class="nav-link" data-scroll-target="#diagnosticar-clases-y-ejemplos"><span class="header-section-number">5.18</span> Diagnosticar clases y ejemplos</a></li>
+  <li><a href="#qué-aporta-y-qué-no-aporta-una-cnn-pequeña" id="toc-qué-aporta-y-qué-no-aporta-una-cnn-pequeña" class="nav-link" data-scroll-target="#qué-aporta-y-qué-no-aporta-una-cnn-pequeña"><span class="header-section-number">5.19</span> Qué aporta y qué no aporta una CNN pequeña</a></li>
+  <li><a href="#qué-hemos-aprendido" id="toc-qué-hemos-aprendido" class="nav-link" data-scroll-target="#qué-hemos-aprendido"><span class="header-section-number">5.20</span> Qué hemos aprendido</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios"><span class="header-section-number">5.21</span> Ejercicios</a></li>
+  <li><a href="#reto" id="toc-reto" class="nav-link" data-scroll-target="#reto"><span class="header-section-number">5.22</span> Reto</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/edit/main/chapters/chapter05.qmd" class="toc-action"><i class="bi bi-github"></i>Editar esta página</a></li><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/issues/new" class="toc-action"><i class="bi empty"></i>Informar sobre problema</a></li></ul></div></nav>
     </div>
@@ -338,56 +423,1785 @@ div.csl-indent {
 </header>
 
 
-<div class="problem-banner">
-<strong>Problema:</strong> clasificar imágenes sin tratar cada píxel como una característica independiente de su vecindad.
+<div class="chapter-actions" aria-label="Recursos del capitulo">
+  <a class="chapter-action" href="../notebooks/chapter05.ipynb" download="">Descargar notebook</a>
+  <a class="chapter-action chapter-action-colab" href="https://colab.research.google.com/github/jflorez-giraldo/DeepLearningNotes/blob/main/notebooks/chapter05.ipynb" target="_blank" rel="noopener">Abrir en Colab</a>
 </div>
-<div class="callout callout-style-simple callout-warning callout-titled" title="Capítulo en desarrollo">
+
+<div class="problem-banner">
+<p><strong>Problema:</strong> clasificar imágenes normalizadas de prendas en diez categorías. Una MLP puede aplanar los 784 píxeles, pero no expresa que píxeles cercanos forman bordes y siluetas ni que un mismo patrón puede aparecer en distintas posiciones. Compararemos esa representación con una CNN pequeña de presupuesto de parámetros casi idéntico.</p>
+</div>
+<section id="del-píxel-aislado-a-la-vecindad" class="level2" data-number="5.1">
+<h2 data-number="5.1" class="anchored" data-anchor-id="del-píxel-aislado-a-la-vecindad"><span class="header-section-number">5.1</span> Del píxel aislado a la vecindad</h2>
+<p>Aplanar una imagen conserva sus valores, pero elimina de la interfaz del modelo la organización espacial explícita. Una capa densa aprende un peso distinto para cada conexión entre píxel y unidad. Una capa convolucional introduce dos hipótesis:</p>
+<ul>
+<li><strong>localidad:</strong> los patrones útiles se forman inicialmente en vecindarios;</li>
+<li><strong>pesos compartidos:</strong> un detector puede reutilizarse en distintas posiciones.</li>
+</ul>
+<p>Estas hipótesis reducen parámetros y producen mapas que conservan posición. No son leyes universales: la ubicación absoluta puede importar y los bordes de una imagen requieren condiciones especiales. Las CNN modernas heredan estas ideas de arquitecturas como LeNet <span class="citation" data-cites="lecun1998gradient">(<a href="../references.html#ref-lecun1998gradient" role="doc-biblioref">LeCun et&nbsp;al. 1998</a>)</span>.</p>
+<div class="callout callout-style-simple callout-note callout-titled" title="Objetivos de aprendizaje">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Advertencia</span>Capítulo en desarrollo
+<span class="screen-reader-only">Nota</span>Objetivos de aprendizaje
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>El capítulo comenzará con una convolución observable antes de usar <code>nn.Conv2d</code>.</p>
-</div>
-</div>
-<section id="objetivos" class="level2" data-number="5.1">
-<h2 data-number="5.1" class="anchored" data-anchor-id="objetivos"><span class="header-section-number">5.1</span> Objetivos</h2>
+<p>Al terminar este capítulo podrás:</p>
 <ul>
-<li>calcular una convolución bidimensional;</li>
-<li>explicar conectividad local y pesos compartidos;</li>
-<li>anticipar formas después de padding, stride y pooling;</li>
-<li>construir una CNN pequeña;</li>
-<li>comparar CNN y MLP con un presupuesto razonable; y</li>
-<li>visualizar filtros, mapas de activación y errores.</li>
+<li>calcular una correlación cruzada bidimensional manualmente;</li>
+<li>explicar por qué PyTorch llama convolución a esa operación;</li>
+<li>seguir formas NCHW y kernels con canales de entrada y salida;</li>
+<li>calcular dimensiones después de padding, stride y pooling;</li>
+<li>contar parámetros y calcular el campo receptivo de una CNN;</li>
+<li>distinguir equivariancia aproximada de invariancia;</li>
+<li>construir una CNN pequeña con <code>nn.Conv2d</code>;</li>
+<li>comparar CNN y MLP con parámetros, datos y semillas controlados; y</li>
+<li>analizar filtros, activaciones, confusiones, errores y costo.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="preparar-el-entorno" class="level2" data-number="5.2">
+<h2 data-number="5.2" class="anchored" data-anchor-id="preparar-el-entorno"><span class="header-section-number">5.2</span> Preparar el entorno</h2>
+<div id="5546c2c5" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> copy <span class="im">import</span> deepcopy</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> gzip</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> hashlib <span class="im">import</span> sha256</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> struct</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> time <span class="im">import</span> perf_counter</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> urllib.request <span class="im">import</span> urlretrieve</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sklearn</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.metrics <span class="im">import</span> confusion_matrix, f1_score</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> sklearn.model_selection <span class="im">import</span> train_test_split</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.nn <span class="im">import</span> functional <span class="im">as</span> F</span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>SEED <span class="op">=</span> <span class="dv">42</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>PAIR_SEEDS <span class="op">=</span> [<span class="dv">7</span>, <span class="dv">19</span>, <span class="dv">42</span>, <span class="dv">73</span>, <span class="dv">101</span>]</span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a>np.random.seed(SEED)</span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>torch.use_deterministic_algorithms(<span class="va">True</span>)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cpu"</span>)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"PyTorch </span><span class="sc">{</span>torch<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | NumPy </span><span class="sc">{</span>np<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | "</span></span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"pandas </span><span class="sc">{</span>pd<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | scikit-learn </span><span class="sc">{</span>sklearn<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Dispositivo: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss"> | hilos de PyTorch: </span><span class="sc">{</span>torch<span class="sc">.</span>get_num_threads()<span class="sc">}</span><span class="ss">"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PyTorch 2.8.0 | NumPy 2.0.2 | pandas 2.3.3 | scikit-learn 1.6.1
+Dispositivo: cpu | hilos de PyTorch: 1</code></pre>
+</div>
+</div>
+<p>La ejecución canónica usa CPU y un hilo para comparar tiempos y semillas. El notebook puede adaptarse a GPU, pero mezclar dispositivos haría que los tiempos de esta edición dejaran de ser comparables.</p>
+</section>
+<section id="obtener-fashion-mnist-sin-depender-de-torchvision" class="level2" data-number="5.3">
+<h2 data-number="5.3" class="anchored" data-anchor-id="obtener-fashion-mnist-sin-depender-de-torchvision"><span class="header-section-number">5.3</span> Obtener Fashion-MNIST sin depender de torchvision</h2>
+<p>Fashion-MNIST contiene 60.000 imágenes oficiales de entrenamiento y 10.000 de test, balanceadas entre diez clases <span class="citation" data-cites="xiao2017fashion">(<a href="../references.html#ref-xiao2017fashion" role="doc-biblioref">Xiao et&nbsp;al. 2017</a>)</span>. Cada imagen es de <span class="math inline">\(28\times28\)</span> píxeles en escala de grises. El proyecto oficial declara licencia MIT en su repositorio.</p>
+<p>Descargamos los cuatro archivos IDX comprimidos desde una revisión inmutable del repositorio oficial. Cada archivo se valida con SHA-256 antes de abrirlo.</p>
+<div id="62fa2c11" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Mostrar descarga y lector IDX</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DATA_COMMIT <span class="op">=</span> <span class="st">"b2617bb6d3ffa2e429640350f613e3291e10b141"</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>DATA_BASE_URL <span class="op">=</span> (</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://raw.githubusercontent.com/zalandoresearch/fashion-mnist/"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"</span><span class="sc">{</span>DATA_COMMIT<span class="sc">}</span><span class="ss">/data/fashion"</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">".cache/chapter05"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>FILE_HASHES <span class="op">=</span> {</span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"train-images-idx3-ubyte.gz"</span>: (</span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>        <span class="st">"3aede38d61863908ad78613f6a32ed271626dd12800ba2636569512369268a84"</span></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"train-labels-idx1-ubyte.gz"</span>: (</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"a04f17134ac03560a47e3764e11b92fc97de4d1bfaf8ba1a3aa29af54cc90845"</span></span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"t10k-images-idx3-ubyte.gz"</span>: (</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"346e55b948d973a97e58d2351dde16a484bd415d4595297633bb08f03db6a073"</span></span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"t10k-labels-idx1-ubyte.gz"</span>: (</span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">"67da17c76eaffca5446c3361aaab5c3cd6d1c2608764d35dfb1850b086bf8dd5"</span></span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>CLASS_NAMES <span class="op">=</span> [</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Camiseta/top"</span>,</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Pantalón"</span>,</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Jersey"</span>,</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Vestido"</span>,</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Abrigo"</span>,</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Sandalia"</span>,</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Camisa"</span>,</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Zapatilla"</span>,</span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Bolso"</span>,</span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Botín"</span>,</span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-36"><a href="#cb3-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-37"><a href="#cb3-37" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> download_fashion_mnist():</span>
+<span id="cb3-38"><a href="#cb3-38" aria-hidden="true" tabindex="-1"></a>    DATA_DIR.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-39"><a href="#cb3-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> filename, expected_hash <span class="kw">in</span> FILE_HASHES.items():</span>
+<span id="cb3-40"><a href="#cb3-40" aria-hidden="true" tabindex="-1"></a>        path <span class="op">=</span> DATA_DIR <span class="op">/</span> filename</span>
+<span id="cb3-41"><a href="#cb3-41" aria-hidden="true" tabindex="-1"></a>        current_hash <span class="op">=</span> sha256(path.read_bytes()).hexdigest() <span class="cf">if</span> path.exists() <span class="cf">else</span> <span class="va">None</span></span>
+<span id="cb3-42"><a href="#cb3-42" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> current_hash <span class="op">!=</span> expected_hash:</span>
+<span id="cb3-43"><a href="#cb3-43" aria-hidden="true" tabindex="-1"></a>            temporary_path <span class="op">=</span> path.with_suffix(path.suffix <span class="op">+</span> <span class="st">".part"</span>)</span>
+<span id="cb3-44"><a href="#cb3-44" aria-hidden="true" tabindex="-1"></a>            urlretrieve(<span class="ss">f"</span><span class="sc">{</span>DATA_BASE_URL<span class="sc">}</span><span class="ss">/</span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss">"</span>, temporary_path)</span>
+<span id="cb3-45"><a href="#cb3-45" aria-hidden="true" tabindex="-1"></a>            temporary_hash <span class="op">=</span> sha256(temporary_path.read_bytes()).hexdigest()</span>
+<span id="cb3-46"><a href="#cb3-46" aria-hidden="true" tabindex="-1"></a>            <span class="cf">if</span> temporary_hash <span class="op">!=</span> expected_hash:</span>
+<span id="cb3-47"><a href="#cb3-47" aria-hidden="true" tabindex="-1"></a>                temporary_path.unlink(missing_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-48"><a href="#cb3-48" aria-hidden="true" tabindex="-1"></a>                <span class="cf">raise</span> <span class="pp">ValueError</span>(</span>
+<span id="cb3-49"><a href="#cb3-49" aria-hidden="true" tabindex="-1"></a>                    <span class="ss">f"SHA-256 inesperado al descargar </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>temporary_hash<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb3-50"><a href="#cb3-50" aria-hidden="true" tabindex="-1"></a>                )</span>
+<span id="cb3-51"><a href="#cb3-51" aria-hidden="true" tabindex="-1"></a>            temporary_path.replace(path)</span>
+<span id="cb3-52"><a href="#cb3-52" aria-hidden="true" tabindex="-1"></a>        actual_hash <span class="op">=</span> sha256(path.read_bytes()).hexdigest()</span>
+<span id="cb3-53"><a href="#cb3-53" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> actual_hash <span class="op">!=</span> expected_hash:</span>
+<span id="cb3-54"><a href="#cb3-54" aria-hidden="true" tabindex="-1"></a>            <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"SHA-256 inesperado para </span><span class="sc">{</span>filename<span class="sc">}</span><span class="ss">: </span><span class="sc">{</span>actual_hash<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-55"><a href="#cb3-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-56"><a href="#cb3-56" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-57"><a href="#cb3-57" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_idx_images(path):</span>
+<span id="cb3-58"><a href="#cb3-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> gzip.<span class="bu">open</span>(path, <span class="st">"rb"</span>) <span class="im">as</span> source:</span>
+<span id="cb3-59"><a href="#cb3-59" aria-hidden="true" tabindex="-1"></a>        magic, count, rows, columns <span class="op">=</span> struct.unpack(<span class="st">"&gt;IIII"</span>, source.read(<span class="dv">16</span>))</span>
+<span id="cb3-60"><a href="#cb3-60" aria-hidden="true" tabindex="-1"></a>        payload <span class="op">=</span> source.read()</span>
+<span id="cb3-61"><a href="#cb3-61" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> magic <span class="op">!=</span> <span class="dv">2051</span> <span class="kw">or</span> <span class="bu">len</span>(payload) <span class="op">!=</span> count <span class="op">*</span> rows <span class="op">*</span> columns:</span>
+<span id="cb3-62"><a href="#cb3-62" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Archivo IDX de imágenes inválido: </span><span class="sc">{</span>path<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-63"><a href="#cb3-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.frombuffer(payload, dtype<span class="op">=</span>np.uint8).reshape(count, rows, columns).copy()</span>
+<span id="cb3-64"><a href="#cb3-64" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-65"><a href="#cb3-65" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-66"><a href="#cb3-66" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> read_idx_labels(path):</span>
+<span id="cb3-67"><a href="#cb3-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> gzip.<span class="bu">open</span>(path, <span class="st">"rb"</span>) <span class="im">as</span> source:</span>
+<span id="cb3-68"><a href="#cb3-68" aria-hidden="true" tabindex="-1"></a>        magic, count <span class="op">=</span> struct.unpack(<span class="st">"&gt;II"</span>, source.read(<span class="dv">8</span>))</span>
+<span id="cb3-69"><a href="#cb3-69" aria-hidden="true" tabindex="-1"></a>        payload <span class="op">=</span> source.read()</span>
+<span id="cb3-70"><a href="#cb3-70" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> magic <span class="op">!=</span> <span class="dv">2049</span> <span class="kw">or</span> <span class="bu">len</span>(payload) <span class="op">!=</span> count:</span>
+<span id="cb3-71"><a href="#cb3-71" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"Archivo IDX de etiquetas inválido: </span><span class="sc">{</span>path<span class="sc">.</span>name<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-72"><a href="#cb3-72" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.frombuffer(payload, dtype<span class="op">=</span>np.uint8).copy()</span>
+<span id="cb3-73"><a href="#cb3-73" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-74"><a href="#cb3-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-75"><a href="#cb3-75" aria-hidden="true" tabindex="-1"></a>download_fashion_mnist()</span>
+<span id="cb3-76"><a href="#cb3-76" aria-hidden="true" tabindex="-1"></a>official_train_images <span class="op">=</span> read_idx_images(</span>
+<span id="cb3-77"><a href="#cb3-77" aria-hidden="true" tabindex="-1"></a>    DATA_DIR <span class="op">/</span> <span class="st">"train-images-idx3-ubyte.gz"</span></span>
+<span id="cb3-78"><a href="#cb3-78" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-79"><a href="#cb3-79" aria-hidden="true" tabindex="-1"></a>official_train_labels <span class="op">=</span> read_idx_labels(</span>
+<span id="cb3-80"><a href="#cb3-80" aria-hidden="true" tabindex="-1"></a>    DATA_DIR <span class="op">/</span> <span class="st">"train-labels-idx1-ubyte.gz"</span></span>
+<span id="cb3-81"><a href="#cb3-81" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-82"><a href="#cb3-82" aria-hidden="true" tabindex="-1"></a>official_test_images <span class="op">=</span> read_idx_images(DATA_DIR <span class="op">/</span> <span class="st">"t10k-images-idx3-ubyte.gz"</span>)</span>
+<span id="cb3-83"><a href="#cb3-83" aria-hidden="true" tabindex="-1"></a>official_test_labels <span class="op">=</span> read_idx_labels(DATA_DIR <span class="op">/</span> <span class="st">"t10k-labels-idx1-ubyte.gz"</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<div id="22e6cb85" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> official_train_images.shape <span class="op">!=</span> (<span class="dv">60_000</span>, <span class="dv">28</span>, <span class="dv">28</span>):</span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Forma inesperada en las imágenes oficiales de entrenamiento"</span>)</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> official_test_images.shape <span class="op">!=</span> (<span class="dv">10_000</span>, <span class="dv">28</span>, <span class="dv">28</span>):</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Forma inesperada en las imágenes oficiales de test"</span>)</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> <span class="bu">set</span>(np.unique(official_train_labels)) <span class="op">!=</span> <span class="bu">set</span>(<span class="bu">range</span>(<span class="dv">10</span>)):</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"Las etiquetas no corresponden a las diez clases"</span>)</span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a>train_hashes <span class="op">=</span> pd.Series([</span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>    sha256(image.tobytes()).hexdigest() <span class="cf">for</span> image <span class="kw">in</span> official_train_images</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>test_hashes <span class="op">=</span> pd.Series([</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>    sha256(image.tobytes()).hexdigest() <span class="cf">for</span> image <span class="kw">in</span> official_test_images</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>data_audit <span class="op">=</span> pd.Series({</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"imágenes de entrenamiento oficiales"</span>: <span class="bu">len</span>(official_train_images),</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"imágenes de test oficiales"</span>: <span class="bu">len</span>(official_test_images),</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"alto"</span>: official_train_images.shape[<span class="dv">1</span>],</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"ancho"</span>: official_train_images.shape[<span class="dv">2</span>],</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"clases"</span>: <span class="bu">len</span>(np.unique(official_train_labels)),</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"mínimo de píxel"</span>: <span class="bu">int</span>(official_train_images.<span class="bu">min</span>()),</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"máximo de píxel"</span>: <span class="bu">int</span>(official_train_images.<span class="bu">max</span>()),</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"duplicados internos en entrenamiento"</span>: <span class="bu">int</span>(train_hashes.duplicated().<span class="bu">sum</span>()),</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"duplicados internos en test"</span>: <span class="bu">int</span>(test_hashes.duplicated().<span class="bu">sum</span>()),</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"imágenes compartidas entre splits"</span>: <span class="bu">len</span>(<span class="bu">set</span>(train_hashes) <span class="op">&amp;</span> <span class="bu">set</span>(test_hashes)),</span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>data_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>imágenes de entrenamiento oficiales     60000
+imágenes de test oficiales              10000
+alto                                       28
+ancho                                      28
+clases                                     10
+mínimo de píxel                             0
+máximo de píxel                           255
+duplicados internos en entrenamiento        0
+duplicados internos en test                 0
+imágenes compartidas entre splits           0
+dtype: int64</code></pre>
+</div>
+</div>
+<p>Los duplicados exactos se reportan como propiedad del benchmark; no los eliminamos porque respetaremos el test oficial y construiremos ajuste y validación sin solapamiento de índices. La auditoría no detecta duplicados cercanos ni etiquetas contradictorias visualmente.</p>
+</section>
+<section id="fijar-un-presupuesto-y-bloquear-test" class="level2" data-number="5.4">
+<h2 data-number="5.4" class="anchored" data-anchor-id="fijar-un-presupuesto-y-bloquear-test"><span class="header-section-number">5.4</span> Fijar un presupuesto y bloquear test</h2>
+<p>Para que cinco semillas y una prueba mecanística sean ejecutables en CPU, extraemos de las 60.000 imágenes oficiales 20.000 para ajuste y 5.000 para validación, ambas estratificadas. Las otras 35.000 no participan. El test oficial permanece bloqueado hasta cerrar modelos, épocas y regla de checkpoint.</p>
+<div id="6eb3de9f" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>all_indices <span class="op">=</span> np.arange(<span class="bu">len</span>(official_train_labels))</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a>development_indices, unused_indices <span class="op">=</span> train_test_split(</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a>    all_indices,</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a>    train_size<span class="op">=</span><span class="dv">25_000</span>,</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>official_train_labels,</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span>SEED,</span>
+<span id="cb6-7"><a href="#cb6-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-8"><a href="#cb6-8" aria-hidden="true" tabindex="-1"></a>fit_indices, validation_indices <span class="op">=</span> train_test_split(</span>
+<span id="cb6-9"><a href="#cb6-9" aria-hidden="true" tabindex="-1"></a>    development_indices,</span>
+<span id="cb6-10"><a href="#cb6-10" aria-hidden="true" tabindex="-1"></a>    train_size<span class="op">=</span><span class="dv">20_000</span>,</span>
+<span id="cb6-11"><a href="#cb6-11" aria-hidden="true" tabindex="-1"></a>    stratify<span class="op">=</span>official_train_labels[development_indices],</span>
+<span id="cb6-12"><a href="#cb6-12" aria-hidden="true" tabindex="-1"></a>    random_state<span class="op">=</span>SEED,</span>
+<span id="cb6-13"><a href="#cb6-13" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb6-14"><a href="#cb6-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-15"><a href="#cb6-15" aria-hidden="true" tabindex="-1"></a>split_summary <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb6-16"><a href="#cb6-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"partición"</span>: [<span class="st">"ajuste"</span>, <span class="st">"validación"</span>, <span class="st">"no utilizada"</span>, <span class="st">"test oficial"</span>],</span>
+<span id="cb6-17"><a href="#cb6-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"imágenes"</span>: [</span>
+<span id="cb6-18"><a href="#cb6-18" aria-hidden="true" tabindex="-1"></a>        <span class="bu">len</span>(fit_indices),</span>
+<span id="cb6-19"><a href="#cb6-19" aria-hidden="true" tabindex="-1"></a>        <span class="bu">len</span>(validation_indices),</span>
+<span id="cb6-20"><a href="#cb6-20" aria-hidden="true" tabindex="-1"></a>        <span class="bu">len</span>(unused_indices),</span>
+<span id="cb6-21"><a href="#cb6-21" aria-hidden="true" tabindex="-1"></a>        <span class="bu">len</span>(official_test_labels),</span>
+<span id="cb6-22"><a href="#cb6-22" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-23"><a href="#cb6-23" aria-hidden="true" tabindex="-1"></a>    <span class="st">"uso"</span>: [</span>
+<span id="cb6-24"><a href="#cb6-24" aria-hidden="true" tabindex="-1"></a>        <span class="st">"parámetros"</span>,</span>
+<span id="cb6-25"><a href="#cb6-25" aria-hidden="true" tabindex="-1"></a>        <span class="st">"checkpoint y comparación"</span>,</span>
+<span id="cb6-26"><a href="#cb6-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">"ninguno"</span>,</span>
+<span id="cb6-27"><a href="#cb6-27" aria-hidden="true" tabindex="-1"></a>        <span class="st">"evaluación final"</span>,</span>
+<span id="cb6-28"><a href="#cb6-28" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb6-29"><a href="#cb6-29" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb6-30"><a href="#cb6-30" aria-hidden="true" tabindex="-1"></a>split_summary</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">partición</th>
+<th data-quarto-table-cell-role="th">imágenes</th>
+<th data-quarto-table-cell-role="th">uso</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ajuste</td>
+<td>20000</td>
+<td>parámetros</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>validación</td>
+<td>5000</td>
+<td>checkpoint y comparación</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>no utilizada</td>
+<td>35000</td>
+<td>ninguno</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>test oficial</td>
+<td>10000</td>
+<td>evaluación final</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="2206668f" class="cell" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>fit_uint8 <span class="op">=</span> official_train_images[fit_indices]</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>validation_uint8 <span class="op">=</span> official_train_images[validation_indices]</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>fit_mean <span class="op">=</span> fit_uint8.mean() <span class="op">/</span> <span class="fl">255.0</span></span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>fit_std <span class="op">=</span> fit_uint8.std() <span class="op">/</span> <span class="fl">255.0</span></span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> fit_std <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"La desviación de los píxeles de ajuste es cero"</span>)</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> images_to_tensor(images):</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    tensor <span class="op">=</span> torch.from_numpy(images.copy()).to(torch.float32).div_(<span class="fl">255.0</span>)</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    tensor.sub_(fit_mean).div_(fit_std)</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> tensor.unsqueeze(<span class="dv">1</span>)</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-16"><a href="#cb7-16" aria-hidden="true" tabindex="-1"></a>X_fit <span class="op">=</span> images_to_tensor(fit_uint8)</span>
+<span id="cb7-17"><a href="#cb7-17" aria-hidden="true" tabindex="-1"></a>y_fit <span class="op">=</span> torch.from_numpy(</span>
+<span id="cb7-18"><a href="#cb7-18" aria-hidden="true" tabindex="-1"></a>    official_train_labels[fit_indices].astype(np.int64)</span>
+<span id="cb7-19"><a href="#cb7-19" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-20"><a href="#cb7-20" aria-hidden="true" tabindex="-1"></a>X_validation <span class="op">=</span> images_to_tensor(validation_uint8)</span>
+<span id="cb7-21"><a href="#cb7-21" aria-hidden="true" tabindex="-1"></a>y_validation <span class="op">=</span> torch.from_numpy(</span>
+<span id="cb7-22"><a href="#cb7-22" aria-hidden="true" tabindex="-1"></a>    official_train_labels[validation_indices].astype(np.int64)</span>
+<span id="cb7-23"><a href="#cb7-23" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-24"><a href="#cb7-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-25"><a href="#cb7-25" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="ss">f"Media de ajuste: </span><span class="sc">{</span>fit_mean<span class="sc">:.6f}</span><span class="ss"> | desviación: </span><span class="sc">{</span>fit_std<span class="sc">:.6f}</span><span class="ss">"</span>)</span>
+<span id="cb7-26"><a href="#cb7-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Ajuste:"</span>, X_fit.shape, y_fit.shape)</span>
+<span id="cb7-27"><a href="#cb7-27" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Validación:"</span>, X_validation.shape, y_validation.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Media de ajuste: 0.285651 | desviación: 0.352750
+Ajuste: torch.Size([20000, 1, 28, 28]) torch.Size([20000])
+Validación: torch.Size([5000, 1, 28, 28]) torch.Size([5000])</code></pre>
+</div>
+</div>
+<div id="cell-fig-fashion-examples" class="cell" data-fig-height="5" data-fig-width="10" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">10</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">5</span>))</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> class_index, class_name <span class="kw">in</span> <span class="bu">enumerate</span>(CLASS_NAMES):</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    positions <span class="op">=</span> np.flatnonzero(y_fit.numpy() <span class="op">==</span> class_index)[:<span class="dv">2</span>]</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row, position <span class="kw">in</span> <span class="bu">enumerate</span>(positions):</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>        axes[row, class_index].imshow(fit_uint8[position], cmap<span class="op">=</span><span class="st">"gray"</span>, vmin<span class="op">=</span><span class="dv">0</span>, vmax<span class="op">=</span><span class="dv">255</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>        axes[row, class_index].axis(<span class="st">"off"</span>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> row <span class="op">==</span> <span class="dv">0</span>:</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>            axes[row, class_index].set_title(class_name, fontsize<span class="op">=</span><span class="dv">8</span>, rotation<span class="op">=</span><span class="dv">25</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-fashion-examples" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Cuadrícula de veinte imágenes pequeñas de prendas, dos por cada clase.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fashion-examples-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-fashion-examples-output-1.png" alt="Cuadrícula de veinte imágenes pequeñas de prendas, dos por cada clase." width="950" height="325" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fashion-examples-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.1: Dos imágenes de ajuste por clase de Fashion-MNIST.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Las imágenes están centradas, sin color y con fondo uniforme. Esto hace visible la operación espacial, pero no representa fotografías reales de inventario.</p>
+</section>
+<section id="observar-un-filtro-antes-de-aprenderlo" class="level2" data-number="5.5">
+<h2 data-number="5.5" class="anchored" data-anchor-id="observar-un-filtro-antes-de-aprenderlo"><span class="header-section-number">5.5</span> Observar un filtro antes de aprenderlo</h2>
+<p>PyTorch implementa <strong>correlación cruzada</strong>, aunque la API y la literatura de deep learning la llaman convolución. Para una entrada <span class="math inline">\(\mathbf{X}\)</span> y un kernel <span class="math inline">\(\mathbf{K}\)</span>,</p>
+<p><span class="math display">\[
+Y_{ij}=\sum_{u=0}^{K_h-1}\sum_{v=0}^{K_w-1}
+K_{uv}X_{i+u,j+v}.
+\]</span></p>
+<p>La convolución matemática invertiría el kernel. Como los pesos serán aprendidos, esa inversión solo cambia la parametrización y se conserva el nombre habitual.</p>
+<div id="aa88b911" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>synthetic_image <span class="op">=</span> torch.zeros(<span class="dv">7</span>, <span class="dv">7</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>synthetic_image[:, <span class="dv">3</span>:] <span class="op">=</span> <span class="fl">1.0</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>vertical_kernel <span class="op">=</span> torch.tensor([</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">1.0</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">1.0</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">1.0</span>, <span class="fl">0.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> correlate2d(image, kernel):</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>    output_height <span class="op">=</span> image.shape[<span class="dv">0</span>] <span class="op">-</span> kernel.shape[<span class="dv">0</span>] <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    output_width <span class="op">=</span> image.shape[<span class="dv">1</span>] <span class="op">-</span> kernel.shape[<span class="dv">1</span>] <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>    output <span class="op">=</span> torch.empty(output_height, output_width)</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row <span class="kw">in</span> <span class="bu">range</span>(output_height):</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> column <span class="kw">in</span> <span class="bu">range</span>(output_width):</span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a>            window <span class="op">=</span> image[</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a>                row:row <span class="op">+</span> kernel.shape[<span class="dv">0</span>],</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a>                column:column <span class="op">+</span> kernel.shape[<span class="dv">1</span>],</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a>            ]</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a>            output[row, column] <span class="op">=</span> (window <span class="op">*</span> kernel).<span class="bu">sum</span>()</span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> output</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>manual_response <span class="op">=</span> correlate2d(synthetic_image, vertical_kernel)</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>pytorch_response <span class="op">=</span> F.conv2d(</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>    synthetic_image[<span class="va">None</span>, <span class="va">None</span>],</span>
+<span id="cb10-27"><a href="#cb10-27" aria-hidden="true" tabindex="-1"></a>    vertical_kernel[<span class="va">None</span>, <span class="va">None</span>],</span>
+<span id="cb10-28"><a href="#cb10-28" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb10-29"><a href="#cb10-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-30"><a href="#cb10-30" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> torch.allclose(manual_response, pytorch_response)</span>
+<span id="cb10-31"><a href="#cb10-31" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(manual_response)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>tensor([[0., 3., 3., 0., 0.],
+        [0., 3., 3., 0., 0.],
+        [0., 3., 3., 0., 0.],
+        [0., 3., 3., 0., 0.],
+        [0., 3., 3., 0., 0.]])</code></pre>
+</div>
+</div>
+<div id="cell-fig-manual-correlation" class="cell" data-fig-height="3" data-fig-width="9" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">3</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">3</span>))</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis, values, title <span class="kw">in</span> [</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">0</span>], synthetic_image, <span class="st">"Entrada"</span>),</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">1</span>], vertical_kernel, <span class="st">"Kernel vertical"</span>),</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">2</span>], manual_response, <span class="st">"Respuesta"</span>),</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>    image <span class="op">=</span> axis.imshow(values, cmap<span class="op">=</span><span class="st">"coolwarm"</span>)</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    axis.set_title(title)</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>    axis.set_xticks([])</span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a>    axis.set_yticks([])</span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>    fig.colorbar(image, ax<span class="op">=</span>axis, fraction<span class="op">=</span><span class="fl">0.046</span>)</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-manual-correlation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Imagen sintética con borde, kernel de tres por tres y mapa de respuesta.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-manual-correlation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-manual-correlation-output-1.png" alt="Imagen sintética con borde, kernel de tres por tres y mapa de respuesta." width="854" height="258" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-manual-correlation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.2: Un kernel vertical responde donde cambia localmente la intensidad.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>El valor de cada salida resume una ventana de <span class="math inline">\(3\times3\)</span>. Una respuesta positiva y una negativa distinguen la dirección del cambio; su magnitud indica qué tan compatible es la ventana con el patrón fijado.</p>
+</section>
+<section id="aplicar-detectores-manuales-a-una-prenda" class="level2" data-number="5.6">
+<h2 data-number="5.6" class="anchored" data-anchor-id="aplicar-detectores-manuales-a-una-prenda"><span class="header-section-number">5.6</span> Aplicar detectores manuales a una prenda</h2>
+<div id="67864262" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a>horizontal_kernel <span class="op">=</span> torch.tensor([</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    [<span class="op">-</span><span class="fl">1.0</span>, <span class="op">-</span><span class="fl">1.0</span>, <span class="op">-</span><span class="fl">1.0</span>],</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.0</span>, <span class="fl">0.0</span>, <span class="fl">0.0</span>],</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">1.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>real_image <span class="op">=</span> torch.from_numpy(fit_uint8[<span class="dv">0</span>].copy()).to(torch.float32) <span class="op">/</span> <span class="fl">255.0</span></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>vertical_response <span class="op">=</span> F.conv2d(</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>    real_image[<span class="va">None</span>, <span class="va">None</span>], vertical_kernel[<span class="va">None</span>, <span class="va">None</span>], padding<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>horizontal_response <span class="op">=</span> F.conv2d(</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>    real_image[<span class="va">None</span>, <span class="va">None</span>], horizontal_kernel[<span class="va">None</span>, <span class="va">None</span>], padding<span class="op">=</span><span class="dv">1</span></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>)[<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>edge_magnitude <span class="op">=</span> torch.sqrt(vertical_response <span class="op">**</span> <span class="dv">2</span> <span class="op">+</span> horizontal_response <span class="op">**</span> <span class="dv">2</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-fig-manual-fashion-filters" class="cell" data-fig-height="3" data-fig-width="10" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">4</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">3</span>))</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis, values, title, cmap <span class="kw">in</span> [</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">0</span>], real_image, <span class="st">"Imagen"</span>, <span class="st">"gray"</span>),</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">1</span>], vertical_response, <span class="st">"Cambio vertical"</span>, <span class="st">"coolwarm"</span>),</span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">2</span>], horizontal_response, <span class="st">"Cambio horizontal"</span>, <span class="st">"coolwarm"</span>),</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">3</span>], edge_magnitude, <span class="st">"Magnitud"</span>, <span class="st">"magma"</span>),</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    axis.imshow(values, cmap<span class="op">=</span>cmap)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    axis.set_title(title)</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a>    axis.axis(<span class="st">"off"</span>)</span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-manual-fashion-filters" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Imagen de una prenda y tres mapas de respuesta de bordes.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-manual-fashion-filters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-manual-fashion-filters-output-1.png" alt="Imagen de una prenda y tres mapas de respuesta de bordes." width="950" height="261" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-manual-fashion-filters-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.3: Filtros manuales resaltan cambios horizontales y verticales en una prenda.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Estos kernels no fueron aprendidos y no son una explicación del modelo final. Solo hacen observable el cálculo que una capa entrenable generalizará.</p>
+</section>
+<section id="padding-stride-y-forma-de-salida" class="level2" data-number="5.7">
+<h2 data-number="5.7" class="anchored" data-anchor-id="padding-stride-y-forma-de-salida"><span class="header-section-number">5.7</span> Padding, stride y forma de salida</h2>
+<p>Para entrada espacial <span class="math inline">\(H_{\mathrm{in}}\times W_{\mathrm{in}}\)</span>, kernel <span class="math inline">\(K\)</span>, padding <span class="math inline">\(P\)</span>, stride <span class="math inline">\(S\)</span> y dilatación <span class="math inline">\(D\)</span>,</p>
+<p><span class="math display">\[
+H_{\mathrm{out}}=
+\left\lfloor
+\frac{H_{\mathrm{in}}+2P_h-D_h(K_h-1)-1}{S_h}+1
+\right\rfloor,
+\]</span></p>
+<p>y de manera análoga para el ancho. En este capítulo usaremos dilatación uno.</p>
+<div id="126cfa87" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb15"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> convolution_output_size(size, kernel, padding<span class="op">=</span><span class="dv">0</span>, stride<span class="op">=</span><span class="dv">1</span>, dilation<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> (size <span class="op">+</span> <span class="dv">2</span> <span class="op">*</span> padding <span class="op">-</span> dilation <span class="op">*</span> (kernel <span class="op">-</span> <span class="dv">1</span>) <span class="op">-</span> <span class="dv">1</span>) <span class="op">//</span> stride <span class="op">+</span> <span class="dv">1</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-4"><a href="#cb15-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb15-5"><a href="#cb15-5" aria-hidden="true" tabindex="-1"></a>shape_cases <span class="op">=</span> pd.DataFrame([</span>
+<span id="cb15-6"><a href="#cb15-6" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"entrada"</span>: <span class="st">"28x28"</span>, <span class="st">"kernel"</span>: <span class="dv">3</span>, <span class="st">"padding"</span>: <span class="dv">0</span>, <span class="st">"stride"</span>: <span class="dv">1</span>},</span>
+<span id="cb15-7"><a href="#cb15-7" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"entrada"</span>: <span class="st">"28x28"</span>, <span class="st">"kernel"</span>: <span class="dv">3</span>, <span class="st">"padding"</span>: <span class="dv">1</span>, <span class="st">"stride"</span>: <span class="dv">1</span>},</span>
+<span id="cb15-8"><a href="#cb15-8" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"entrada"</span>: <span class="st">"28x28"</span>, <span class="st">"kernel"</span>: <span class="dv">3</span>, <span class="st">"padding"</span>: <span class="dv">1</span>, <span class="st">"stride"</span>: <span class="dv">2</span>},</span>
+<span id="cb15-9"><a href="#cb15-9" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"entrada"</span>: <span class="st">"28x28"</span>, <span class="st">"kernel"</span>: <span class="dv">5</span>, <span class="st">"padding"</span>: <span class="dv">2</span>, <span class="st">"stride"</span>: <span class="dv">1</span>},</span>
+<span id="cb15-10"><a href="#cb15-10" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb15-11"><a href="#cb15-11" aria-hidden="true" tabindex="-1"></a>shape_cases[<span class="st">"salida"</span>] <span class="op">=</span> shape_cases.<span class="bu">apply</span>(</span>
+<span id="cb15-12"><a href="#cb15-12" aria-hidden="true" tabindex="-1"></a>    <span class="kw">lambda</span> row: convolution_output_size(</span>
+<span id="cb15-13"><a href="#cb15-13" aria-hidden="true" tabindex="-1"></a>        <span class="dv">28</span>, row[<span class="st">"kernel"</span>], row[<span class="st">"padding"</span>], row[<span class="st">"stride"</span>]</span>
+<span id="cb15-14"><a href="#cb15-14" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb15-15"><a href="#cb15-15" aria-hidden="true" tabindex="-1"></a>    axis<span class="op">=</span><span class="dv">1</span>,</span>
+<span id="cb15-16"><a href="#cb15-16" aria-hidden="true" tabindex="-1"></a>).<span class="bu">map</span>(<span class="kw">lambda</span> size: <span class="ss">f"</span><span class="sc">{</span>size<span class="sc">}</span><span class="ss">x</span><span class="sc">{</span>size<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb15-17"><a href="#cb15-17" aria-hidden="true" tabindex="-1"></a>shape_cases</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">entrada</th>
+<th data-quarto-table-cell-role="th">kernel</th>
+<th data-quarto-table-cell-role="th">padding</th>
+<th data-quarto-table-cell-role="th">stride</th>
+<th data-quarto-table-cell-role="th">salida</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>28x28</td>
+<td>3</td>
+<td>0</td>
+<td>1</td>
+<td>26x26</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>28x28</td>
+<td>3</td>
+<td>1</td>
+<td>1</td>
+<td>28x28</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>28x28</td>
+<td>3</td>
+<td>1</td>
+<td>2</td>
+<td>14x14</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>28x28</td>
+<td>5</td>
+<td>2</td>
+<td>1</td>
+<td>28x28</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Padding agrega una condición de borde, no información. Stride reduce el número de posiciones evaluadas y puede descartar detalle. La fórmula debe auditarse antes de conectar una cabeza densa.</p>
+</section>
+<section id="canales-y-parámetros-compartidos" class="level2" data-number="5.8">
+<h2 data-number="5.8" class="anchored" data-anchor-id="canales-y-parámetros-compartidos"><span class="header-section-number">5.8</span> Canales y parámetros compartidos</h2>
+<p>Para entrada <span class="math inline">\(\mathbf{X}\in\mathbb{R}^{N\times C_{\mathrm{in}}\times H\times W}\)</span>, los pesos de <code>Conv2d</code> tienen forma</p>
+<p><span class="math display">\[
+C_{\mathrm{out}}\times C_{\mathrm{in}}\times K_h\times K_w.
+\]</span></p>
+<p>Cada canal de salida suma respuestas sobre todos los canales de entrada. Su número de parámetros es</p>
+<p><span class="math display">\[
+C_{\mathrm{out}}(C_{\mathrm{in}}K_hK_w+1),
+\]</span></p>
+<p>independiente del alto y ancho de la imagen.</p>
+<div id="f3a3c538" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>observable_conv <span class="op">=</span> nn.Conv2d(<span class="dv">1</span>, <span class="dv">8</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>example_batch <span class="op">=</span> X_fit[:<span class="dv">32</span>]</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>example_maps <span class="op">=</span> observable_conv(example_batch)</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>example_loss <span class="op">=</span> example_maps.square().mean()</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>example_loss.backward()</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Entrada:"</span>, example_batch.shape)</span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Pesos:"</span>, observable_conv.weight.shape)</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Sesgo:"</span>, observable_conv.bias.shape)</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Salida:"</span>, example_maps.shape)</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Parámetros:"</span>, <span class="bu">sum</span>(p.numel() <span class="cf">for</span> p <span class="kw">in</span> observable_conv.parameters()))</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Gradiente de pesos:"</span>, observable_conv.weight.grad.shape)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Entrada: torch.Size([32, 1, 28, 28])
+Pesos: torch.Size([8, 1, 3, 3])
+Sesgo: torch.Size([8])
+Salida: torch.Size([32, 8, 28, 28])
+Parámetros: 80
+Gradiente de pesos: torch.Size([8, 1, 3, 3])</code></pre>
+</div>
+</div>
+<p>Los ocho canales de salida no son clases: son ocho mapas cuyos kernels se actualizarán desde la pérdida.</p>
+</section>
+<section id="pooling-resume-vecindarios" class="level2" data-number="5.9">
+<h2 data-number="5.9" class="anchored" data-anchor-id="pooling-resume-vecindarios"><span class="header-section-number">5.9</span> Pooling resume vecindarios</h2>
+<p>Max pooling conserva el máximo de cada ventana y no tiene parámetros:</p>
+<p><span class="math display">\[
+Y_{n,c,i,j}=\max_{0\leq u&lt;K_h,\,0\leq v&lt;K_w}
+X_{n,c,iS_h+u,jS_w+v}.
+\]</span></p>
+<div id="3cff8387" class="cell" data-execution_count="13">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb18"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a>pool_input <span class="op">=</span> torch.tensor([</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">3.0</span>, <span class="fl">2.0</span>, <span class="fl">0.0</span>],</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">4.0</span>, <span class="fl">6.0</span>, <span class="fl">5.0</span>, <span class="fl">1.0</span>],</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">0.0</span>, <span class="fl">2.0</span>, <span class="fl">8.0</span>, <span class="fl">7.0</span>],</span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a>    [<span class="fl">1.0</span>, <span class="fl">3.0</span>, <span class="fl">4.0</span>, <span class="fl">9.0</span>],</span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a>max_pooled <span class="op">=</span> F.max_pool2d(pool_input[<span class="va">None</span>, <span class="va">None</span>], kernel_size<span class="op">=</span><span class="dv">2</span>)[<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a>average_pooled <span class="op">=</span> F.avg_pool2d(pool_input[<span class="va">None</span>, <span class="va">None</span>], kernel_size<span class="op">=</span><span class="dv">2</span>)[<span class="dv">0</span>, <span class="dv">0</span>]</span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Max pooling:</span><span class="ch">\n</span><span class="st">"</span>, max_pooled)</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(<span class="st">"Average pooling:</span><span class="ch">\n</span><span class="st">"</span>, average_pooled)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Max pooling:
+ tensor([[6., 5.],
+        [3., 9.]])
+Average pooling:
+ tensor([[3.5000, 2.0000],
+        [1.5000, 7.0000]])</code></pre>
+</div>
+</div>
+<p>Pooling reduce resolución y puede estabilizar respuestas ante desplazamientos pequeños, pero no garantiza invariancia. Un desplazamiento de un píxel puede cambiar qué valores comparten ventana.</p>
+</section>
+<section id="campo-receptivo" class="level2" data-number="5.10">
+<h2 data-number="5.10" class="anchored" data-anchor-id="campo-receptivo"><span class="header-section-number">5.10</span> Campo receptivo</h2>
+<p>El campo receptivo teórico indica qué región original puede influir en una unidad. Si <span class="math inline">\(r_\ell\)</span> es su tamaño y <span class="math inline">\(j_\ell\)</span> el salto entre unidades vecinas,</p>
+<p><span class="math display">\[
+j_\ell=j_{\ell-1}s_\ell,
+\qquad
+r_\ell=r_{\ell-1}+(k_\ell-1)j_{\ell-1},
+\]</span></p>
+<p>con <span class="math inline">\(r_0=j_0=1\)</span>.</p>
+<div id="9c641c06" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>receptive_operations <span class="op">=</span> [</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"Entrada"</span>, <span class="dv">1</span>, <span class="dv">1</span>, <span class="st">"28x28"</span>),</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"Conv 3x3"</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="st">"28x28"</span>),</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"MaxPool 2x2"</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="st">"14x14"</span>),</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"Conv 3x3"</span>, <span class="dv">3</span>, <span class="dv">1</span>, <span class="st">"14x14"</span>),</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"MaxPool 2x2"</span>, <span class="dv">2</span>, <span class="dv">2</span>, <span class="st">"7x7"</span>),</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-9"><a href="#cb20-9" aria-hidden="true" tabindex="-1"></a>receptive_rows <span class="op">=</span> []</span>
+<span id="cb20-10"><a href="#cb20-10" aria-hidden="true" tabindex="-1"></a>receptive_field <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb20-11"><a href="#cb20-11" aria-hidden="true" tabindex="-1"></a>jump <span class="op">=</span> <span class="dv">1</span></span>
+<span id="cb20-12"><a href="#cb20-12" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index, (operation, kernel, stride, resolution) <span class="kw">in</span> <span class="bu">enumerate</span>(</span>
+<span id="cb20-13"><a href="#cb20-13" aria-hidden="true" tabindex="-1"></a>    receptive_operations</span>
+<span id="cb20-14"><a href="#cb20-14" aria-hidden="true" tabindex="-1"></a>):</span>
+<span id="cb20-15"><a href="#cb20-15" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> index <span class="op">&gt;</span> <span class="dv">0</span>:</span>
+<span id="cb20-16"><a href="#cb20-16" aria-hidden="true" tabindex="-1"></a>        receptive_field <span class="op">+=</span> (kernel <span class="op">-</span> <span class="dv">1</span>) <span class="op">*</span> jump</span>
+<span id="cb20-17"><a href="#cb20-17" aria-hidden="true" tabindex="-1"></a>        jump <span class="op">*=</span> stride</span>
+<span id="cb20-18"><a href="#cb20-18" aria-hidden="true" tabindex="-1"></a>    receptive_rows.append({</span>
+<span id="cb20-19"><a href="#cb20-19" aria-hidden="true" tabindex="-1"></a>        <span class="st">"operación"</span>: operation,</span>
+<span id="cb20-20"><a href="#cb20-20" aria-hidden="true" tabindex="-1"></a>        <span class="st">"resolución"</span>: resolution,</span>
+<span id="cb20-21"><a href="#cb20-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"salto"</span>: jump,</span>
+<span id="cb20-22"><a href="#cb20-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">"campo receptivo"</span>: receptive_field,</span>
+<span id="cb20-23"><a href="#cb20-23" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb20-24"><a href="#cb20-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-25"><a href="#cb20-25" aria-hidden="true" tabindex="-1"></a>pd.DataFrame(receptive_rows)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">operación</th>
+<th data-quarto-table-cell-role="th">resolución</th>
+<th data-quarto-table-cell-role="th">salto</th>
+<th data-quarto-table-cell-role="th">campo receptivo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>Entrada</td>
+<td>28x28</td>
+<td>1</td>
+<td>1</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Conv 3x3</td>
+<td>28x28</td>
+<td>1</td>
+<td>3</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>MaxPool 2x2</td>
+<td>14x14</td>
+<td>2</td>
+<td>4</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>Conv 3x3</td>
+<td>14x14</td>
+<td>2</td>
+<td>8</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>MaxPool 2x2</td>
+<td>7x7</td>
+<td>4</td>
+<td>10</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Una unidad del último mapa depende teóricamente de una región <span class="math inline">\(10\times10\)</span>. La cabeza densa combina todas las posiciones y puede usar la imagen completa. El campo efectivo suele concentrarse en una región menor <span class="citation" data-cites="luo2016receptive">(<a href="../references.html#ref-luo2016receptive" role="doc-biblioref">Luo et&nbsp;al. 2016</a>)</span>.</p>
+</section>
+<section id="construir-modelos-comparables" class="level2" data-number="5.11">
+<h2 data-number="5.11" class="anchored" data-anchor-id="construir-modelos-comparables"><span class="header-section-number">5.11</span> Construir modelos comparables</h2>
+<p>La MLP y la CNN tendrán alrededor de 26,6 mil parámetros. Así evitamos atribuir a la estructura espacial una ventaja causada simplemente por tamaño.</p>
+<div id="40430d05" class="cell" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FashionMLP(nn.Module):</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.hidden1 <span class="op">=</span> nn.Linear(<span class="dv">28</span> <span class="op">*</span> <span class="dv">28</span>, <span class="dv">32</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.hidden2 <span class="op">=</span> nn.Linear(<span class="dv">32</span>, <span class="dv">32</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.output <span class="op">=</span> nn.Linear(<span class="dv">32</span>, <span class="dv">10</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, X):</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>        hidden <span class="op">=</span> torch.relu(<span class="va">self</span>.hidden1(X.flatten(start_dim<span class="op">=</span><span class="dv">1</span>)))</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>        hidden <span class="op">=</span> torch.relu(<span class="va">self</span>.hidden2(hidden))</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.output(hidden)</span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> FashionCNN(nn.Module):</span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>):</span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb21-17"><a href="#cb21-17" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.conv1 <span class="op">=</span> nn.Conv2d(<span class="dv">1</span>, <span class="dv">8</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb21-18"><a href="#cb21-18" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.conv2 <span class="op">=</span> nn.Conv2d(<span class="dv">8</span>, <span class="dv">16</span>, kernel_size<span class="op">=</span><span class="dv">3</span>, padding<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb21-19"><a href="#cb21-19" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.hidden <span class="op">=</span> nn.Linear(<span class="dv">16</span> <span class="op">*</span> <span class="dv">7</span> <span class="op">*</span> <span class="dv">7</span>, <span class="dv">32</span>)</span>
+<span id="cb21-20"><a href="#cb21-20" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.output <span class="op">=</span> nn.Linear(<span class="dv">32</span>, <span class="dv">10</span>)</span>
+<span id="cb21-21"><a href="#cb21-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-22"><a href="#cb21-22" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> features(<span class="va">self</span>, X):</span>
+<span id="cb21-23"><a href="#cb21-23" aria-hidden="true" tabindex="-1"></a>        maps1 <span class="op">=</span> torch.relu(<span class="va">self</span>.conv1(X))</span>
+<span id="cb21-24"><a href="#cb21-24" aria-hidden="true" tabindex="-1"></a>        pooled1 <span class="op">=</span> F.max_pool2d(maps1, kernel_size<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb21-25"><a href="#cb21-25" aria-hidden="true" tabindex="-1"></a>        maps2 <span class="op">=</span> torch.relu(<span class="va">self</span>.conv2(pooled1))</span>
+<span id="cb21-26"><a href="#cb21-26" aria-hidden="true" tabindex="-1"></a>        pooled2 <span class="op">=</span> F.max_pool2d(maps2, kernel_size<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb21-27"><a href="#cb21-27" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> maps1, maps2, pooled2</span>
+<span id="cb21-28"><a href="#cb21-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-29"><a href="#cb21-29" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, X):</span>
+<span id="cb21-30"><a href="#cb21-30" aria-hidden="true" tabindex="-1"></a>        _, _, pooled <span class="op">=</span> <span class="va">self</span>.features(X)</span>
+<span id="cb21-31"><a href="#cb21-31" aria-hidden="true" tabindex="-1"></a>        hidden <span class="op">=</span> torch.relu(<span class="va">self</span>.hidden(pooled.flatten(start_dim<span class="op">=</span><span class="dv">1</span>)))</span>
+<span id="cb21-32"><a href="#cb21-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.output(hidden)</span>
+<span id="cb21-33"><a href="#cb21-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-34"><a href="#cb21-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-35"><a href="#cb21-35" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> initialize_relu_model(model):</span>
+<span id="cb21-36"><a href="#cb21-36" aria-hidden="true" tabindex="-1"></a>    learned_layers <span class="op">=</span> [</span>
+<span id="cb21-37"><a href="#cb21-37" aria-hidden="true" tabindex="-1"></a>        module</span>
+<span id="cb21-38"><a href="#cb21-38" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> module <span class="kw">in</span> model.modules()</span>
+<span id="cb21-39"><a href="#cb21-39" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> <span class="bu">isinstance</span>(module, (nn.Linear, nn.Conv2d))</span>
+<span id="cb21-40"><a href="#cb21-40" aria-hidden="true" tabindex="-1"></a>    ]</span>
+<span id="cb21-41"><a href="#cb21-41" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> layer <span class="kw">in</span> learned_layers[:<span class="op">-</span><span class="dv">1</span>]:</span>
+<span id="cb21-42"><a href="#cb21-42" aria-hidden="true" tabindex="-1"></a>        nn.init.kaiming_normal_(layer.weight, nonlinearity<span class="op">=</span><span class="st">"relu"</span>)</span>
+<span id="cb21-43"><a href="#cb21-43" aria-hidden="true" tabindex="-1"></a>        nn.init.zeros_(layer.bias)</span>
+<span id="cb21-44"><a href="#cb21-44" aria-hidden="true" tabindex="-1"></a>    nn.init.xavier_uniform_(learned_layers[<span class="op">-</span><span class="dv">1</span>].weight)</span>
+<span id="cb21-45"><a href="#cb21-45" aria-hidden="true" tabindex="-1"></a>    nn.init.zeros_(learned_layers[<span class="op">-</span><span class="dv">1</span>].bias)</span>
+<span id="cb21-46"><a href="#cb21-46" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-47"><a href="#cb21-47" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-48"><a href="#cb21-48" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(SEED)</span>
+<span id="cb21-49"><a href="#cb21-49" aria-hidden="true" tabindex="-1"></a>mlp_example <span class="op">=</span> FashionMLP()</span>
+<span id="cb21-50"><a href="#cb21-50" aria-hidden="true" tabindex="-1"></a>cnn_example <span class="op">=</span> FashionCNN()</span>
+<span id="cb21-51"><a href="#cb21-51" aria-hidden="true" tabindex="-1"></a>initialize_relu_model(mlp_example)</span>
+<span id="cb21-52"><a href="#cb21-52" aria-hidden="true" tabindex="-1"></a>initialize_relu_model(cnn_example)</span>
+<span id="cb21-53"><a href="#cb21-53" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-54"><a href="#cb21-54" aria-hidden="true" tabindex="-1"></a>model_audit <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb21-55"><a href="#cb21-55" aria-hidden="true" tabindex="-1"></a>    <span class="st">"modelo"</span>: [<span class="st">"MLP"</span>, <span class="st">"CNN"</span>],</span>
+<span id="cb21-56"><a href="#cb21-56" aria-hidden="true" tabindex="-1"></a>    <span class="st">"parámetros"</span>: [</span>
+<span id="cb21-57"><a href="#cb21-57" aria-hidden="true" tabindex="-1"></a>        <span class="bu">sum</span>(parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> mlp_example.parameters()),</span>
+<span id="cb21-58"><a href="#cb21-58" aria-hidden="true" tabindex="-1"></a>        <span class="bu">sum</span>(parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> cnn_example.parameters()),</span>
+<span id="cb21-59"><a href="#cb21-59" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb21-60"><a href="#cb21-60" aria-hidden="true" tabindex="-1"></a>    <span class="st">"forma de logits"</span>: [</span>
+<span id="cb21-61"><a href="#cb21-61" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(mlp_example(X_fit[:<span class="dv">16</span>]).shape),</span>
+<span id="cb21-62"><a href="#cb21-62" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(cnn_example(X_fit[:<span class="dv">16</span>]).shape),</span>
+<span id="cb21-63"><a href="#cb21-63" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb21-64"><a href="#cb21-64" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb21-65"><a href="#cb21-65" aria-hidden="true" tabindex="-1"></a>model_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="15">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">modelo</th>
+<th data-quarto-table-cell-role="th">parámetros</th>
+<th data-quarto-table-cell-role="th">forma de logits</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>MLP</td>
+<td>26506</td>
+<td>(16, 10)</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>CNN</td>
+<td>26698</td>
+<td>(16, 10)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="e4784a53" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>    maps1, maps2, pooled2 <span class="op">=</span> cnn_example.features(X_fit[:<span class="dv">16</span>])</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a>shape_audit <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"etapa"</span>: [<span class="st">"Entrada"</span>, <span class="st">"Conv1"</span>, <span class="st">"Pool1"</span>, <span class="st">"Conv2"</span>, <span class="st">"Pool2"</span>, <span class="st">"Logits"</span>],</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"forma"</span>: [</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(X_fit[:<span class="dv">16</span>].shape),</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(maps1.shape),</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a>        (<span class="dv">16</span>, <span class="dv">8</span>, <span class="dv">14</span>, <span class="dv">14</span>),</span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(maps2.shape),</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(pooled2.shape),</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="bu">tuple</span>(cnn_example(X_fit[:<span class="dv">16</span>]).shape),</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>    ],</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>shape_audit</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">etapa</th>
+<th data-quarto-table-cell-role="th">forma</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>Entrada</td>
+<td>(16, 1, 28, 28)</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Conv1</td>
+<td>(16, 8, 28, 28)</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>Pool1</td>
+<td>(16, 8, 14, 14)</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>Conv2</td>
+<td>(16, 16, 14, 14)</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>Pool2</td>
+<td>(16, 16, 7, 7)</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>Logits</td>
+<td>(16, 10)</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>La CNN tiene solo 192 parámetros más. Igualar parámetros no iguala operaciones: reutilizar un kernel sobre muchas posiciones requiere más cómputo que una matriz densa pequeña.</p>
+</section>
+<section id="protocolo-controlado-mlp-cnn" class="level2" data-number="5.12">
+<h2 data-number="5.12" class="anchored" data-anchor-id="protocolo-controlado-mlp-cnn"><span class="header-section-number">5.12</span> Protocolo controlado MLP-CNN</h2>
+<p>Ambos modelos usarán:</p>
+<ul>
+<li>los mismos índices y normalización;</li>
+<li>AdamW con tasa 0,001 y sin weight decay;</li>
+<li>batch de 256, ocho épocas y entropía cruzada;</li>
+<li>ReLU con inicialización Kaiming y salida Xavier;</li>
+<li>checkpoint de menor pérdida de validación;</li>
+<li>cinco semillas pareadas y CPU.</li>
+</ul>
+<p>Antes de ejecutar declaramos:</p>
+<ol type="1">
+<li>la CNN superará macro-F1 de validación en al menos cuatro de cinco semillas;</li>
+<li>una mejora material requiere mediana del delta CNN-MLP de al menos 0,01;</li>
+<li>al permutar los píxeles, la CNN perderá más desempeño que la MLP.</li>
+</ol>
+<p>La tasa común controla la receta, pero no demuestra que cada arquitectura esté óptimamente ajustada.</p>
+<div id="7a3771fe" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>EPOCHS <span class="op">=</span> <span class="dv">8</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> macro_f1(labels, predictions):</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> f1_score(</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>        labels.numpy(),</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>        predictions.numpy(),</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a>        labels<span class="op">=</span>np.arange(<span class="dv">10</span>),</span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>        average<span class="op">=</span><span class="st">"macro"</span>,</span>
+<span id="cb23-11"><a href="#cb23-11" aria-hidden="true" tabindex="-1"></a>        zero_division<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb23-12"><a href="#cb23-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-13"><a href="#cb23-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-14"><a href="#cb23-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-15"><a href="#cb23-15" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> evaluate_model(model, X, y):</span>
+<span id="cb23-16"><a href="#cb23-16" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb23-17"><a href="#cb23-17" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb23-18"><a href="#cb23-18" aria-hidden="true" tabindex="-1"></a>        logits <span class="op">=</span> model(X)</span>
+<span id="cb23-19"><a href="#cb23-19" aria-hidden="true" tabindex="-1"></a>        loss <span class="op">=</span> F.cross_entropy(logits, y).item()</span>
+<span id="cb23-20"><a href="#cb23-20" aria-hidden="true" tabindex="-1"></a>        predictions <span class="op">=</span> logits.argmax(dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb23-21"><a href="#cb23-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> loss, macro_f1(y, predictions), predictions, logits</span>
+<span id="cb23-22"><a href="#cb23-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-23"><a href="#cb23-23" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-24"><a href="#cb23-24" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_visual_model(model_class, seed, train_X<span class="op">=</span>X_fit, validation_X<span class="op">=</span>X_validation):</span>
+<span id="cb23-25"><a href="#cb23-25" aria-hidden="true" tabindex="-1"></a>    torch.manual_seed(seed)</span>
+<span id="cb23-26"><a href="#cb23-26" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> model_class().to(device)</span>
+<span id="cb23-27"><a href="#cb23-27" aria-hidden="true" tabindex="-1"></a>    initialize_relu_model(model)</span>
+<span id="cb23-28"><a href="#cb23-28" aria-hidden="true" tabindex="-1"></a>    loader <span class="op">=</span> DataLoader(</span>
+<span id="cb23-29"><a href="#cb23-29" aria-hidden="true" tabindex="-1"></a>        TensorDataset(train_X, y_fit),</span>
+<span id="cb23-30"><a href="#cb23-30" aria-hidden="true" tabindex="-1"></a>        batch_size<span class="op">=</span>BATCH_SIZE,</span>
+<span id="cb23-31"><a href="#cb23-31" aria-hidden="true" tabindex="-1"></a>        shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb23-32"><a href="#cb23-32" aria-hidden="true" tabindex="-1"></a>        generator<span class="op">=</span>torch.Generator().manual_seed(seed),</span>
+<span id="cb23-33"><a href="#cb23-33" aria-hidden="true" tabindex="-1"></a>        num_workers<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb23-34"><a href="#cb23-34" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-35"><a href="#cb23-35" aria-hidden="true" tabindex="-1"></a>    optimizer <span class="op">=</span> torch.optim.AdamW(</span>
+<span id="cb23-36"><a href="#cb23-36" aria-hidden="true" tabindex="-1"></a>        model.parameters(), lr<span class="op">=</span><span class="fl">0.001</span>, weight_decay<span class="op">=</span><span class="fl">0.0</span></span>
+<span id="cb23-37"><a href="#cb23-37" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb23-38"><a href="#cb23-38" aria-hidden="true" tabindex="-1"></a>    best_loss <span class="op">=</span> <span class="bu">float</span>(<span class="st">"inf"</span>)</span>
+<span id="cb23-39"><a href="#cb23-39" aria-hidden="true" tabindex="-1"></a>    best_epoch <span class="op">=</span> <span class="dv">0</span></span>
+<span id="cb23-40"><a href="#cb23-40" aria-hidden="true" tabindex="-1"></a>    best_state <span class="op">=</span> <span class="va">None</span></span>
+<span id="cb23-41"><a href="#cb23-41" aria-hidden="true" tabindex="-1"></a>    history_rows <span class="op">=</span> []</span>
+<span id="cb23-42"><a href="#cb23-42" aria-hidden="true" tabindex="-1"></a>    started_at <span class="op">=</span> perf_counter()</span>
+<span id="cb23-43"><a href="#cb23-43" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-44"><a href="#cb23-44" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, EPOCHS <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb23-45"><a href="#cb23-45" aria-hidden="true" tabindex="-1"></a>        model.train()</span>
+<span id="cb23-46"><a href="#cb23-46" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> batch_X, batch_y <span class="kw">in</span> loader:</span>
+<span id="cb23-47"><a href="#cb23-47" aria-hidden="true" tabindex="-1"></a>            optimizer.zero_grad(set_to_none<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb23-48"><a href="#cb23-48" aria-hidden="true" tabindex="-1"></a>            loss <span class="op">=</span> F.cross_entropy(model(batch_X), batch_y)</span>
+<span id="cb23-49"><a href="#cb23-49" aria-hidden="true" tabindex="-1"></a>            loss.backward()</span>
+<span id="cb23-50"><a href="#cb23-50" aria-hidden="true" tabindex="-1"></a>            optimizer.step()</span>
+<span id="cb23-51"><a href="#cb23-51" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-52"><a href="#cb23-52" aria-hidden="true" tabindex="-1"></a>        fit_loss, fit_f1, _, _ <span class="op">=</span> evaluate_model(model, train_X, y_fit)</span>
+<span id="cb23-53"><a href="#cb23-53" aria-hidden="true" tabindex="-1"></a>        validation_loss, validation_f1, _, _ <span class="op">=</span> evaluate_model(</span>
+<span id="cb23-54"><a href="#cb23-54" aria-hidden="true" tabindex="-1"></a>            model, validation_X, y_validation</span>
+<span id="cb23-55"><a href="#cb23-55" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb23-56"><a href="#cb23-56" aria-hidden="true" tabindex="-1"></a>        history_rows.append({</span>
+<span id="cb23-57"><a href="#cb23-57" aria-hidden="true" tabindex="-1"></a>            <span class="st">"epoch"</span>: epoch,</span>
+<span id="cb23-58"><a href="#cb23-58" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fit_loss"</span>: fit_loss,</span>
+<span id="cb23-59"><a href="#cb23-59" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_loss"</span>: validation_loss,</span>
+<span id="cb23-60"><a href="#cb23-60" aria-hidden="true" tabindex="-1"></a>            <span class="st">"fit_macro_f1"</span>: fit_f1,</span>
+<span id="cb23-61"><a href="#cb23-61" aria-hidden="true" tabindex="-1"></a>            <span class="st">"validation_macro_f1"</span>: validation_f1,</span>
+<span id="cb23-62"><a href="#cb23-62" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb23-63"><a href="#cb23-63" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-64"><a href="#cb23-64" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> validation_loss <span class="op">&lt;</span> best_loss:</span>
+<span id="cb23-65"><a href="#cb23-65" aria-hidden="true" tabindex="-1"></a>            best_loss <span class="op">=</span> validation_loss</span>
+<span id="cb23-66"><a href="#cb23-66" aria-hidden="true" tabindex="-1"></a>            best_epoch <span class="op">=</span> epoch</span>
+<span id="cb23-67"><a href="#cb23-67" aria-hidden="true" tabindex="-1"></a>            best_state <span class="op">=</span> deepcopy(model.state_dict())</span>
+<span id="cb23-68"><a href="#cb23-68" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-69"><a href="#cb23-69" aria-hidden="true" tabindex="-1"></a>    elapsed_seconds <span class="op">=</span> perf_counter() <span class="op">-</span> started_at</span>
+<span id="cb23-70"><a href="#cb23-70" aria-hidden="true" tabindex="-1"></a>    model.load_state_dict(best_state)</span>
+<span id="cb23-71"><a href="#cb23-71" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb23-72"><a href="#cb23-72" aria-hidden="true" tabindex="-1"></a>        <span class="st">"model"</span>: model,</span>
+<span id="cb23-73"><a href="#cb23-73" aria-hidden="true" tabindex="-1"></a>        <span class="st">"history"</span>: pd.DataFrame(history_rows),</span>
+<span id="cb23-74"><a href="#cb23-74" aria-hidden="true" tabindex="-1"></a>        <span class="st">"best_epoch"</span>: best_epoch,</span>
+<span id="cb23-75"><a href="#cb23-75" aria-hidden="true" tabindex="-1"></a>        <span class="st">"seconds"</span>: elapsed_seconds,</span>
+<span id="cb23-76"><a href="#cb23-76" aria-hidden="true" tabindex="-1"></a>    }</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="entrenar-cinco-semillas-pareadas" class="level2" data-number="5.13">
+<h2 data-number="5.13" class="anchored" data-anchor-id="entrenar-cinco-semillas-pareadas"><span class="header-section-number">5.13</span> Entrenar cinco semillas pareadas</h2>
+<div id="5b5f52b4" class="cell" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>paired_runs <span class="op">=</span> {}</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>validation_rows <span class="op">=</span> []</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> model_name, model_class <span class="kw">in</span> [(<span class="st">"MLP"</span>, FashionMLP), (<span class="st">"CNN"</span>, FashionCNN)]:</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        run <span class="op">=</span> train_visual_model(model_class, seed)</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        paired_runs[(seed, model_name)] <span class="op">=</span> run</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        validation_loss, validation_f1, _, _ <span class="op">=</span> evaluate_model(</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>            run[<span class="st">"model"</span>], X_validation, y_validation</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>        validation_rows.append({</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>            <span class="st">"semilla"</span>: seed,</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a>            <span class="st">"modelo"</span>: model_name,</span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mejor época"</span>: run[<span class="st">"best_epoch"</span>],</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">"loss validación"</span>: validation_loss,</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">"macro-F1 validación"</span>: validation_f1,</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">"parámetros"</span>: <span class="bu">sum</span>(</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>                parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> run[<span class="st">"model"</span>].parameters()</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>            ),</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos protocolo"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>validation_results <span class="op">=</span> pd.DataFrame(validation_rows)</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>validation_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="18">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th">modelo</th>
+<th data-quarto-table-cell-role="th">mejor época</th>
+<th data-quarto-table-cell-role="th">loss validación</th>
+<th data-quarto-table-cell-role="th">macro-F1 validación</th>
+<th data-quarto-table-cell-role="th">parámetros</th>
+<th data-quarto-table-cell-role="th">segundos protocolo</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>7</td>
+<td>MLP</td>
+<td>6</td>
+<td>0.387815</td>
+<td>0.861463</td>
+<td>26506</td>
+<td>0.628946</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>7</td>
+<td>CNN</td>
+<td>8</td>
+<td>0.363003</td>
+<td>0.870809</td>
+<td>26698</td>
+<td>24.050011</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>19</td>
+<td>MLP</td>
+<td>8</td>
+<td>0.385785</td>
+<td>0.863973</td>
+<td>26506</td>
+<td>0.554017</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>19</td>
+<td>CNN</td>
+<td>8</td>
+<td>0.347522</td>
+<td>0.870983</td>
+<td>26698</td>
+<td>24.290355</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>42</td>
+<td>MLP</td>
+<td>7</td>
+<td>0.391367</td>
+<td>0.859169</td>
+<td>26506</td>
+<td>0.564699</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>42</td>
+<td>CNN</td>
+<td>7</td>
+<td>0.371995</td>
+<td>0.865997</td>
+<td>26698</td>
+<td>23.802551</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>73</td>
+<td>MLP</td>
+<td>8</td>
+<td>0.398580</td>
+<td>0.858531</td>
+<td>26506</td>
+<td>0.634473</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>73</td>
+<td>CNN</td>
+<td>8</td>
+<td>0.363785</td>
+<td>0.872047</td>
+<td>26698</td>
+<td>24.134642</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>101</td>
+<td>MLP</td>
+<td>8</td>
+<td>0.394867</td>
+<td>0.858386</td>
+<td>26506</td>
+<td>0.622299</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>101</td>
+<td>CNN</td>
+<td>8</td>
+<td>0.338854</td>
+<td>0.876123</td>
+<td>26698</td>
+<td>23.745096</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-fashion-training-curves" class="cell" data-fig-height="4" data-fig-width="10" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> model_name, color <span class="kw">in</span> [(<span class="st">"MLP"</span>, <span class="st">"#6042a6"</span>), (<span class="st">"CNN"</span>, <span class="st">"#327c78"</span>)]:</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> paired_runs[(<span class="dv">42</span>, model_name)][<span class="st">"history"</span>]</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>].plot(</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>], history[<span class="st">"validation_loss"</span>], color<span class="op">=</span>color, label<span class="op">=</span>model_name</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>].plot(</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"epoch"</span>],</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>        history[<span class="st">"validation_macro_f1"</span>],</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>color,</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>model_name,</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Entropía cruzada"</span>, title<span class="op">=</span><span class="st">"Validación"</span>)</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Época"</span>, ylabel<span class="op">=</span><span class="st">"Macro-F1"</span>, title<span class="op">=</span><span class="st">"Validación"</span>)</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>    axis.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-fashion-training-curves" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Pérdida y macro-F1 de ajuste y validación para MLP y CNN.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fashion-training-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-fashion-training-curves-output-1.png" alt="Pérdida y macro-F1 de ajuste y validación para MLP y CNN." width="951" height="375" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fashion-training-curves-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.4: Curvas de la semilla 42, fijada antes de comparar resultados.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div id="bca48e4e" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>validation_pivot <span class="op">=</span> validation_results.pivot(</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>    index<span class="op">=</span><span class="st">"semilla"</span>, columns<span class="op">=</span><span class="st">"modelo"</span>, values<span class="op">=</span><span class="st">"macro-F1 validación"</span></span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>validation_pivot[<span class="st">"Delta CNN-MLP"</span>] <span class="op">=</span> (</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    validation_pivot[<span class="st">"CNN"</span>] <span class="op">-</span> validation_pivot[<span class="st">"MLP"</span>]</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mediana del delta CNN-MLP:"</span>,</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"</span><span class="sc">{</span>validation_pivot[<span class="st">'Delta CNN-MLP'</span>]<span class="sc">.</span>median()<span class="sc">:.4f}</span><span class="ss">"</span>,</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb26-11"><a href="#cb26-11" aria-hidden="true" tabindex="-1"></a>validation_pivot</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mediana del delta CNN-MLP: 0.0093</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">modelo</th>
+<th data-quarto-table-cell-role="th">CNN</th>
+<th data-quarto-table-cell-role="th">MLP</th>
+<th data-quarto-table-cell-role="th">Delta CNN-MLP</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">7</th>
+<td>0.870809</td>
+<td>0.861463</td>
+<td>0.009346</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>0.870983</td>
+<td>0.863973</td>
+<td>0.007009</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">42</th>
+<td>0.865997</td>
+<td>0.859169</td>
+<td>0.006828</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">73</th>
+<td>0.872047</td>
+<td>0.858531</td>
+<td>0.013516</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">101</th>
+<td>0.876123</td>
+<td>0.858386</td>
+<td>0.017737</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>La CNN supera a la MLP en todas las semillas. Sin embargo, la mediana del delta es 0,0093: la mejora es consistente, pero <strong>no alcanza</strong> el umbral predefinido de relevancia material en validación. Debe interpretarse junto con el costo, no como una victoria universal de todas las CNN sobre todas las MLP.</p>
+</section>
+<section id="destruir-la-vecindad-sin-destruir-la-información" class="level2" data-number="5.14">
+<h2 data-number="5.14" class="anchored" data-anchor-id="destruir-la-vecindad-sin-destruir-la-información"><span class="header-section-number">5.14</span> Destruir la vecindad sin destruir la información</h2>
+<p>Una permutación fija renumera los 784 píxeles. Para una MLP, la familia funcional permanece esencialmente igual porque todas las entradas siguen conectadas a cada unidad. Para una CNN, cada ventana local pasa a reunir píxeles que antes estaban lejos.</p>
+<p>Esta prueba usa solo ajuste y validación, con semilla 42. Es una demostración ilustrativa, no una estimación de estabilidad: vuelve a entrenar ambos modelos y no empareja los pesos de entrada de la MLP bajo la permutación. No modifica la comparación principal ni consulta test.</p>
+<div id="a0598c10" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>permutation_generator <span class="op">=</span> torch.Generator().manual_seed(<span class="dv">2_026</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>pixel_permutation <span class="op">=</span> torch.randperm(<span class="dv">28</span> <span class="op">*</span> <span class="dv">28</span>, generator<span class="op">=</span>permutation_generator)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> permute_pixels(images):</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> images.flatten(start_dim<span class="op">=</span><span class="dv">1</span>)[:, pixel_permutation].reshape_as(images)</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>X_fit_permuted <span class="op">=</span> permute_pixels(X_fit)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>X_validation_permuted <span class="op">=</span> permute_pixels(X_validation)</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>permutation_rows <span class="op">=</span> []</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> model_name, model_class <span class="kw">in</span> [(<span class="st">"MLP"</span>, FashionMLP), (<span class="st">"CNN"</span>, FashionCNN)]:</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>    normal_run <span class="op">=</span> paired_runs[(<span class="dv">42</span>, model_name)]</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    _, normal_f1, _, _ <span class="op">=</span> evaluate_model(</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>        normal_run[<span class="st">"model"</span>], X_validation, y_validation</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>    permuted_run <span class="op">=</span> train_visual_model(</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>        model_class,</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a>        seed<span class="op">=</span><span class="dv">42</span>,</span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>        train_X<span class="op">=</span>X_fit_permuted,</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a>        validation_X<span class="op">=</span>X_validation_permuted,</span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    _, permuted_f1, _, _ <span class="op">=</span> evaluate_model(</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>        permuted_run[<span class="st">"model"</span>], X_validation_permuted, y_validation</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>    permutation_rows.extend([</span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"modelo"</span>: model_name, <span class="st">"estructura"</span>: <span class="st">"Espacial"</span>, <span class="st">"macro-F1"</span>: normal_f1},</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>        {<span class="st">"modelo"</span>: model_name, <span class="st">"estructura"</span>: <span class="st">"Permutada"</span>, <span class="st">"macro-F1"</span>: permuted_f1},</span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    ])</span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>permutation_results <span class="op">=</span> pd.DataFrame(permutation_rows)</span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>permutation_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">modelo</th>
+<th data-quarto-table-cell-role="th">estructura</th>
+<th data-quarto-table-cell-role="th">macro-F1</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>MLP</td>
+<td>Espacial</td>
+<td>0.859169</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>MLP</td>
+<td>Permutada</td>
+<td>0.858321</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>CNN</td>
+<td>Espacial</td>
+<td>0.865997</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>CNN</td>
+<td>Permutada</td>
+<td>0.838131</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-spatial-permutation" class="cell" data-fig-height="4" data-fig-width="7" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>fig, ax <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">7</span>, <span class="dv">4</span>))</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>permutation_pivot <span class="op">=</span> permutation_results.pivot(</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    index<span class="op">=</span><span class="st">"modelo"</span>, columns<span class="op">=</span><span class="st">"estructura"</span>, values<span class="op">=</span><span class="st">"macro-F1"</span></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> model_name, color <span class="kw">in</span> [(<span class="st">"MLP"</span>, <span class="st">"#6042a6"</span>), (<span class="st">"CNN"</span>, <span class="st">"#327c78"</span>)]:</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>    ax.plot(</span>
+<span id="cb29-7"><a href="#cb29-7" aria-hidden="true" tabindex="-1"></a>        [<span class="dv">0</span>, <span class="dv">1</span>],</span>
+<span id="cb29-8"><a href="#cb29-8" aria-hidden="true" tabindex="-1"></a>        [</span>
+<span id="cb29-9"><a href="#cb29-9" aria-hidden="true" tabindex="-1"></a>            permutation_pivot.loc[model_name, <span class="st">"Espacial"</span>],</span>
+<span id="cb29-10"><a href="#cb29-10" aria-hidden="true" tabindex="-1"></a>            permutation_pivot.loc[model_name, <span class="st">"Permutada"</span>],</span>
+<span id="cb29-11"><a href="#cb29-11" aria-hidden="true" tabindex="-1"></a>        ],</span>
+<span id="cb29-12"><a href="#cb29-12" aria-hidden="true" tabindex="-1"></a>        marker<span class="op">=</span><span class="st">"o"</span>,</span>
+<span id="cb29-13"><a href="#cb29-13" aria-hidden="true" tabindex="-1"></a>        linewidth<span class="op">=</span><span class="dv">2</span>,</span>
+<span id="cb29-14"><a href="#cb29-14" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>color,</span>
+<span id="cb29-15"><a href="#cb29-15" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>model_name,</span>
+<span id="cb29-16"><a href="#cb29-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb29-17"><a href="#cb29-17" aria-hidden="true" tabindex="-1"></a>ax.set_xticks([<span class="dv">0</span>, <span class="dv">1</span>], [<span class="st">"Espacial"</span>, <span class="st">"Permutada"</span>])</span>
+<span id="cb29-18"><a href="#cb29-18" aria-hidden="true" tabindex="-1"></a>ax.set_ylabel(<span class="st">"Macro-F1 de validación"</span>)</span>
+<span id="cb29-19"><a href="#cb29-19" aria-hidden="true" tabindex="-1"></a>ax.set_ylim(<span class="fl">0.82</span>, <span class="fl">0.88</span>)</span>
+<span id="cb29-20"><a href="#cb29-20" aria-hidden="true" tabindex="-1"></a>ax.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb29-21"><a href="#cb29-21" aria-hidden="true" tabindex="-1"></a>ax.grid(axis<span class="op">=</span><span class="st">"y"</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb29-22"><a href="#cb29-22" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb29-23"><a href="#cb29-23" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-spatial-permutation" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Líneas comparan macro-F1 de MLP y CNN con imágenes normales y píxeles permutados.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-spatial-permutation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-spatial-permutation-output-1.png" alt="Líneas comparan macro-F1 de MLP y CNN con imágenes normales y píxeles permutados." width="660" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-spatial-permutation-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.5: La permutación fija perjudica más a la CNN porque destruye vecindarios locales.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>La MLP cambia poco; la CNN pierde la ventaja y cae por debajo. El experimento no demuestra que toda estructura local sea útil, pero conecta el desempeño con el sesgo inductivo que queríamos estudiar.</p>
+</section>
+<section id="abrir-el-test-oficial" class="level2" data-number="5.15">
+<h2 data-number="5.15" class="anchored" data-anchor-id="abrir-el-test-oficial"><span class="header-section-number">5.15</span> Abrir el test oficial</h2>
+<p>Arquitecturas, semillas, épocas y checkpoints están cerrados. Evaluamos una vez los diez modelos en el test oficial; después no reajustaremos el capítulo con estos resultados.</p>
+<div id="436d04ad" class="cell" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>X_test <span class="op">=</span> images_to_tensor(official_test_images)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a>y_test <span class="op">=</span> torch.from_numpy(official_test_labels.astype(np.int64))</span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a>test_rows <span class="op">=</span> []</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a>test_outputs <span class="op">=</span> {}</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> model_name <span class="kw">in</span> [<span class="st">"MLP"</span>, <span class="st">"CNN"</span>]:</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>        run <span class="op">=</span> paired_runs[(seed, model_name)]</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>        test_loss, test_f1, predictions, logits <span class="op">=</span> evaluate_model(</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>            run[<span class="st">"model"</span>], X_test, y_test</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>        test_outputs[(seed, model_name)] <span class="op">=</span> (predictions, logits)</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>        test_rows.append({</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>            <span class="st">"semilla"</span>: seed,</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>            <span class="st">"modelo"</span>: model_name,</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>            <span class="st">"loss test"</span>: test_loss,</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>            <span class="st">"macro-F1 test"</span>: test_f1,</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos protocolo"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>test_results <span class="op">=</span> pd.DataFrame(test_rows)</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>test_pivot <span class="op">=</span> test_results.pivot(</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>    index<span class="op">=</span><span class="st">"semilla"</span>, columns<span class="op">=</span><span class="st">"modelo"</span>, values<span class="op">=</span><span class="st">"macro-F1 test"</span></span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>test_pivot[<span class="st">"Delta CNN-MLP"</span>] <span class="op">=</span> test_pivot[<span class="st">"CNN"</span>] <span class="op">-</span> test_pivot[<span class="st">"MLP"</span>]</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Mediana del delta CNN-MLP:"</span>,</span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"</span><span class="sc">{</span>test_pivot[<span class="st">'Delta CNN-MLP'</span>]<span class="sc">.</span>median()<span class="sc">:.4f}</span><span class="ss">"</span>,</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>test_pivot</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>Mediana del delta CNN-MLP: 0.0142</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="23">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th">modelo</th>
+<th data-quarto-table-cell-role="th">CNN</th>
+<th data-quarto-table-cell-role="th">MLP</th>
+<th data-quarto-table-cell-role="th">Delta CNN-MLP</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">7</th>
+<td>0.863667</td>
+<td>0.847854</td>
+<td>0.015813</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>0.859461</td>
+<td>0.850801</td>
+<td>0.008660</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">42</th>
+<td>0.855444</td>
+<td>0.846367</td>
+<td>0.009076</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">73</th>
+<td>0.860826</td>
+<td>0.846671</td>
+<td>0.014155</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">101</th>
+<td>0.866351</td>
+<td>0.846619</td>
+<td>0.019732</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-cnn-mlp-paired" class="cell" data-fig-height="4" data-fig-width="9" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="dv">4</span>))</span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis, pivot, title <span class="kw">in</span> [</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">0</span>], validation_pivot, <span class="st">"Validación"</span>),</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">1</span>], test_pivot, <span class="st">"Test oficial"</span>),</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>        axis.plot(</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>            [<span class="dv">0</span>, <span class="dv">1</span>],</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>            [pivot.loc[seed, <span class="st">"MLP"</span>], pivot.loc[seed, <span class="st">"CNN"</span>]],</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>            marker<span class="op">=</span><span class="st">"o"</span>,</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>            alpha<span class="op">=</span><span class="fl">0.65</span>,</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    axis.set_xticks([<span class="dv">0</span>, <span class="dv">1</span>], [<span class="st">"MLP"</span>, <span class="st">"CNN"</span>])</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>    axis.set_ylabel(<span class="st">"Macro-F1"</span>)</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>    axis.set_title(title)</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-cnn-mlp-paired" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Líneas por semilla conectan macro-F1 de MLP y CNN en dos particiones.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-cnn-mlp-paired-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-cnn-mlp-paired-output-1.png" alt="Líneas por semilla conectan macro-F1 de MLP y CNN en dos particiones." width="853" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-cnn-mlp-paired-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.6: Comparación pareada de MLP y CNN en validación y test.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>La ventaja de la CNN aparece en las cinco semillas de ambas particiones. Aun así, el tamaño del efecto es modesto: compartir detectores locales ayuda en este benchmark, pero no sustituye una evaluación de dominio real.</p>
+</section>
+<section id="parámetros-tiempo-e-inferencia" class="level2" data-number="5.16">
+<h2 data-number="5.16" class="anchored" data-anchor-id="parámetros-tiempo-e-inferencia"><span class="header-section-number">5.16</span> Parámetros, tiempo e inferencia</h2>
+<p>Medimos inferencia con batch 256, una pasada de calentamiento y cinco repeticiones. Los segundos son propios de este equipo; parámetros y formas son portables.</p>
+<div id="10ad3c21" class="cell" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> inference_throughput(model, images, repetitions<span class="op">=</span><span class="dv">5</span>):</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    batches <span class="op">=</span> <span class="bu">list</span>(images.split(BATCH_SIZE))</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> torch.no_grad():</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> batch <span class="kw">in</span> batches:</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>            model(batch)</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>        times <span class="op">=</span> []</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> _ <span class="kw">in</span> <span class="bu">range</span>(repetitions):</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>            started_at <span class="op">=</span> perf_counter()</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>            <span class="cf">for</span> batch <span class="kw">in</span> batches:</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a>                model(batch)</span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>            times.append(perf_counter() <span class="op">-</span> started_at)</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>    median_seconds <span class="op">=</span> <span class="bu">float</span>(np.median(times))</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">len</span>(images) <span class="op">/</span> median_seconds</span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>cost_rows <span class="op">=</span> []</span>
+<span id="cb33-18"><a href="#cb33-18" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> model_name <span class="kw">in</span> [<span class="st">"MLP"</span>, <span class="st">"CNN"</span>]:</span>
+<span id="cb33-19"><a href="#cb33-19" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> paired_runs[(<span class="dv">42</span>, model_name)][<span class="st">"model"</span>]</span>
+<span id="cb33-20"><a href="#cb33-20" aria-hidden="true" tabindex="-1"></a>    cost_rows.append({</span>
+<span id="cb33-21"><a href="#cb33-21" aria-hidden="true" tabindex="-1"></a>        <span class="st">"modelo"</span>: model_name,</span>
+<span id="cb33-22"><a href="#cb33-22" aria-hidden="true" tabindex="-1"></a>        <span class="st">"parámetros"</span>: <span class="bu">sum</span>(parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> model.parameters()),</span>
+<span id="cb33-23"><a href="#cb33-23" aria-hidden="true" tabindex="-1"></a>        <span class="st">"memoria FP32 (KiB)"</span>: <span class="bu">sum</span>(</span>
+<span id="cb33-24"><a href="#cb33-24" aria-hidden="true" tabindex="-1"></a>            parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> model.parameters()</span>
+<span id="cb33-25"><a href="#cb33-25" aria-hidden="true" tabindex="-1"></a>        ) <span class="op">*</span> <span class="dv">4</span> <span class="op">/</span> <span class="dv">1024</span>,</span>
+<span id="cb33-26"><a href="#cb33-26" aria-hidden="true" tabindex="-1"></a>        <span class="st">"segundos protocolo mediana"</span>: validation_results[</span>
+<span id="cb33-27"><a href="#cb33-27" aria-hidden="true" tabindex="-1"></a>            validation_results[<span class="st">"modelo"</span>] <span class="op">==</span> model_name</span>
+<span id="cb33-28"><a href="#cb33-28" aria-hidden="true" tabindex="-1"></a>        ][<span class="st">"segundos protocolo"</span>].median(),</span>
+<span id="cb33-29"><a href="#cb33-29" aria-hidden="true" tabindex="-1"></a>        <span class="st">"imágenes/s inferencia"</span>: inference_throughput(model, X_test),</span>
+<span id="cb33-30"><a href="#cb33-30" aria-hidden="true" tabindex="-1"></a>        <span class="st">"macro-F1 test mediana"</span>: test_results[</span>
+<span id="cb33-31"><a href="#cb33-31" aria-hidden="true" tabindex="-1"></a>            test_results[<span class="st">"modelo"</span>] <span class="op">==</span> model_name</span>
+<span id="cb33-32"><a href="#cb33-32" aria-hidden="true" tabindex="-1"></a>        ][<span class="st">"macro-F1 test"</span>].median(),</span>
+<span id="cb33-33"><a href="#cb33-33" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb33-34"><a href="#cb33-34" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-35"><a href="#cb33-35" aria-hidden="true" tabindex="-1"></a>cost_results <span class="op">=</span> pd.DataFrame(cost_rows).set_index(<span class="st">"modelo"</span>)</span>
+<span id="cb33-36"><a href="#cb33-36" aria-hidden="true" tabindex="-1"></a>cost_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">parámetros</th>
+<th data-quarto-table-cell-role="th">memoria FP32 (KiB)</th>
+<th data-quarto-table-cell-role="th">segundos protocolo mediana</th>
+<th data-quarto-table-cell-role="th">imágenes/s inferencia</th>
+<th data-quarto-table-cell-role="th">macro-F1 test mediana</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">modelo</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">MLP</th>
+<td>26506</td>
+<td>103.539062</td>
+<td>0.622299</td>
+<td>3.769731e+06</td>
+<td>0.846671</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">CNN</th>
+<td>26698</td>
+<td>104.289062</td>
+<td>24.050011</td>
+<td>2.849388e+04</td>
+<td>0.860826</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>La CNN paga más operaciones y tiempo aunque tenga casi los mismos parámetros. Una mejora predictiva debe evaluarse junto con latencia y recursos.</p>
+</section>
+<section id="qué-aprendió-la-primera-capa" class="level2" data-number="5.17">
+<h2 data-number="5.17" class="anchored" data-anchor-id="qué-aprendió-la-primera-capa"><span class="header-section-number">5.17</span> Qué aprendió la primera capa</h2>
+<p>Visualizamos los ocho kernels y sus mapas para la primera imagen de test. Los mapas son respuestas internas, no explicaciones causales de la predicción <span class="citation" data-cites="zeiler2014visualizing">(<a href="../references.html#ref-zeiler2014visualizing" role="doc-biblioref">Zeiler y Fergus 2014</a>)</span>.</p>
+<div id="cell-fig-learned-kernels" class="cell" data-fig-height="5" data-fig-width="11" data-execution_count="26">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>cnn_for_analysis <span class="op">=</span> paired_runs[(<span class="dv">42</span>, <span class="st">"CNN"</span>)][<span class="st">"model"</span>]</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>cnn_for_analysis.<span class="bu">eval</span>()</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    first_maps, _, _ <span class="op">=</span> cnn_for_analysis.features(X_test[:<span class="dv">1</span>])</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>kernel_limit <span class="op">=</span> cnn_for_analysis.conv1.weight.detach().<span class="bu">abs</span>().<span class="bu">max</span>().item()</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>map_limit <span class="op">=</span> first_maps.<span class="bu">max</span>().item()</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">8</span>, figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="dv">5</span>))</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> index <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">8</span>):</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>, index].imshow(</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>        cnn_for_analysis.conv1.weight[index, <span class="dv">0</span>].detach(),</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>        cmap<span class="op">=</span><span class="st">"coolwarm"</span>,</span>
+<span id="cb34-14"><a href="#cb34-14" aria-hidden="true" tabindex="-1"></a>        vmin<span class="op">=-</span>kernel_limit,</span>
+<span id="cb34-15"><a href="#cb34-15" aria-hidden="true" tabindex="-1"></a>        vmax<span class="op">=</span>kernel_limit,</span>
+<span id="cb34-16"><a href="#cb34-16" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb34-17"><a href="#cb34-17" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>, index].set_title(<span class="ss">f"Kernel </span><span class="sc">{</span>index<span class="sc">}</span><span class="ss">"</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb34-18"><a href="#cb34-18" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>, index].imshow(first_maps[<span class="dv">0</span>, index], cmap<span class="op">=</span><span class="st">"magma"</span>, vmin<span class="op">=</span><span class="dv">0</span>, vmax<span class="op">=</span>map_limit)</span>
+<span id="cb34-19"><a href="#cb34-19" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>, index].set_title(<span class="ss">f"Mapa </span><span class="sc">{</span>index<span class="sc">}</span><span class="ss">"</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb34-20"><a href="#cb34-20" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">0</span>, index].axis(<span class="st">"off"</span>)</span>
+<span id="cb34-21"><a href="#cb34-21" aria-hidden="true" tabindex="-1"></a>    axes[<span class="dv">1</span>, index].axis(<span class="st">"off"</span>)</span>
+<span id="cb34-22"><a href="#cb34-22" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb34-23"><a href="#cb34-23" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-learned-kernels" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Dos filas muestran ocho kernels aprendidos y ocho mapas de activación.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-learned-kernels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-learned-kernels-output-1.png" alt="Dos filas muestran ocho kernels aprendidos y ocho mapas de activación." width="1046" height="351" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-learned-kernels-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.7: Kernels y mapas de activación de la primera capa de la CNN con semilla 42.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Los kernels no tienen nombres semánticos garantizados. Sus combinaciones y las capas posteriores, no un filtro aislado, producen los logits.</p>
+</section>
+<section id="diagnosticar-clases-y-ejemplos" class="level2" data-number="5.18">
+<h2 data-number="5.18" class="anchored" data-anchor-id="diagnosticar-clases-y-ejemplos"><span class="header-section-number">5.18</span> Diagnosticar clases y ejemplos</h2>
+<p>Usamos la semilla 42, fijada antes de observar resultados, y matrices normalizadas por clase real.</p>
+<div id="4f12dd2c" class="cell" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>mlp_test_predictions, mlp_test_logits <span class="op">=</span> test_outputs[(<span class="dv">42</span>, <span class="st">"MLP"</span>)]</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a>cnn_test_predictions, cnn_test_logits <span class="op">=</span> test_outputs[(<span class="dv">42</span>, <span class="st">"CNN"</span>)]</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>mlp_confusion <span class="op">=</span> confusion_matrix(</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    y_test.numpy(), mlp_test_predictions.numpy(), labels<span class="op">=</span>np.arange(<span class="dv">10</span>), normalize<span class="op">=</span><span class="st">"true"</span></span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>cnn_confusion <span class="op">=</span> confusion_matrix(</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    y_test.numpy(), cnn_test_predictions.numpy(), labels<span class="op">=</span>np.arange(<span class="dv">10</span>), normalize<span class="op">=</span><span class="st">"true"</span></span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-fig-fashion-confusions" class="cell" data-fig-height="5" data-fig-width="11" data-execution_count="28">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">11</span>, <span class="dv">5</span>))</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis, matrix, title <span class="kw">in</span> [</span>
+<span id="cb36-3"><a href="#cb36-3" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">0</span>], mlp_confusion, <span class="st">"MLP"</span>),</span>
+<span id="cb36-4"><a href="#cb36-4" aria-hidden="true" tabindex="-1"></a>    (axes[<span class="dv">1</span>], cnn_confusion, <span class="st">"CNN"</span>),</span>
+<span id="cb36-5"><a href="#cb36-5" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb36-6"><a href="#cb36-6" aria-hidden="true" tabindex="-1"></a>    image <span class="op">=</span> axis.imshow(matrix, cmap<span class="op">=</span><span class="st">"Purples"</span>, vmin<span class="op">=</span><span class="dv">0</span>, vmax<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb36-7"><a href="#cb36-7" aria-hidden="true" tabindex="-1"></a>    axis.set_xticks(<span class="bu">range</span>(<span class="dv">10</span>), CLASS_NAMES, rotation<span class="op">=</span><span class="dv">55</span>, ha<span class="op">=</span><span class="st">"right"</span>, fontsize<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb36-8"><a href="#cb36-8" aria-hidden="true" tabindex="-1"></a>    axis.set_yticks(<span class="bu">range</span>(<span class="dv">10</span>), CLASS_NAMES, fontsize<span class="op">=</span><span class="dv">7</span>)</span>
+<span id="cb36-9"><a href="#cb36-9" aria-hidden="true" tabindex="-1"></a>    axis.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"Predicha"</span>, ylabel<span class="op">=</span><span class="st">"Real"</span>, title<span class="op">=</span>title)</span>
+<span id="cb36-10"><a href="#cb36-10" aria-hidden="true" tabindex="-1"></a>fig.colorbar(image, ax<span class="op">=</span>axes, label<span class="op">=</span><span class="st">"Proporción de la clase real"</span>, shrink<span class="op">=</span><span class="fl">0.8</span>)</span>
+<span id="cb36-11"><a href="#cb36-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-fashion-confusions" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Dos matrices de diez por diez comparan errores por clase real.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fashion-confusions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-fashion-confusions-output-1.png" alt="Dos matrices de diez por diez comparan errores por clase real." width="870" height="421" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fashion-confusions-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.8: Matrices de confusión normalizadas de MLP y CNN en test para la semilla 42.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div id="3e93115a" class="cell" data-execution_count="29">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb37"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a>cnn_correct_mlp_wrong <span class="op">=</span> np.flatnonzero(</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a>    (cnn_test_predictions <span class="op">==</span> y_test) <span class="op">&amp;</span> (mlp_test_predictions <span class="op">!=</span> y_test)</span>
+<span id="cb37-3"><a href="#cb37-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-4"><a href="#cb37-4" aria-hidden="true" tabindex="-1"></a>both_wrong <span class="op">=</span> np.flatnonzero(</span>
+<span id="cb37-5"><a href="#cb37-5" aria-hidden="true" tabindex="-1"></a>    (cnn_test_predictions <span class="op">!=</span> y_test) <span class="op">&amp;</span> (mlp_test_predictions <span class="op">!=</span> y_test)</span>
+<span id="cb37-6"><a href="#cb37-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb37-7"><a href="#cb37-7" aria-hidden="true" tabindex="-1"></a>selected_examples <span class="op">=</span> np.concatenate([</span>
+<span id="cb37-8"><a href="#cb37-8" aria-hidden="true" tabindex="-1"></a>    cnn_correct_mlp_wrong[:<span class="dv">6</span>],</span>
+<span id="cb37-9"><a href="#cb37-9" aria-hidden="true" tabindex="-1"></a>    both_wrong[:<span class="dv">6</span>],</span>
+<span id="cb37-10"><a href="#cb37-10" aria-hidden="true" tabindex="-1"></a>])</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<div id="cell-fig-fashion-errors" class="cell" data-fig-height="5" data-fig-width="10" data-execution_count="30">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">2</span>, <span class="dv">6</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">5</span>))</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis, position <span class="kw">in</span> <span class="bu">zip</span>(axes.flat, selected_examples):</span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>    axis.imshow(official_test_images[position], cmap<span class="op">=</span><span class="st">"gray"</span>, vmin<span class="op">=</span><span class="dv">0</span>, vmax<span class="op">=</span><span class="dv">255</span>)</span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>    axis.set_title(</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"Real: </span><span class="sc">{</span>CLASS_NAMES[y_test[position]]<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span></span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"MLP: </span><span class="sc">{</span>CLASS_NAMES[mlp_test_predictions[position]]<span class="sc">}</span><span class="ch">\n</span><span class="ss">"</span></span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>        <span class="ss">f"CNN: </span><span class="sc">{</span>CLASS_NAMES[cnn_test_predictions[position]]<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>        fontsize<span class="op">=</span><span class="dv">7</span>,</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>    axis.axis(<span class="st">"off"</span>)</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-fashion-errors" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Doce imágenes con clase real y predicciones de MLP y CNN.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-fashion-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter05_files/figure-html/fig-fashion-errors-output-1.png" alt="Doce imágenes con clase real y predicciones de MLP y CNN." width="950" height="417" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-fashion-errors-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;5.9: Desacuerdos y errores compartidos seleccionados por posición, no por confianza.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>Las prendas superiores concentran ambigüedad porque la resolución elimina textura y detalle. Los errores posteriores a test describen límites; cualquier cambio motivado por ellos requeriría una nueva evaluación independiente.</p>
+</section>
+<section id="qué-aporta-y-qué-no-aporta-una-cnn-pequeña" class="level2" data-number="5.19">
+<h2 data-number="5.19" class="anchored" data-anchor-id="qué-aporta-y-qué-no-aporta-una-cnn-pequeña"><span class="header-section-number">5.19</span> Qué aporta y qué no aporta una CNN pequeña</h2>
+<p>La comparación respalda que localidad y pesos compartidos son útiles en Fashion-MNIST. No demuestra que:</p>
+<ul>
+<li>la CNN sea robusta a rotación, escala, oclusión o iluminación;</li>
+<li>pooling produzca invariancia exacta;</li>
+<li>los mapas de activación expliquen causalmente la decisión;</li>
+<li>una MLP mejor ajustada no reduzca la diferencia;</li>
+<li>el desempeño se transfiera a fotografías reales; ni</li>
+<li>el test oficial represente otra tienda, cámara o población.</li>
+</ul>
+<p>Igualar parámetros no iguala FLOPs ni tiempo. Cinco semillas miden variabilidad algorítmica con una partición fija, no incertidumbre poblacional.</p>
+<div class="callout callout-style-simple callout-important callout-titled" title="Frontera con el próximo capítulo">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Frontera con el próximo capítulo
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>Aquí usamos dos convoluciones, sin augmentación, BatchNorm ni conexiones residuales. El Capítulo 6 estudiará cómo aumentar profundidad y robustez visual mediante bloques, normalización, augmentación y diseño residual.</p>
+</div>
+</div>
+</section>
+<section id="qué-hemos-aprendido" class="level2" data-number="5.20">
+<h2 data-number="5.20" class="anchored" data-anchor-id="qué-hemos-aprendido"><span class="header-section-number">5.20</span> Qué hemos aprendido</h2>
+<ul>
+<li>Aplanar conserva valores, pero oculta vecindad al modelo.</li>
+<li><code>Conv2d</code> usa conectividad local y pesos compartidos.</li>
+<li>PyTorch implementa correlación cruzada bajo el nombre de convolución.</li>
+<li>Padding, stride y pooling cambian resolución y condiciones de borde.</li>
+<li>Los canales de salida son mapas aprendidos, no clases.</li>
+<li>El campo receptivo crece con kernels y strides acumulados.</li>
+<li>Equivarianza aproximada no equivale a invariancia.</li>
+<li>Con parámetros casi iguales, la CNN supera consistentemente a la MLP en este experimento, aunque la validación no alcanza el umbral material predefinido y el costo computacional es mayor.</li>
+<li>Permutar píxeles muestra que la ventaja depende de vecindarios informativos.</li>
+<li>Filtros, activaciones, errores y costo complementan una métrica promedio.</li>
 </ul>
 </section>
-<section id="caso-y-línea-base" class="level2" data-number="5.2">
-<h2 data-number="5.2" class="anchored" data-anchor-id="caso-y-línea-base"><span class="header-section-number">5.2</span> Caso y línea base</h2>
-<p>CIFAR-10 o Fashion-MNIST permitirá comparar una regresión softmax, un MLP y una CNN pequeña con las mismas particiones.</p>
-</section>
-<section id="ruta-de-desarrollo" class="level2" data-number="5.3">
-<h2 data-number="5.3" class="anchored" data-anchor-id="ruta-de-desarrollo"><span class="header-section-number">5.3</span> Ruta de desarrollo</h2>
+<section id="ejercicios" class="level2" data-number="5.21">
+<h2 data-number="5.21" class="anchored" data-anchor-id="ejercicios"><span class="header-section-number">5.21</span> Ejercicios</h2>
 <ol type="1">
-<li>Filtros manuales sobre una imagen.</li>
-<li>Operación de correlación y dimensiones.</li>
-<li>Canales de entrada y salida.</li>
-<li>Pooling y campo receptivo.</li>
-<li>CNN inspirada en LeNet.</li>
-<li>Evaluación por clase y costo computacional.</li>
+<li>Calcula manualmente la correlación de una matriz <span class="math inline">\(5\times5\)</span> con un kernel <span class="math inline">\(3\times3\)</span> y comprueba el resultado con <code>F.conv2d</code>.</li>
+<li>Modifica <code>correlate2d()</code> para aceptar padding y stride.</li>
+<li>Invierte el kernel y demuestra la diferencia entre correlación y convolución matemática.</li>
+<li>Deriva las formas de salida para cinco combinaciones de kernel, padding, stride y dilatación.</li>
+<li>Calcula parámetros de una convolución RGB con 32 canales de salida y kernel <span class="math inline">\(5\times5\)</span>.</li>
+<li>Construye dos matrices distintas que produzcan el mismo max pooling.</li>
+<li>Calcula el campo receptivo de una red con tres convoluciones y dos pooling.</li>
+<li>Sustituye max pooling por convoluciones con stride dos manteniendo fijo el resto del protocolo.</li>
+<li>Desplaza las imágenes un píxel y mide cuándo se rompe la equivariancia.</li>
+<li>Compara recall por clase y encuentra dónde la CNN pierde frente a la MLP.</li>
+<li>Estima multiplicaciones de las capas densas y convolucionales; explica por qué parámetros y tiempo no son equivalentes.</li>
+<li>Repite el protocolo con KMNIST y documenta fuente, licencia y clases antes de entrenar.</li>
 </ol>
 </section>
-<section id="referencia-conceptual" class="level2" data-number="5.4">
-<h2 data-number="5.4" class="anchored" data-anchor-id="referencia-conceptual"><span class="header-section-number">5.4</span> Referencia conceptual</h2>
-<p>Redes convolucionales en <span class="citation" data-cites="zhang2023dive">(<a href="../references.html#ref-zhang2023dive" role="doc-biblioref">Zhang et&nbsp;al. 2023</a>)</span>.</p>
+<section id="reto" class="level2" data-number="5.22">
+<h2 data-number="5.22" class="anchored" data-anchor-id="reto"><span class="header-section-number">5.22</span> Reto</h2>
+<p>Amplía la prueba de permutación a cinco semillas pareadas. Entrena MLP y CNN con imágenes normales y con una misma permutación fija, conserva exactamente el presupuesto y reporta el cambio de macro-F1, tiempo y errores por clase. Define antes qué resultado respaldaría que el sesgo local ayuda y acepta explícitamente una conclusión nula o contraria.</p>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-zhang2023dive" class="csl-entry" role="listitem">
-Zhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. <em>Dive into Deep Learning</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781009389433">https://doi.org/10.1017/9781009389433</a>.
+<div id="ref-lecun1998gradient" class="csl-entry" role="listitem">
+LeCun, Yann, Léon Bottou, Yoshua Bengio, y Patrick Haffner. 1998. <span>«Gradient-based learning applied to document recognition»</span>. <em>Proceedings of the IEEE</em> 86 (11): 2278-324. <a href="https://doi.org/10.1109/5.726791">https://doi.org/10.1109/5.726791</a>.
+</div>
+<div id="ref-luo2016receptive" class="csl-entry" role="listitem">
+Luo, Wenjie, Yujia Li, Raquel Urtasun, y Richard Zemel. 2016. <span>«Understanding the Effective Receptive Field in Deep Convolutional Neural Networks»</span>. <em>Advances in Neural Information Processing Systems</em> 29. <a href="https://proceedings.neurips.cc/paper/2016/hash/c8067ad1937f728f51288b3eb986afaa-Abstract.html">https://proceedings.neurips.cc/paper/2016/hash/c8067ad1937f728f51288b3eb986afaa-Abstract.html</a>.
+</div>
+<div id="ref-xiao2017fashion" class="csl-entry" role="listitem">
+Xiao, Han, Kashif Rasul, y Roland Vollgraf. 2017. <span>«Fashion-MNIST: a Novel Image Dataset for Benchmarking Machine Learning Algorithms»</span>. <em>arXiv preprint arXiv:1708.07747</em>, advance online publication. <a href="https://doi.org/10.48550/arXiv.1708.07747">https://doi.org/10.48550/arXiv.1708.07747</a>.
+</div>
+<div id="ref-zeiler2014visualizing" class="csl-entry" role="listitem">
+Zeiler, Matthew D., y Rob Fergus. 2014. <span>«Visualizing and Understanding Convolutional Networks»</span>. <em>Computer Vision – ECCV 2014</em>, 818-33. <a href="https://doi.org/10.1007/978-3-319-10590-1_53">https://doi.org/10.1007/978-3-319-10590-1_53</a>.
 </div>
 </div>
 </section>
