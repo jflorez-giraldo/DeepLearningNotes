@@ -1,6 +1,9 @@
 ---
 title: "Del dato al tensor: fundamentos de PyTorch"
 jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
 {{< chapter-actions >}}
