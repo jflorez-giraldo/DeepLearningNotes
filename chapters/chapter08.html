@@ -27,6 +27,41 @@ ul.task-list li input[type="checkbox"] {
   margin: 0 0.8em 0.2em -1em; /* quarto-specific, see https://github.com/quarto-dev/quarto-cli/issues/4556 */ 
   vertical-align: middle;
 }
+/* CSS for syntax highlighting */
+html { -webkit-text-size-adjust: 100%; }
+pre > code.sourceCode { white-space: pre; position: relative; }
+pre > code.sourceCode > span { display: inline-block; line-height: 1.25; }
+pre > code.sourceCode > span:empty { height: 1.2em; }
+.sourceCode { overflow: visible; }
+code.sourceCode > span { color: inherit; text-decoration: inherit; }
+div.sourceCode { margin: 1em 0; }
+pre.sourceCode { margin: 0; }
+@media screen {
+div.sourceCode { overflow: auto; }
+}
+@media print {
+pre > code.sourceCode { white-space: pre-wrap; }
+pre > code.sourceCode > span { text-indent: -5em; padding-left: 5em; }
+}
+pre.numberSource code
+  { counter-reset: source-line 0; }
+pre.numberSource code > span
+  { position: relative; left: -4em; counter-increment: source-line; }
+pre.numberSource code > span > a:first-child::before
+  { content: counter(source-line);
+    position: relative; left: -1em; text-align: right; vertical-align: baseline;
+    border: none; display: inline-block;
+    -webkit-touch-callout: none; -webkit-user-select: none;
+    -khtml-user-select: none; -moz-user-select: none;
+    -ms-user-select: none; user-select: none;
+    padding: 0 4px; width: 4em;
+  }
+pre.numberSource { margin-left: 3em;  padding-left: 4px; }
+div.sourceCode
+  {   }
+@media screen {
+pre > code.sourceCode > span > a:first-child::before { text-decoration: underline; }
+}
 /* CSS for citations */
 div.csl-bib-body { }
 div.csl-entry {
@@ -49,7 +84,7 @@ div.csl-indent {
 }</style>
 
 
-<script src="../site_libs/quarto-nav/quarto-nav.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.min.js" integrity="sha384-ZvpUoO/+PpLXR1lu4jmpXWu80pZlYUAfxl5NsBMWOEPSjUn/6Z/hRTt8+pR6L4N2" crossorigin="anonymous"></script><script src="../site_libs/quarto-nav/quarto-nav.js"></script>
 <script src="../site_libs/quarto-nav/headroom.min.js"></script>
 <script src="../site_libs/clipboard/clipboard.min.js"></script>
 <script src="../site_libs/quarto-search/autocomplete.umd.js"></script>
@@ -95,7 +130,39 @@ div.csl-indent {
   }
 }</script>
 <style>html{ scroll-behavior: smooth; }</style>
+<script src="https://cdn.jsdelivr.net/npm/requirejs@2.3.6/require.min.js" integrity="sha384-c9c+LnTbwQ3aujuU7ULEPVvgLs+Fn6fJUvIGTsuu1ZcCf11fiEubah0ttpca4ntM sha384-6V1/AdqZRWk1KAlWbKBlGhN7VG4iE/yAZcO6NZPMF8od0vukrvr0tg4qY6NSrItx" crossorigin="anonymous"></script>
 
+<script type="application/javascript">define('jquery', [],function() {return window.jQuery;})</script>
+
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@4/tex-chtml.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -309,9 +376,30 @@ div.csl-indent {
     <h2 id="toc-title">Contenido</h2>
    
   <ul>
-  <li><a href="#objetivos" id="toc-objetivos" class="nav-link active" data-scroll-target="#objetivos"><span class="header-section-number">8.1</span> Objetivos</a></li>
-  <li><a href="#ruta-de-desarrollo" id="toc-ruta-de-desarrollo" class="nav-link" data-scroll-target="#ruta-de-desarrollo"><span class="header-section-number">8.2</span> Ruta de desarrollo</a></li>
-  <li><a href="#referencia-conceptual" id="toc-referencia-conceptual" class="nav-link" data-scroll-target="#referencia-conceptual"><span class="header-section-number">8.3</span> Referencia conceptual</a></li>
+  <li><a href="#de-observaciones-aisladas-a-secuencias" id="toc-de-observaciones-aisladas-a-secuencias" class="nav-link active" data-scroll-target="#de-observaciones-aisladas-a-secuencias"><span class="header-section-number">8.1</span> De observaciones aisladas a secuencias</a></li>
+  <li><a href="#preparar-un-laboratorio-reproducible" id="toc-preparar-un-laboratorio-reproducible" class="nav-link" data-scroll-target="#preparar-un-laboratorio-reproducible"><span class="header-section-number">8.2</span> Preparar un laboratorio reproducible</a></li>
+  <li><a href="#obtener-bike-sharing-y-verificar-sus-bytes" id="toc-obtener-bike-sharing-y-verificar-sus-bytes" class="nav-link" data-scroll-target="#obtener-bike-sharing-y-verificar-sus-bytes"><span class="header-section-number">8.3</span> Obtener Bike Sharing y verificar sus bytes</a></li>
+  <li><a href="#auditar-filas-identidades-y-tiempo" id="toc-auditar-filas-identidades-y-tiempo" class="nav-link" data-scroll-target="#auditar-filas-identidades-y-tiempo"><span class="header-section-number">8.4</span> Auditar filas, identidades y tiempo</a></li>
+  <li><a href="#bloquear-el-futuro" id="toc-bloquear-el-futuro" class="nav-link" data-scroll-target="#bloquear-el-futuro"><span class="header-section-number">8.5</span> Bloquear el futuro</a></li>
+  <li><a href="#representar-ciclos-y-escalas" id="toc-representar-ciclos-y-escalas" class="nav-link" data-scroll-target="#representar-ciclos-y-escalas"><span class="header-section-number">8.6</span> Representar ciclos y escalas</a></li>
+  <li><a href="#establecer-líneas-base" id="toc-establecer-líneas-base" class="nav-link" data-scroll-target="#establecer-líneas-base"><span class="header-section-number">8.7</span> Establecer líneas base</a></li>
+  <li><a href="#formular-un-estado-recurrente" id="toc-formular-un-estado-recurrente" class="nav-link" data-scroll-target="#formular-un-estado-recurrente"><span class="header-section-number">8.8</span> Formular un estado recurrente</a></li>
+  <li><a href="#comprobar-manualrnn-contra-nn.rnn" id="toc-comprobar-manualrnn-contra-nn.rnn" class="nav-link" data-scroll-target="#comprobar-manualrnn-contra-nn.rnn"><span class="header-section-number">8.9</span> Comprobar <code>ManualRNN</code> contra <code>nn.RNN</code></a></li>
+  <li><a href="#desenrollar-backpropagation-through-time" id="toc-desenrollar-backpropagation-through-time" class="nav-link" data-scroll-target="#desenrollar-backpropagation-through-time"><span class="header-section-number">8.10</span> Desenrollar backpropagation through time</a></li>
+  <li><a href="#construir-el-pronosticador" id="toc-construir-el-pronosticador" class="nav-link" data-scroll-target="#construir-el-pronosticador"><span class="header-section-number">8.11</span> Construir el pronosticador</a></li>
+  <li><a href="#fijar-la-receta-antes-del-backtesting" id="toc-fijar-la-receta-antes-del-backtesting" class="nav-link" data-scroll-target="#fijar-la-receta-antes-del-backtesting"><span class="header-section-number">8.12</span> Fijar la receta antes del backtesting</a></li>
+  <li><a href="#comprobar-convergencia-en-junio" id="toc-comprobar-convergencia-en-junio" class="nav-link" data-scroll-target="#comprobar-convergencia-en-junio"><span class="header-section-number">8.13</span> Comprobar convergencia en junio</a></li>
+  <li><a href="#ejecutar-tres-orígenes-expansivos" id="toc-ejecutar-tres-orígenes-expansivos" class="nav-link" data-scroll-target="#ejecutar-tres-orígenes-expansivos"><span class="header-section-number">8.14</span> Ejecutar tres orígenes expansivos</a></li>
+  <li><a href="#leer-estabilidad-y-skill" id="toc-leer-estabilidad-y-skill" class="nav-link" data-scroll-target="#leer-estabilidad-y-skill"><span class="header-section-number">8.15</span> Leer estabilidad y skill</a></li>
+  <li><a href="#abrir-el-test-una-sola-vez" id="toc-abrir-el-test-una-sola-vez" class="nav-link" data-scroll-target="#abrir-el-test-una-sola-vez"><span class="header-section-number">8.16</span> Abrir el test una sola vez</a></li>
+  <li><a href="#pronosticar-24-horas-por-retroalimentación" id="toc-pronosticar-24-horas-por-retroalimentación" class="nav-link" data-scroll-target="#pronosticar-24-horas-por-retroalimentación"><span class="header-section-number">8.17</span> Pronosticar 24 horas por retroalimentación</a></li>
+  <li><a href="#diagnosticar-cuándo-falla" id="toc-diagnosticar-cuándo-falla" class="nav-link" data-scroll-target="#diagnosticar-cuándo-falla"><span class="header-section-number">8.18</span> Diagnosticar cuándo falla</a></li>
+  <li><a href="#medir-cobertura-no-esconderla" id="toc-medir-cobertura-no-esconderla" class="nav-link" data-scroll-target="#medir-cobertura-no-esconderla"><span class="header-section-number">8.19</span> Medir cobertura, no esconderla</a></li>
+  <li><a href="#qué-permite-concluir-el-experimento" id="toc-qué-permite-concluir-el-experimento" class="nav-link" data-scroll-target="#qué-permite-concluir-el-experimento"><span class="header-section-number">8.20</span> Qué permite concluir el experimento</a></li>
+  <li><a href="#limitaciones-y-condiciones-de-uso" id="toc-limitaciones-y-condiciones-de-uso" class="nav-link" data-scroll-target="#limitaciones-y-condiciones-de-uso"><span class="header-section-number">8.21</span> Limitaciones y condiciones de uso</a></li>
+  <li><a href="#cierre" id="toc-cierre" class="nav-link" data-scroll-target="#cierre"><span class="header-section-number">8.22</span> Cierre</a></li>
+  <li><a href="#ejercicios" id="toc-ejercicios" class="nav-link" data-scroll-target="#ejercicios"><span class="header-section-number">8.23</span> Ejercicios</a></li>
+  <li><a href="#reto" id="toc-reto" class="nav-link" data-scroll-target="#reto"><span class="header-section-number">8.24</span> Reto</a></li>
   </ul>
 <div class="toc-actions"><ul><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/edit/main/chapters/chapter08.qmd" class="toc-action"><i class="bi bi-github"></i>Editar esta página</a></li><li><a href="https://github.com/jflorez-giraldo/DeepLearningNotes/issues/new" class="toc-action"><i class="bi empty"></i>Informar sobre problema</a></li></ul></div></nav>
     </div>
@@ -337,52 +425,2087 @@ div.csl-indent {
 </header>
 
 
-<div class="problem-banner">
-<strong>Problema:</strong> pronosticar una variable ambiental o de demanda cuando el orden temporal contiene información y una partición aleatoria sería optimista.
+<div class="chapter-actions" aria-label="Recursos del capitulo">
+  <a class="chapter-action" href="../notebooks/chapter08.ipynb" download="">Descargar notebook</a>
+  <a class="chapter-action chapter-action-colab" href="https://colab.research.google.com/github/jflorez-giraldo/DeepLearningNotes/blob/main/notebooks/chapter08.ipynb" target="_blank" rel="noopener">Abrir en Colab</a>
 </div>
-<div class="callout callout-style-simple callout-warning callout-titled" title="Capítulo en desarrollo">
+
+<div class="problem-banner">
+<p><strong>Problema:</strong> pronosticar la demanda horaria de bicicletas cuando el orden temporal contiene información, algunas horas no están registradas y una partición aleatoria permitiría aprender del futuro.</p>
+</div>
+<section id="de-observaciones-aisladas-a-secuencias" class="level2" data-number="8.1">
+<h2 data-number="8.1" class="anchored" data-anchor-id="de-observaciones-aisladas-a-secuencias"><span class="header-section-number">8.1</span> De observaciones aisladas a secuencias</h2>
+<p>Hasta ahora cada entrada produjo una salida sin conservar memoria entre observaciones. En una serie temporal, 200 alquileres a las 08:00 no significan lo mismo que 200 alquileres a medianoche: importa qué ocurrió antes y en qué momento se emitió el pronóstico.</p>
+<p>Una red recurrente reutiliza la misma transformación en cada paso y resume el pasado en un <strong>estado oculto</strong>. Estudiaremos esa idea con una RNN simple antes de introducir las compuertas de LSTM y GRU en el Capítulo 9.</p>
+<div class="callout callout-style-simple callout-note callout-titled" title="Objetivos de aprendizaje">
 <div class="callout-header d-flex align-content-center">
 <div class="callout-icon-container">
 <i class="callout-icon"></i>
 </div>
 <div class="callout-title-container flex-fill">
-<span class="screen-reader-only">Advertencia</span>Capítulo en desarrollo
+<span class="screen-reader-only">Nota</span>Objetivos de aprendizaje
 </div>
 </div>
 <div class="callout-body-container callout-body">
-<p>La evaluación preservará el tiempo y comparará contra baselines de persistencia y estacionalidad.</p>
-</div>
-</div>
-<section id="objetivos" class="level2" data-number="8.1">
-<h2 data-number="8.1" class="anchored" data-anchor-id="objetivos"><span class="header-section-number">8.1</span> Objetivos</h2>
+<p>Al terminar este capítulo podrás:</p>
 <ul>
-<li>construir ventanas sin usar información futura;</li>
-<li>formular un estado recurrente;</li>
-<li>implementar una RNN y backpropagation through time;</li>
-<li>distinguir pronóstico de un paso y multihorizonte;</li>
-<li>evaluar con backtesting temporal; y</li>
-<li>diagnosticar error por horizonte y periodo.</li>
+<li>construir ventanas que no crucen interrupciones ni usen información futura;</li>
+<li>representar calendario cíclico y ajustar escalas solo con el pasado;</li>
+<li>implementar recurrencia con tensores y con <code>nn.RNN</code>;</li>
+<li>explicar backpropagation through time sobre una secuencia corta;</li>
+<li>distinguir evaluación a un paso y pronóstico recursivo multihorizonte;</li>
+<li>ejecutar backtesting con orígenes expansivos; y</li>
+<li>diagnosticar error, estabilidad y cobertura temporal.</li>
+</ul>
+</div>
+</div>
+</section>
+<section id="preparar-un-laboratorio-reproducible" class="level2" data-number="8.2">
+<h2 data-number="8.2" class="anchored" data-anchor-id="preparar-un-laboratorio-reproducible"><span class="header-section-number">8.2</span> Preparar un laboratorio reproducible</h2>
+<div id="5cadbdc6" class="cell" data-execution_count="1">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> hashlib <span class="im">import</span> sha256</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> io <span class="im">import</span> BytesIO</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> pathlib <span class="im">import</span> Path</span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> random</span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> time <span class="im">import</span> perf_counter</span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> urllib.request <span class="im">import</span> urlretrieve</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> zipfile</span>
+<span id="cb1-8"><a href="#cb1-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-9"><a href="#cb1-9" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb1-10"><a href="#cb1-10" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb1-11"><a href="#cb1-11" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> pandas <span class="im">as</span> pd</span>
+<span id="cb1-12"><a href="#cb1-12" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> sklearn</span>
+<span id="cb1-13"><a href="#cb1-13" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> torch</span>
+<span id="cb1-14"><a href="#cb1-14" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch <span class="im">import</span> nn</span>
+<span id="cb1-15"><a href="#cb1-15" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.nn <span class="im">import</span> functional <span class="im">as</span> F</span>
+<span id="cb1-16"><a href="#cb1-16" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> torch.utils.data <span class="im">import</span> DataLoader, TensorDataset</span>
+<span id="cb1-17"><a href="#cb1-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-18"><a href="#cb1-18" aria-hidden="true" tabindex="-1"></a>PAIR_SEEDS <span class="op">=</span> [<span class="dv">17</span>, <span class="dv">29</span>, <span class="dv">43</span>]</span>
+<span id="cb1-19"><a href="#cb1-19" aria-hidden="true" tabindex="-1"></a>REPRESENTATIVE_SEED <span class="op">=</span> <span class="dv">29</span></span>
+<span id="cb1-20"><a href="#cb1-20" aria-hidden="true" tabindex="-1"></a>HISTORY <span class="op">=</span> <span class="dv">168</span></span>
+<span id="cb1-21"><a href="#cb1-21" aria-hidden="true" tabindex="-1"></a>HIDDEN_SIZE <span class="op">=</span> <span class="dv">32</span></span>
+<span id="cb1-22"><a href="#cb1-22" aria-hidden="true" tabindex="-1"></a>EPOCHS <span class="op">=</span> <span class="dv">12</span></span>
+<span id="cb1-23"><a href="#cb1-23" aria-hidden="true" tabindex="-1"></a>BATCH_SIZE <span class="op">=</span> <span class="dv">256</span></span>
+<span id="cb1-24"><a href="#cb1-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-25"><a href="#cb1-25" aria-hidden="true" tabindex="-1"></a>random.seed(REPRESENTATIVE_SEED)</span>
+<span id="cb1-26"><a href="#cb1-26" aria-hidden="true" tabindex="-1"></a>np.random.seed(REPRESENTATIVE_SEED)</span>
+<span id="cb1-27"><a href="#cb1-27" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(REPRESENTATIVE_SEED)</span>
+<span id="cb1-28"><a href="#cb1-28" aria-hidden="true" tabindex="-1"></a>torch.set_num_threads(<span class="dv">1</span>)</span>
+<span id="cb1-29"><a href="#cb1-29" aria-hidden="true" tabindex="-1"></a>torch.use_deterministic_algorithms(<span class="va">True</span>)</span>
+<span id="cb1-30"><a href="#cb1-30" aria-hidden="true" tabindex="-1"></a>device <span class="op">=</span> torch.device(<span class="st">"cpu"</span>)</span>
+<span id="cb1-31"><a href="#cb1-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-32"><a href="#cb1-32" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(</span>
+<span id="cb1-33"><a href="#cb1-33" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"PyTorch </span><span class="sc">{</span>torch<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | scikit-learn </span><span class="sc">{</span>sklearn<span class="sc">.</span>__version__<span class="sc">}</span><span class="ss"> | "</span></span>
+<span id="cb1-34"><a href="#cb1-34" aria-hidden="true" tabindex="-1"></a>    <span class="ss">f"dispositivo: </span><span class="sc">{</span>device<span class="sc">}</span><span class="ss"> | hilos: </span><span class="sc">{</span>torch<span class="sc">.</span>get_num_threads()<span class="sc">}</span><span class="ss">"</span></span>
+<span id="cb1-35"><a href="#cb1-35" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>PyTorch 2.8.0 | scikit-learn 1.6.1 | dispositivo: cpu | hilos: 1</code></pre>
+</div>
+</div>
+<p>CPU y un solo hilo reducen variación entre corridas en esta ejecución; los tiempos no son comparables entre máquinas. Una GPU puede acelerar el entrenamiento, pero no corrige un protocolo temporal inválido.</p>
+</section>
+<section id="obtener-bike-sharing-y-verificar-sus-bytes" class="level2" data-number="8.3">
+<h2 data-number="8.3" class="anchored" data-anchor-id="obtener-bike-sharing-y-verificar-sus-bytes"><span class="header-section-number">8.3</span> Obtener Bike Sharing y verificar sus bytes</h2>
+<p>Bike Sharing contiene demanda de Capital Bikeshare entre 2011 y 2012, junto con calendario y clima <span class="citation" data-cites="fanaee2013bike fanaee2014event">(<a href="../references.html#ref-fanaee2013bike" role="doc-biblioref">Fanaee-T 2013</a>; <a href="../references.html#ref-fanaee2014event" role="doc-biblioref">Fanaee-T y Gama 2014</a>)</span>. UCI lo distribuye bajo CC BY 4.0. Descargamos el ZIP oficial y exigimos el SHA-256 observado por esta edición antes de leerlo.</p>
+<div id="22086a33" class="cell" data-execution_count="2">
+<details class="code-fold">
+<summary>Mostrar descarga y verificación</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>DATA_URL <span class="op">=</span> (</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"https://archive.ics.uci.edu/static/public/275/"</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"bike+sharing+dataset.zip"</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>DATA_DIR <span class="op">=</span> Path(<span class="st">".cache/chapter08"</span>)</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>ARCHIVE_PATH <span class="op">=</span> DATA_DIR <span class="op">/</span> <span class="st">"bike-sharing-dataset.zip"</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a>ARCHIVE_SHA256 <span class="op">=</span> <span class="st">"b70182d0d0508e9abbb79306ce5c0cec34869000f8220175ac83d11dbe845401"</span></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a>HOURLY_SHA256 <span class="op">=</span> <span class="st">"e03de4ee4ef4dc376ac6e04bf829673c6269e8eba5c60fa121640fa2f829504f"</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> file_sha256(path, chunk_size<span class="op">=</span><span class="dv">1</span> <span class="op">&lt;&lt;</span> <span class="dv">20</span>):</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>    digest <span class="op">=</span> sha256()</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>    <span class="cf">with</span> path.<span class="bu">open</span>(<span class="st">"rb"</span>) <span class="im">as</span> source:</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> chunk <span class="kw">in</span> <span class="bu">iter</span>(<span class="kw">lambda</span>: source.read(chunk_size), <span class="st">b""</span>):</span>
+<span id="cb3-15"><a href="#cb3-15" aria-hidden="true" tabindex="-1"></a>            digest.update(chunk)</span>
+<span id="cb3-16"><a href="#cb3-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> digest.hexdigest()</span>
+<span id="cb3-17"><a href="#cb3-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-18"><a href="#cb3-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-19"><a href="#cb3-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> verified_download(url, path, expected_hash):</span>
+<span id="cb3-20"><a href="#cb3-20" aria-hidden="true" tabindex="-1"></a>    DATA_DIR.mkdir(parents<span class="op">=</span><span class="va">True</span>, exist_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-21"><a href="#cb3-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> path.exists() <span class="kw">and</span> file_sha256(path) <span class="op">==</span> expected_hash:</span>
+<span id="cb3-22"><a href="#cb3-22" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="st">"caché verificada"</span></span>
+<span id="cb3-23"><a href="#cb3-23" aria-hidden="true" tabindex="-1"></a>    temporary <span class="op">=</span> path.with_suffix(path.suffix <span class="op">+</span> <span class="st">".download"</span>)</span>
+<span id="cb3-24"><a href="#cb3-24" aria-hidden="true" tabindex="-1"></a>    temporary.unlink(missing_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-25"><a href="#cb3-25" aria-hidden="true" tabindex="-1"></a>    urlretrieve(url, temporary)</span>
+<span id="cb3-26"><a href="#cb3-26" aria-hidden="true" tabindex="-1"></a>    actual_hash <span class="op">=</span> file_sha256(temporary)</span>
+<span id="cb3-27"><a href="#cb3-27" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> actual_hash <span class="op">!=</span> expected_hash:</span>
+<span id="cb3-28"><a href="#cb3-28" aria-hidden="true" tabindex="-1"></a>        temporary.unlink(missing_ok<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb3-29"><a href="#cb3-29" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="ss">f"SHA-256 inesperado: </span><span class="sc">{</span>actual_hash<span class="sc">}</span><span class="ss">"</span>)</span>
+<span id="cb3-30"><a href="#cb3-30" aria-hidden="true" tabindex="-1"></a>    temporary.replace(path)</span>
+<span id="cb3-31"><a href="#cb3-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="st">"descarga verificada"</span></span>
+<span id="cb3-32"><a href="#cb3-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-33"><a href="#cb3-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-34"><a href="#cb3-34" aria-hidden="true" tabindex="-1"></a>download_status <span class="op">=</span> verified_download(DATA_URL, ARCHIVE_PATH, ARCHIVE_SHA256)</span>
+<span id="cb3-35"><a href="#cb3-35" aria-hidden="true" tabindex="-1"></a><span class="bu">print</span>(download_status, <span class="st">"|"</span>, file_sha256(ARCHIVE_PATH))</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+<div class="cell-output cell-output-stdout">
+<pre><code>caché verificada | b70182d0d0508e9abbb79306ce5c0cec34869000f8220175ac83d11dbe845401</code></pre>
+</div>
+</div>
+<p>La verificación fija los bytes, no garantiza que la serie sea completa o que las variables sean apropiadas. Esas son preguntas de auditoría.</p>
+</section>
+<section id="auditar-filas-identidades-y-tiempo" class="level2" data-number="8.4">
+<h2 data-number="8.4" class="anchored" data-anchor-id="auditar-filas-identidades-y-tiempo"><span class="header-section-number">8.4</span> Auditar filas, identidades y tiempo</h2>
+<p>Leemos únicamente <code>hour.csv</code> desde el ZIP y comprobamos su hash. No extraemos ni ejecutamos contenido del archivo.</p>
+<div id="38f3bcbc" class="cell" data-execution_count="3">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> zipfile.ZipFile(ARCHIVE_PATH) <span class="im">as</span> archive:</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> archive.testzip() <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>        <span class="cf">raise</span> <span class="pp">ValueError</span>(<span class="st">"El ZIP está corrupto"</span>)</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    hourly_bytes <span class="op">=</span> archive.read(<span class="st">"hour.csv"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> sha256(hourly_bytes).hexdigest() <span class="op">==</span> HOURLY_SHA256</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>bikes <span class="op">=</span> pd.read_csv(BytesIO(hourly_bytes))</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>bikes[<span class="st">"timestamp"</span>] <span class="op">=</span> pd.to_datetime(bikes[<span class="st">"dteday"</span>]) <span class="op">+</span> pd.to_timedelta(</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>    bikes[<span class="st">"hr"</span>], unit<span class="op">=</span><span class="st">"h"</span></span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>bikes <span class="op">=</span> bikes.sort_values(<span class="st">"timestamp"</span>).reset_index(drop<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>pd.Series({</span>
+<span id="cb5-14"><a href="#cb5-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"filas reales"</span>: <span class="bu">len</span>(bikes),</span>
+<span id="cb5-15"><a href="#cb5-15" aria-hidden="true" tabindex="-1"></a>    <span class="st">"columnas"</span>: bikes.shape[<span class="dv">1</span>],</span>
+<span id="cb5-16"><a href="#cb5-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"inicio"</span>: bikes[<span class="st">"timestamp"</span>].<span class="bu">min</span>(),</span>
+<span id="cb5-17"><a href="#cb5-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"fin"</span>: bikes[<span class="st">"timestamp"</span>].<span class="bu">max</span>(),</span>
+<span id="cb5-18"><a href="#cb5-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"celdas vacías"</span>: <span class="bu">int</span>(bikes.isna().<span class="bu">sum</span>().<span class="bu">sum</span>()),</span>
+<span id="cb5-19"><a href="#cb5-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"timestamps duplicados"</span>: <span class="bu">int</span>(bikes[<span class="st">"timestamp"</span>].duplicated().<span class="bu">sum</span>()),</span>
+<span id="cb5-20"><a href="#cb5-20" aria-hidden="true" tabindex="-1"></a>    <span class="st">"fallos casual + registered = cnt"</span>: <span class="bu">int</span>(</span>
+<span id="cb5-21"><a href="#cb5-21" aria-hidden="true" tabindex="-1"></a>        (bikes[<span class="st">"casual"</span>] <span class="op">+</span> bikes[<span class="st">"registered"</span>] <span class="op">!=</span> bikes[<span class="st">"cnt"</span>]).<span class="bu">sum</span>()</span>
+<span id="cb5-22"><a href="#cb5-22" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb5-23"><a href="#cb5-23" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="3">
+<pre><code>filas reales                                      17379
+columnas                                             18
+inicio                              2011-01-01 00:00:00
+fin                                 2012-12-31 23:00:00
+celdas vacías                                         0
+timestamps duplicados                                 0
+fallos casual + registered = cnt                      0
+dtype: object</code></pre>
+</div>
+</div>
+<p>La ficha web declara 17.389 instancias, pero el archivo contiene 17.379. Esta diferencia de diez filas es una discrepancia documental, no diez valores que podamos reconstruir. Además, <code>casual</code> y <code>registered</code> suman exactamente <code>cnt</code>: usarlos para predecir <code>cnt</code> sería entregar la respuesta al modelo.</p>
+<div id="8d8fad78" class="cell" data-execution_count="4">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb7"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a>full_grid <span class="op">=</span> pd.date_range(</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a>    bikes[<span class="st">"timestamp"</span>].<span class="bu">min</span>(), bikes[<span class="st">"timestamp"</span>].<span class="bu">max</span>(), freq<span class="op">=</span><span class="st">"h"</span></span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a>missing_hours <span class="op">=</span> full_grid.difference(bikes[<span class="st">"timestamp"</span>])</span>
+<span id="cb7-5"><a href="#cb7-5" aria-hidden="true" tabindex="-1"></a>hour_steps <span class="op">=</span> bikes[<span class="st">"timestamp"</span>].diff().dt.total_seconds().div(<span class="dv">3600</span>)</span>
+<span id="cb7-6"><a href="#cb7-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb7-7"><a href="#cb7-7" aria-hidden="true" tabindex="-1"></a>pd.Series({</span>
+<span id="cb7-8"><a href="#cb7-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"horas esperadas"</span>: <span class="bu">len</span>(full_grid),</span>
+<span id="cb7-9"><a href="#cb7-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"horas observadas"</span>: <span class="bu">len</span>(bikes),</span>
+<span id="cb7-10"><a href="#cb7-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"horas ausentes"</span>: <span class="bu">len</span>(missing_hours),</span>
+<span id="cb7-11"><a href="#cb7-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"saltos mayores a una hora"</span>: <span class="bu">int</span>((hour_steps <span class="op">&gt;</span> <span class="dv">1</span>).<span class="bu">sum</span>()),</span>
+<span id="cb7-12"><a href="#cb7-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"salto máximo en horas"</span>: <span class="bu">int</span>(hour_steps.<span class="bu">max</span>()),</span>
+<span id="cb7-13"><a href="#cb7-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"demanda mínima observada"</span>: <span class="bu">int</span>(bikes[<span class="st">"cnt"</span>].<span class="bu">min</span>()),</span>
+<span id="cb7-14"><a href="#cb7-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"demanda máxima observada"</span>: <span class="bu">int</span>(bikes[<span class="st">"cnt"</span>].<span class="bu">max</span>()),</span>
+<span id="cb7-15"><a href="#cb7-15" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="4">
+<pre><code>horas esperadas              17544
+horas observadas             17379
+horas ausentes                 165
+saltos mayores a una hora       75
+salto máximo en horas           37
+demanda mínima observada         1
+demanda máxima observada       977
+dtype: int64</code></pre>
+</div>
+</div>
+<p>“Sin valores faltantes” describe las celdas de las filas presentes. No implica una cuadrícula horaria completa: faltan 165 horas y el mayor salto dura 37 horas. La demanda observada nunca vale cero, pero no sabemos si una fila ausente significa cero alquileres, cierre del sistema o falta de medición. Imputar cero inventaría una interpretación.</p>
+<div id="cell-fig-bike-missing" class="cell" data-fig-height="3.8" data-fig-width="9" data-execution_count="5">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb9"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a>missing_by_month <span class="op">=</span> (</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a>    pd.Series(<span class="dv">1</span>, index<span class="op">=</span>missing_hours)</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a>    .resample(<span class="st">"MS"</span>)</span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a>    .<span class="bu">sum</span>()</span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a>    .reindex(pd.date_range(<span class="st">"2011-01-01"</span>, <span class="st">"2012-12-01"</span>, freq<span class="op">=</span><span class="st">"MS"</span>), fill_value<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a>fig, axis <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">3.8</span>))</span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a>axis.bar(missing_by_month.index, missing_by_month.values, width<span class="op">=</span><span class="dv">22</span>, color<span class="op">=</span><span class="st">"#B24C63"</span>)</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a>axis.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"mes"</span>, ylabel<span class="op">=</span><span class="st">"horas ausentes"</span>)</span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a>axis.grid(axis<span class="op">=</span><span class="st">"y"</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-bike-missing" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Barras mensuales muestran más horas ausentes al inicio de 2011 y en octubre de 2012.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-bike-missing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter08_files/figure-html/fig-bike-missing-output-1.png" alt="Barras mensuales muestran más horas ausentes al inicio de 2011 y en octubre de 2012." width="852" height="355" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-bike-missing-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8.1: Horas ausentes por mes; una celda completa no garantiza continuidad temporal.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="bloquear-el-futuro" class="level2" data-number="8.5">
+<h2 data-number="8.5" class="anchored" data-anchor-id="bloquear-el-futuro"><span class="header-section-number">8.5</span> Bloquear el futuro</h2>
+<p>El test comprende octubre, noviembre y diciembre de 2012. Antes de abrirlo, junio sirve como periodo de desarrollo y julio-septiembre como tres orígenes de backtesting expansivo.</p>
+<div id="2e67fd10" class="cell" data-execution_count="6">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>DEVELOPMENT_FIT_END <span class="op">=</span> pd.Timestamp(<span class="st">"2012-05-31 23:00"</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a>DEVELOPMENT_START <span class="op">=</span> pd.Timestamp(<span class="st">"2012-06-01 00:00"</span>)</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a>DEVELOPMENT_END <span class="op">=</span> pd.Timestamp(<span class="st">"2012-06-30 23:00"</span>)</span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a>TEST_START <span class="op">=</span> pd.Timestamp(<span class="st">"2012-10-01 00:00"</span>)</span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a>TEST_END <span class="op">=</span> pd.Timestamp(<span class="st">"2012-12-31 23:00"</span>)</span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a>BACKTEST_FOLDS <span class="op">=</span> [</span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"julio"</span>, pd.Timestamp(<span class="st">"2012-06-30 23:00"</span>),</span>
+<span id="cb10-9"><a href="#cb10-9" aria-hidden="true" tabindex="-1"></a>     pd.Timestamp(<span class="st">"2012-07-01 00:00"</span>), pd.Timestamp(<span class="st">"2012-07-31 23:00"</span>)),</span>
+<span id="cb10-10"><a href="#cb10-10" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"agosto"</span>, pd.Timestamp(<span class="st">"2012-07-31 23:00"</span>),</span>
+<span id="cb10-11"><a href="#cb10-11" aria-hidden="true" tabindex="-1"></a>     pd.Timestamp(<span class="st">"2012-08-01 00:00"</span>), pd.Timestamp(<span class="st">"2012-08-31 23:00"</span>)),</span>
+<span id="cb10-12"><a href="#cb10-12" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"septiembre"</span>, pd.Timestamp(<span class="st">"2012-08-31 23:00"</span>),</span>
+<span id="cb10-13"><a href="#cb10-13" aria-hidden="true" tabindex="-1"></a>     pd.Timestamp(<span class="st">"2012-09-01 00:00"</span>), pd.Timestamp(<span class="st">"2012-09-30 23:00"</span>)),</span>
+<span id="cb10-14"><a href="#cb10-14" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb10-15"><a href="#cb10-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-16"><a href="#cb10-16" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> DEVELOPMENT_FIT_END <span class="op">&lt;</span> DEVELOPMENT_START <span class="op">&lt;=</span> DEVELOPMENT_END</span>
+<span id="cb10-17"><a href="#cb10-17" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> DEVELOPMENT_END <span class="op">&lt;</span> BACKTEST_FOLDS[<span class="dv">0</span>][<span class="dv">2</span>]</span>
+<span id="cb10-18"><a href="#cb10-18" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> <span class="bu">all</span>(fit_end <span class="op">&lt;</span> start <span class="op">&lt;=</span> end <span class="cf">for</span> _, fit_end, start, end <span class="kw">in</span> BACKTEST_FOLDS)</span>
+<span id="cb10-19"><a href="#cb10-19" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> BACKTEST_FOLDS[<span class="op">-</span><span class="dv">1</span>][<span class="dv">3</span>] <span class="op">&lt;</span> TEST_START <span class="op">&lt;=</span> TEST_END</span>
+<span id="cb10-20"><a href="#cb10-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-21"><a href="#cb10-21" aria-hidden="true" tabindex="-1"></a>split_table <span class="op">=</span> pd.DataFrame([</span>
+<span id="cb10-22"><a href="#cb10-22" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"uso"</span>: <span class="st">"desarrollo"</span>, <span class="st">"inicio"</span>: DEVELOPMENT_START, <span class="st">"fin"</span>: DEVELOPMENT_END},</span>
+<span id="cb10-23"><a href="#cb10-23" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"uso"</span>: <span class="st">"backtesting"</span>, <span class="st">"inicio"</span>: BACKTEST_FOLDS[<span class="dv">0</span>][<span class="dv">2</span>], <span class="st">"fin"</span>: BACKTEST_FOLDS[<span class="op">-</span><span class="dv">1</span>][<span class="dv">3</span>]},</span>
+<span id="cb10-24"><a href="#cb10-24" aria-hidden="true" tabindex="-1"></a>    {<span class="st">"uso"</span>: <span class="st">"test bloqueado"</span>, <span class="st">"inicio"</span>: TEST_START, <span class="st">"fin"</span>: TEST_END},</span>
+<span id="cb10-25"><a href="#cb10-25" aria-hidden="true" tabindex="-1"></a>])</span>
+<span id="cb10-26"><a href="#cb10-26" aria-hidden="true" tabindex="-1"></a>split_table</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="6">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">uso</th>
+<th data-quarto-table-cell-role="th">inicio</th>
+<th data-quarto-table-cell-role="th">fin</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>desarrollo</td>
+<td>2012-06-01</td>
+<td>2012-06-30 23:00:00</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>backtesting</td>
+<td>2012-07-01</td>
+<td>2012-09-30 23:00:00</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>test bloqueado</td>
+<td>2012-10-01</td>
+<td>2012-12-31 23:00:00</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Los meses ya evaluados pasan a formar parte del ajuste en el siguiente origen. Esto reproduce un sistema que se actualiza cuando dispone de nuevos datos. Las épocas, la arquitectura y el optimizador permanecerán fijos; el backtesting no se usará para reescribir la receta después de cada mes.</p>
+</section>
+<section id="representar-ciclos-y-escalas" class="level2" data-number="8.6">
+<h2 data-number="8.6" class="anchored" data-anchor-id="representar-ciclos-y-escalas"><span class="header-section-number">8.6</span> Representar ciclos y escalas</h2>
+<p>Hora 23 y hora 0 son vecinas. Para una posición <span class="math inline">\(t\)</span> dentro de un ciclo de periodo <span class="math inline">\(P\)</span>, usamos</p>
+<p><span class="math display">\[
+s(t)=\sin\left(2\pi\frac{t}{P}\right),\qquad
+c(t)=\cos\left(2\pi\frac{t}{P}\right).
+\]</span></p>
+<p>Cada paso contiene demanda, hora y día semanal. El instante objetivo aporta su calendario, conocido al emitir el pronóstico. No usamos clima: el archivo registra clima observado, no un pronóstico meteorológico disponible de forma reproducible.</p>
+<div id="d69a8475" class="cell" data-execution_count="7">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb11"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> calendar_array(timestamps):</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a>    timestamps <span class="op">=</span> pd.DatetimeIndex(timestamps)</span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a>    hour <span class="op">=</span> timestamps.hour.to_numpy()</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a>    weekday <span class="op">=</span> timestamps.dayofweek.to_numpy()</span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.column_stack([</span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>        np.sin(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> hour <span class="op">/</span> <span class="dv">24</span>),</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>        np.cos(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> hour <span class="op">/</span> <span class="dv">24</span>),</span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>        np.sin(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> weekday <span class="op">/</span> <span class="dv">7</span>),</span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>        np.cos(<span class="dv">2</span> <span class="op">*</span> np.pi <span class="op">*</span> weekday <span class="op">/</span> <span class="dv">7</span>),</span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>    ]).astype(<span class="st">"float32"</span>)</span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>timestamps <span class="op">=</span> pd.DatetimeIndex(bikes[<span class="st">"timestamp"</span>])</span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>raw_demand <span class="op">=</span> bikes[<span class="st">"cnt"</span>].to_numpy(dtype<span class="op">=</span><span class="st">"float32"</span>)</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a>log_demand <span class="op">=</span> np.log1p(raw_demand)</span>
+<span id="cb11-16"><a href="#cb11-16" aria-hidden="true" tabindex="-1"></a>calendar_features <span class="op">=</span> calendar_array(timestamps)</span>
+<span id="cb11-17"><a href="#cb11-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-18"><a href="#cb11-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-19"><a href="#cb11-19" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> contiguous_positions(start, end, history<span class="op">=</span>HISTORY, future<span class="op">=</span><span class="dv">1</span>):</span>
+<span id="cb11-20"><a href="#cb11-20" aria-hidden="true" tabindex="-1"></a>    positions <span class="op">=</span> []</span>
+<span id="cb11-21"><a href="#cb11-21" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> position <span class="kw">in</span> <span class="bu">range</span>(history, <span class="bu">len</span>(timestamps) <span class="op">-</span> future <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb11-22"><a href="#cb11-22" aria-hidden="true" tabindex="-1"></a>        target_time <span class="op">=</span> timestamps[position]</span>
+<span id="cb11-23"><a href="#cb11-23" aria-hidden="true" tabindex="-1"></a>        forecast_end <span class="op">=</span> timestamps[position <span class="op">+</span> future <span class="op">-</span> <span class="dv">1</span>]</span>
+<span id="cb11-24"><a href="#cb11-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> target_time <span class="op">&lt;</span> start <span class="kw">or</span> forecast_end <span class="op">&gt;</span> end:</span>
+<span id="cb11-25"><a href="#cb11-25" aria-hidden="true" tabindex="-1"></a>            <span class="cf">continue</span></span>
+<span id="cb11-26"><a href="#cb11-26" aria-hidden="true" tabindex="-1"></a>        expected_span <span class="op">=</span> pd.Timedelta(hours<span class="op">=</span>history <span class="op">+</span> future <span class="op">-</span> <span class="dv">1</span>)</span>
+<span id="cb11-27"><a href="#cb11-27" aria-hidden="true" tabindex="-1"></a>        actual_span <span class="op">=</span> timestamps[position <span class="op">+</span> future <span class="op">-</span> <span class="dv">1</span>] <span class="op">-</span> timestamps[position <span class="op">-</span> history]</span>
+<span id="cb11-28"><a href="#cb11-28" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> actual_span <span class="op">==</span> expected_span:</span>
+<span id="cb11-29"><a href="#cb11-29" aria-hidden="true" tabindex="-1"></a>            positions.append(position)</span>
+<span id="cb11-30"><a href="#cb11-30" aria-hidden="true" tabindex="-1"></a>    positions <span class="op">=</span> np.asarray(positions, dtype<span class="op">=</span><span class="st">"int64"</span>)</span>
+<span id="cb11-31"><a href="#cb11-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">if</span> <span class="bu">len</span>(positions):</span>
+<span id="cb11-32"><a href="#cb11-32" aria-hidden="true" tabindex="-1"></a>        <span class="cf">assert</span> (timestamps[positions] <span class="op">&gt;=</span> start).<span class="bu">all</span>()</span>
+<span id="cb11-33"><a href="#cb11-33" aria-hidden="true" tabindex="-1"></a>        <span class="cf">assert</span> (timestamps[positions <span class="op">+</span> future <span class="op">-</span> <span class="dv">1</span>] <span class="op">&lt;=</span> end).<span class="bu">all</span>()</span>
+<span id="cb11-34"><a href="#cb11-34" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> positions</span>
+<span id="cb11-35"><a href="#cb11-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-36"><a href="#cb11-36" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-37"><a href="#cb11-37" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_scaler(fit_end):</span>
+<span id="cb11-38"><a href="#cb11-38" aria-hidden="true" tabindex="-1"></a>    fit_values <span class="op">=</span> log_demand[timestamps <span class="op">&lt;=</span> fit_end]</span>
+<span id="cb11-39"><a href="#cb11-39" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> <span class="bu">float</span>(fit_values.mean()), <span class="bu">float</span>(fit_values.std())</span>
+<span id="cb11-40"><a href="#cb11-40" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-41"><a href="#cb11-41" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-42"><a href="#cb11-42" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_tensors(fit_end, start, end):</span>
+<span id="cb11-43"><a href="#cb11-43" aria-hidden="true" tabindex="-1"></a>    mean, std <span class="op">=</span> fit_scaler(fit_end)</span>
+<span id="cb11-44"><a href="#cb11-44" aria-hidden="true" tabindex="-1"></a>    positions <span class="op">=</span> contiguous_positions(start, end)</span>
+<span id="cb11-45"><a href="#cb11-45" aria-hidden="true" tabindex="-1"></a>    sequences <span class="op">=</span> np.empty((<span class="bu">len</span>(positions), HISTORY, <span class="dv">5</span>), dtype<span class="op">=</span><span class="st">"float32"</span>)</span>
+<span id="cb11-46"><a href="#cb11-46" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> row, position <span class="kw">in</span> <span class="bu">enumerate</span>(positions):</span>
+<span id="cb11-47"><a href="#cb11-47" aria-hidden="true" tabindex="-1"></a>        history_slice <span class="op">=</span> <span class="bu">slice</span>(position <span class="op">-</span> HISTORY, position)</span>
+<span id="cb11-48"><a href="#cb11-48" aria-hidden="true" tabindex="-1"></a>        sequences[row, :, <span class="dv">0</span>] <span class="op">=</span> (log_demand[history_slice] <span class="op">-</span> mean) <span class="op">/</span> std</span>
+<span id="cb11-49"><a href="#cb11-49" aria-hidden="true" tabindex="-1"></a>        sequences[row, :, <span class="dv">1</span>:] <span class="op">=</span> calendar_features[history_slice]</span>
+<span id="cb11-50"><a href="#cb11-50" aria-hidden="true" tabindex="-1"></a>    target_calendar <span class="op">=</span> calendar_features[positions]</span>
+<span id="cb11-51"><a href="#cb11-51" aria-hidden="true" tabindex="-1"></a>    targets <span class="op">=</span> ((log_demand[positions] <span class="op">-</span> mean) <span class="op">/</span> std).astype(<span class="st">"float32"</span>)</span>
+<span id="cb11-52"><a href="#cb11-52" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb11-53"><a href="#cb11-53" aria-hidden="true" tabindex="-1"></a>        <span class="st">"x"</span>: torch.from_numpy(sequences),</span>
+<span id="cb11-54"><a href="#cb11-54" aria-hidden="true" tabindex="-1"></a>        <span class="st">"calendar"</span>: torch.from_numpy(target_calendar),</span>
+<span id="cb11-55"><a href="#cb11-55" aria-hidden="true" tabindex="-1"></a>        <span class="st">"y"</span>: torch.from_numpy(targets).unsqueeze(<span class="dv">1</span>),</span>
+<span id="cb11-56"><a href="#cb11-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">"positions"</span>: positions,</span>
+<span id="cb11-57"><a href="#cb11-57" aria-hidden="true" tabindex="-1"></a>        <span class="st">"mean"</span>: mean,</span>
+<span id="cb11-58"><a href="#cb11-58" aria-hidden="true" tabindex="-1"></a>        <span class="st">"std"</span>: std,</span>
+<span id="cb11-59"><a href="#cb11-59" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb11-60"><a href="#cb11-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-61"><a href="#cb11-61" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-62"><a href="#cb11-62" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> make_training_tensors(fit_end):</span>
+<span id="cb11-63"><a href="#cb11-63" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> make_tensors(</span>
+<span id="cb11-64"><a href="#cb11-64" aria-hidden="true" tabindex="-1"></a>        fit_end,</span>
+<span id="cb11-65"><a href="#cb11-65" aria-hidden="true" tabindex="-1"></a>        timestamps[HISTORY],</span>
+<span id="cb11-66"><a href="#cb11-66" aria-hidden="true" tabindex="-1"></a>        fit_end,</span>
+<span id="cb11-67"><a href="#cb11-67" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Una ventana es válida solo si sus 168 horas y su objetivo son consecutivos. Con ello evitamos tratar dos observaciones separadas por un cierre como pasos adyacentes.</p>
+</section>
+<section id="establecer-líneas-base" class="level2" data-number="8.7">
+<h2 data-number="8.7" class="anchored" data-anchor-id="establecer-líneas-base"><span class="header-section-number">8.7</span> Establecer líneas base</h2>
+<p>Para un objetivo <span class="math inline">\(y_t\)</span>, las predicciones ingenuas son <span class="math inline">\(y_{t-1}\)</span>, <span class="math inline">\(y_{t-24}\)</span> y <span class="math inline">\(y_{t-168}\)</span>. La última compara la misma hora y día de la semana anterior.</p>
+<div id="289cb826" class="cell" data-execution_count="8">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> regression_metrics(y_true, y_pred):</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a>    errors <span class="op">=</span> np.asarray(y_pred) <span class="op">-</span> np.asarray(y_true)</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>    denominator <span class="op">=</span> np.<span class="bu">abs</span>(y_true).<span class="bu">sum</span>()</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>        <span class="st">"MAE"</span>: <span class="bu">float</span>(np.<span class="bu">abs</span>(errors).mean()),</span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>        <span class="st">"RMSE"</span>: <span class="bu">float</span>(np.sqrt(np.square(errors).mean())),</span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>        <span class="st">"WAPE"</span>: <span class="bu">float</span>(np.<span class="bu">abs</span>(errors).<span class="bu">sum</span>() <span class="op">/</span> denominator),</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> naive_prediction(positions, lag):</span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> raw_demand[positions <span class="op">-</span> lag]</span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>development_positions <span class="op">=</span> contiguous_positions(DEVELOPMENT_START, DEVELOPMENT_END)</span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>development_truth <span class="op">=</span> raw_demand[development_positions]</span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>baseline_development <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Persistencia (1 h)"</span>: regression_metrics(</span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>        development_truth, naive_prediction(development_positions, <span class="dv">1</span>)</span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Estacional diaria (24 h)"</span>: regression_metrics(</span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>        development_truth, naive_prediction(development_positions, <span class="dv">24</span>)</span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Estacional semanal (168 h)"</span>: regression_metrics(</span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>        development_truth, naive_prediction(development_positions, <span class="dv">168</span>)</span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>}).T</span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>baseline_development.<span class="bu">round</span>(<span class="dv">3</span>)</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="8">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">MAE</th>
+<th data-quarto-table-cell-role="th">RMSE</th>
+<th data-quarto-table-cell-role="th">WAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Persistencia (1 h)</th>
+<td>90.211</td>
+<td>131.780</td>
+<td>0.320</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">Estacional diaria (24 h)</th>
+<td>83.507</td>
+<td>138.743</td>
+<td>0.296</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">Estacional semanal (168 h)</th>
+<td>58.208</td>
+<td>97.726</td>
+<td>0.207</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Una RNN solo resulta útil si supera reglas que cuestan cero entrenamiento. Una partición aleatoria ocultaría precisamente el orden que necesitan estas reglas.</p>
+</section>
+<section id="formular-un-estado-recurrente" class="level2" data-number="8.8">
+<h2 data-number="8.8" class="anchored" data-anchor-id="formular-un-estado-recurrente"><span class="header-section-number">8.8</span> Formular un estado recurrente</h2>
+<p>Una RNN de Elman actualiza <span class="citation" data-cites="elman1990finding">(<a href="../references.html#ref-elman1990finding" role="doc-biblioref">Elman 1990</a>)</span></p>
+<p><span class="math display">\[
+h_t=\tanh(W_{xh}x_t+W_{hh}h_{t-1}+b_h),
+\]</span></p>
+<p>donde los mismos parámetros se reutilizan para cada <span class="math inline">\(t\)</span>. La salida usará el último estado y el calendario del objetivo:</p>
+<p><span class="math display">\[
+\hat z_{t+1}=W_{hy}[h_t;c_{t+1}]+b_y.
+\]</span></p>
+<p><span class="math inline">\(z\)</span> representa <code>log1p(cnt)</code> estandarizado. La transformación estabiliza la cola derecha durante el ajuste; MAE, RMSE y WAPE se calculan después de volver a bicicletas.</p>
+<div id="0ffdf63d" class="cell" data-execution_count="9">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb13"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> ManualRNN(nn.Module):</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, input_size, hidden_size):</span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.weight_ih <span class="op">=</span> nn.Parameter(torch.empty(hidden_size, input_size))</span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.weight_hh <span class="op">=</span> nn.Parameter(torch.empty(hidden_size, hidden_size))</span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.bias <span class="op">=</span> nn.Parameter(torch.empty(hidden_size))</span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a>        nn.init.xavier_uniform_(<span class="va">self</span>.weight_ih)</span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a>        nn.init.orthogonal_(<span class="va">self</span>.weight_hh)</span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a>        nn.init.zeros_(<span class="va">self</span>.bias)</span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, inputs, initial_state<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a>        batch_size <span class="op">=</span> inputs.shape[<span class="dv">0</span>]</span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> initial_state <span class="kw">is</span> <span class="va">None</span>:</span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a>            state <span class="op">=</span> inputs.new_zeros(batch_size, <span class="va">self</span>.weight_hh.shape[<span class="dv">0</span>])</span>
+<span id="cb13-15"><a href="#cb13-15" aria-hidden="true" tabindex="-1"></a>        <span class="cf">else</span>:</span>
+<span id="cb13-16"><a href="#cb13-16" aria-hidden="true" tabindex="-1"></a>            state <span class="op">=</span> initial_state</span>
+<span id="cb13-17"><a href="#cb13-17" aria-hidden="true" tabindex="-1"></a>        outputs <span class="op">=</span> []</span>
+<span id="cb13-18"><a href="#cb13-18" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(inputs.shape[<span class="dv">1</span>]):</span>
+<span id="cb13-19"><a href="#cb13-19" aria-hidden="true" tabindex="-1"></a>            state <span class="op">=</span> torch.tanh(</span>
+<span id="cb13-20"><a href="#cb13-20" aria-hidden="true" tabindex="-1"></a>                F.linear(inputs[:, step], <span class="va">self</span>.weight_ih, <span class="va">self</span>.bias)</span>
+<span id="cb13-21"><a href="#cb13-21" aria-hidden="true" tabindex="-1"></a>                <span class="op">+</span> F.linear(state, <span class="va">self</span>.weight_hh)</span>
+<span id="cb13-22"><a href="#cb13-22" aria-hidden="true" tabindex="-1"></a>            )</span>
+<span id="cb13-23"><a href="#cb13-23" aria-hidden="true" tabindex="-1"></a>            outputs.append(state)</span>
+<span id="cb13-24"><a href="#cb13-24" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> torch.stack(outputs, dim<span class="op">=</span><span class="dv">1</span>), state</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>El bucle hace explícito que el eje 1 es tiempo y que el estado tiene una fila por secuencia del lote. No crea parámetros nuevos al avanzar.</p>
+</section>
+<section id="comprobar-manualrnn-contra-nn.rnn" class="level2" data-number="8.9">
+<h2 data-number="8.9" class="anchored" data-anchor-id="comprobar-manualrnn-contra-nn.rnn"><span class="header-section-number">8.9</span> Comprobar <code>ManualRNN</code> contra <code>nn.RNN</code></h2>
+<p>Copiamos los pesos manuales a la implementación optimizada. PyTorch separa dos sesgos; dejamos el recurrente en cero para reproducir un único <span class="math inline">\(b_h\)</span>.</p>
+<div id="ea7d6454" class="cell" data-execution_count="10">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb14"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a>torch.manual_seed(<span class="dv">808</span>)</span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>manual <span class="op">=</span> ManualRNN(input_size<span class="op">=</span><span class="dv">3</span>, hidden_size<span class="op">=</span><span class="dv">4</span>)</span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a>builtin <span class="op">=</span> nn.RNN(input_size<span class="op">=</span><span class="dv">3</span>, hidden_size<span class="op">=</span><span class="dv">4</span>, batch_first<span class="op">=</span><span class="va">True</span>, nonlinearity<span class="op">=</span><span class="st">"tanh"</span>)</span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a><span class="cf">with</span> torch.no_grad():</span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    builtin.weight_ih_l0.copy_(manual.weight_ih)</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>    builtin.weight_hh_l0.copy_(manual.weight_hh)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>    builtin.bias_ih_l0.copy_(manual.bias)</span>
+<span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a>    builtin.bias_hh_l0.zero_()</span>
+<span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>manual_input <span class="op">=</span> torch.randn(<span class="dv">2</span>, <span class="dv">6</span>, <span class="dv">3</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb14-12"><a href="#cb14-12" aria-hidden="true" tabindex="-1"></a>builtin_input <span class="op">=</span> manual_input.detach().clone().requires_grad_(<span class="va">True</span>)</span>
+<span id="cb14-13"><a href="#cb14-13" aria-hidden="true" tabindex="-1"></a>manual_output, manual_last <span class="op">=</span> manual(manual_input)</span>
+<span id="cb14-14"><a href="#cb14-14" aria-hidden="true" tabindex="-1"></a>builtin_output, builtin_last <span class="op">=</span> builtin(builtin_input)</span>
+<span id="cb14-15"><a href="#cb14-15" aria-hidden="true" tabindex="-1"></a>manual_output.<span class="bu">sum</span>().backward()</span>
+<span id="cb14-16"><a href="#cb14-16" aria-hidden="true" tabindex="-1"></a>builtin_output.<span class="bu">sum</span>().backward()</span>
+<span id="cb14-17"><a href="#cb14-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-18"><a href="#cb14-18" aria-hidden="true" tabindex="-1"></a>equivalence <span class="op">=</span> pd.Series({</span>
+<span id="cb14-19"><a href="#cb14-19" aria-hidden="true" tabindex="-1"></a>    <span class="st">"máxima diferencia de salidas"</span>: <span class="bu">float</span>(</span>
+<span id="cb14-20"><a href="#cb14-20" aria-hidden="true" tabindex="-1"></a>        (manual_output <span class="op">-</span> builtin_output).<span class="bu">abs</span>().<span class="bu">max</span>().detach()</span>
+<span id="cb14-21"><a href="#cb14-21" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-22"><a href="#cb14-22" aria-hidden="true" tabindex="-1"></a>    <span class="st">"máxima diferencia del último estado"</span>: <span class="bu">float</span>(</span>
+<span id="cb14-23"><a href="#cb14-23" aria-hidden="true" tabindex="-1"></a>        (manual_last <span class="op">-</span> builtin_last.squeeze(<span class="dv">0</span>)).<span class="bu">abs</span>().<span class="bu">max</span>().detach()</span>
+<span id="cb14-24"><a href="#cb14-24" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-25"><a href="#cb14-25" aria-hidden="true" tabindex="-1"></a>    <span class="st">"máxima diferencia de gradientes de entrada"</span>: <span class="bu">float</span>(</span>
+<span id="cb14-26"><a href="#cb14-26" aria-hidden="true" tabindex="-1"></a>        (manual_input.grad <span class="op">-</span> builtin_input.grad).<span class="bu">abs</span>().<span class="bu">max</span>().detach()</span>
+<span id="cb14-27"><a href="#cb14-27" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-28"><a href="#cb14-28" aria-hidden="true" tabindex="-1"></a>    <span class="st">"máxima diferencia de gradientes W_ih"</span>: <span class="bu">float</span>(</span>
+<span id="cb14-29"><a href="#cb14-29" aria-hidden="true" tabindex="-1"></a>        (manual.weight_ih.grad <span class="op">-</span> builtin.weight_ih_l0.grad).<span class="bu">abs</span>().<span class="bu">max</span>().detach()</span>
+<span id="cb14-30"><a href="#cb14-30" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-31"><a href="#cb14-31" aria-hidden="true" tabindex="-1"></a>    <span class="st">"máxima diferencia de gradientes W_hh"</span>: <span class="bu">float</span>(</span>
+<span id="cb14-32"><a href="#cb14-32" aria-hidden="true" tabindex="-1"></a>        (manual.weight_hh.grad <span class="op">-</span> builtin.weight_hh_l0.grad).<span class="bu">abs</span>().<span class="bu">max</span>().detach()</span>
+<span id="cb14-33"><a href="#cb14-33" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb14-34"><a href="#cb14-34" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb14-35"><a href="#cb14-35" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> equivalence.<span class="bu">max</span>() <span class="op">&lt;</span> <span class="fl">1e-6</span></span>
+<span id="cb14-36"><a href="#cb14-36" aria-hidden="true" tabindex="-1"></a>equivalence</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="10">
+<pre><code>máxima diferencia de salidas                  0.000000e+00
+máxima diferencia del último estado           0.000000e+00
+máxima diferencia de gradientes de entrada    1.192093e-07
+máxima diferencia de gradientes W_ih          9.536743e-07
+máxima diferencia de gradientes W_hh          0.000000e+00
+dtype: float64</code></pre>
+</div>
+</div>
+<p>La equivalencia no prueba que la arquitectura pronostique bien; sí verifica que el bucle implementa la recurrencia declarada.</p>
+</section>
+<section id="desenrollar-backpropagation-through-time" class="level2" data-number="8.10">
+<h2 data-number="8.10" class="anchored" data-anchor-id="desenrollar-backpropagation-through-time"><span class="header-section-number">8.10</span> Desenrollar backpropagation through time</h2>
+<p>Al desenrollar la red, una pérdida final depende de cada estado anterior. BPTT aplica la regla de la cadena sobre esas copias temporales <span class="citation" data-cites="werbos1990bptt">(<a href="../references.html#ref-werbos1990bptt" role="doc-biblioref">Werbos 1990</a>)</span>. En el siguiente sistema escalar, el peso recurrente menor que uno atenúa la influencia de entradas lejanas.</p>
+<div id="bf866b62" class="cell" data-execution_count="11">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb16"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a>toy_inputs <span class="op">=</span> torch.ones(<span class="dv">6</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a>recurrent_weight <span class="op">=</span> torch.tensor(<span class="fl">0.65</span>, requires_grad<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>state <span class="op">=</span> torch.tensor(<span class="fl">0.0</span>)</span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>toy_states <span class="op">=</span> []</span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> value <span class="kw">in</span> toy_inputs:</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>    state <span class="op">=</span> torch.tanh(value <span class="op">+</span> recurrent_weight <span class="op">*</span> state)</span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a>    toy_states.append(state)</span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-9"><a href="#cb16-9" aria-hidden="true" tabindex="-1"></a>toy_states[<span class="op">-</span><span class="dv">1</span>].backward()</span>
+<span id="cb16-10"><a href="#cb16-10" aria-hidden="true" tabindex="-1"></a>bptt_table <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb16-11"><a href="#cb16-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"paso"</span>: np.arange(<span class="dv">1</span>, <span class="dv">7</span>),</span>
+<span id="cb16-12"><a href="#cb16-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"distancia hasta la salida"</span>: np.arange(<span class="dv">5</span>, <span class="op">-</span><span class="dv">1</span>, <span class="op">-</span><span class="dv">1</span>),</span>
+<span id="cb16-13"><a href="#cb16-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"d salida / d entrada"</span>: toy_inputs.grad.detach().numpy(),</span>
+<span id="cb16-14"><a href="#cb16-14" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb16-15"><a href="#cb16-15" aria-hidden="true" tabindex="-1"></a>bptt_table</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="11">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">paso</th>
+<th data-quarto-table-cell-role="th">distancia hasta la salida</th>
+<th data-quarto-table-cell-role="th">d salida / d entrada</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>1</td>
+<td>5</td>
+<td>0.000005</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2</td>
+<td>4</td>
+<td>0.000017</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>3</td>
+<td>3</td>
+<td>0.000145</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>4</td>
+<td>2</td>
+<td>0.001452</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>5</td>
+<td>1</td>
+<td>0.014786</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>6</td>
+<td>0</td>
+<td>0.150812</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Los gradientes dependen también de la derivada de <code>tanh</code> y de los estados, no solo de <span class="math inline">\(0{,}65^k\)</span>. En el Capítulo 9 estudiaremos por qué productos repetidos pueden desvanecerse o explotar y cómo las compuertas modifican ese recorrido.</p>
+</section>
+<section id="construir-el-pronosticador" class="level2" data-number="8.11">
+<h2 data-number="8.11" class="anchored" data-anchor-id="construir-el-pronosticador"><span class="header-section-number">8.11</span> Construir el pronosticador</h2>
+<p>La implementación experimental usa una capa recurrente, 32 unidades ocultas y una cabeza lineal. No apilamos capas ni recorremos la ventana en ambas direcciones. La causalidad proviene de excluir observaciones iguales o posteriores al objetivo; una lectura inversa del mismo pasado no violaría por sí sola esa condición, pero pertenece a la comparación del Capítulo 9.</p>
+<div id="088169ab" class="cell" data-execution_count="12">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb17"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="kw">class</span> RNNForecaster(nn.Module):</span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> <span class="fu">__init__</span>(<span class="va">self</span>, input_size<span class="op">=</span><span class="dv">5</span>, hidden_size<span class="op">=</span>HIDDEN_SIZE):</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a>        <span class="bu">super</span>().<span class="fu">__init__</span>()</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.rnn <span class="op">=</span> nn.RNN(input_size, hidden_size, batch_first<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a>        <span class="va">self</span>.head <span class="op">=</span> nn.Linear(hidden_size <span class="op">+</span> <span class="dv">4</span>, <span class="dv">1</span>)</span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a>    <span class="kw">def</span> forward(<span class="va">self</span>, sequence, target_calendar):</span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a>        _, last_state <span class="op">=</span> <span class="va">self</span>.rnn(sequence)</span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a>        features <span class="op">=</span> torch.cat([last_state.squeeze(<span class="dv">0</span>), target_calendar], dim<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a>        <span class="cf">return</span> <span class="va">self</span>.head(features)</span>
+<span id="cb17-11"><a href="#cb17-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-12"><a href="#cb17-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-13"><a href="#cb17-13" aria-hidden="true" tabindex="-1"></a>model_shape_check <span class="op">=</span> RNNForecaster()</span>
+<span id="cb17-14"><a href="#cb17-14" aria-hidden="true" tabindex="-1"></a>dummy_output <span class="op">=</span> model_shape_check(torch.zeros(<span class="dv">7</span>, HISTORY, <span class="dv">5</span>), torch.zeros(<span class="dv">7</span>, <span class="dv">4</span>))</span>
+<span id="cb17-15"><a href="#cb17-15" aria-hidden="true" tabindex="-1"></a>pd.Series({</span>
+<span id="cb17-16"><a href="#cb17-16" aria-hidden="true" tabindex="-1"></a>    <span class="st">"forma de salida"</span>: <span class="bu">str</span>(<span class="bu">tuple</span>(dummy_output.shape)),</span>
+<span id="cb17-17"><a href="#cb17-17" aria-hidden="true" tabindex="-1"></a>    <span class="st">"parámetros"</span>: <span class="bu">sum</span>(parameter.numel() <span class="cf">for</span> parameter <span class="kw">in</span> model_shape_check.parameters()),</span>
+<span id="cb17-18"><a href="#cb17-18" aria-hidden="true" tabindex="-1"></a>})</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="12">
+<pre><code>forma de salida    (7, 1)
+parámetros           1285
+dtype: object</code></pre>
+</div>
+</div>
+</section>
+<section id="fijar-la-receta-antes-del-backtesting" class="level2" data-number="8.12">
+<h2 data-number="8.12" class="anchored" data-anchor-id="fijar-la-receta-antes-del-backtesting"><span class="header-section-number">8.12</span> Fijar la receta antes del backtesting</h2>
+<p>Usaremos AdamW, tasa <span class="math inline">\(3\times10^{-3}\)</span>, 12 épocas, batch 256, MSE sobre el objetivo transformado y clipping de norma 1. La semilla cambia inicialización y orden de mini-batches; cortes y ventanas permanecen idénticos.</p>
+<div class="callout callout-style-simple callout-important callout-titled" title="Hipótesis y evaluación fijadas antes de test">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Hipótesis y evaluación fijadas antes de test
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<ul>
+<li>La métrica primaria será MAE en bicicletas; RMSE y WAPE serán secundarias.</li>
+<li>La RNN se considerará materialmente mejor si reduce al menos 5% el MAE del mejor baseline estacional mediano y gana en dos de tres meses.</li>
+<li>Se reportarán tres semillas pareadas y tiempos de ajuste.</li>
+<li>Como análisis secundario fijado ahora, cada RNN producirá 24 pasos recursivos desde todos los orígenes continuos del test. Se resumirá la métrica mediana entre semillas, sin combinar sus predicciones; la semilla 29 ilustrará casos.</li>
+<li>Octubre-diciembre no se consultará hasta terminar el backtesting.</li>
+</ul>
+</div>
+</div>
+<div id="bee9cefa" class="cell" data-execution_count="13">
+<details class="code-fold">
+<summary>Mostrar entrenamiento y evaluación</summary>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb19"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> restore_prediction(scaled, mean, std):</span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a>    log_values <span class="op">=</span> np.asarray(scaled) <span class="op">*</span> std <span class="op">+</span> mean</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> np.maximum(np.expm1(log_values), <span class="fl">0.0</span>)</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a><span class="at">@torch.inference_mode</span>()</span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> predict_model(model, tensors):</span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a>    predictions <span class="op">=</span> model(tensors[<span class="st">"x"</span>], tensors[<span class="st">"calendar"</span>]).squeeze(<span class="dv">1</span>).numpy()</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> restore_prediction(predictions, tensors[<span class="st">"mean"</span>], tensors[<span class="st">"std"</span>])</span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> train_model(train_tensors, seed, monitored_tensors<span class="op">=</span><span class="va">None</span>):</span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a>    random.seed(seed)</span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a>    np.random.seed(seed)</span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a>    torch.manual_seed(seed)</span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a>    model <span class="op">=</span> RNNForecaster()</span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a>    optimizer <span class="op">=</span> torch.optim.AdamW(model.parameters(), lr<span class="op">=</span><span class="fl">3e-3</span>, weight_decay<span class="op">=</span><span class="fl">1e-4</span>)</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a>    generator <span class="op">=</span> torch.Generator().manual_seed(seed <span class="op">+</span> <span class="dv">8_000</span>)</span>
+<span id="cb19-20"><a href="#cb19-20" aria-hidden="true" tabindex="-1"></a>    loader <span class="op">=</span> DataLoader(</span>
+<span id="cb19-21"><a href="#cb19-21" aria-hidden="true" tabindex="-1"></a>        TensorDataset(</span>
+<span id="cb19-22"><a href="#cb19-22" aria-hidden="true" tabindex="-1"></a>            train_tensors[<span class="st">"x"</span>], train_tensors[<span class="st">"calendar"</span>], train_tensors[<span class="st">"y"</span>]</span>
+<span id="cb19-23"><a href="#cb19-23" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb19-24"><a href="#cb19-24" aria-hidden="true" tabindex="-1"></a>        batch_size<span class="op">=</span>BATCH_SIZE,</span>
+<span id="cb19-25"><a href="#cb19-25" aria-hidden="true" tabindex="-1"></a>        shuffle<span class="op">=</span><span class="va">True</span>,</span>
+<span id="cb19-26"><a href="#cb19-26" aria-hidden="true" tabindex="-1"></a>        generator<span class="op">=</span>generator,</span>
+<span id="cb19-27"><a href="#cb19-27" aria-hidden="true" tabindex="-1"></a>        num_workers<span class="op">=</span><span class="dv">0</span>,</span>
+<span id="cb19-28"><a href="#cb19-28" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-29"><a href="#cb19-29" aria-hidden="true" tabindex="-1"></a>    history <span class="op">=</span> []</span>
+<span id="cb19-30"><a href="#cb19-30" aria-hidden="true" tabindex="-1"></a>    started <span class="op">=</span> perf_counter()</span>
+<span id="cb19-31"><a href="#cb19-31" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> epoch <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">1</span>, EPOCHS <span class="op">+</span> <span class="dv">1</span>):</span>
+<span id="cb19-32"><a href="#cb19-32" aria-hidden="true" tabindex="-1"></a>        model.train()</span>
+<span id="cb19-33"><a href="#cb19-33" aria-hidden="true" tabindex="-1"></a>        loss_sum <span class="op">=</span> <span class="fl">0.0</span></span>
+<span id="cb19-34"><a href="#cb19-34" aria-hidden="true" tabindex="-1"></a>        <span class="cf">for</span> sequences, target_calendar, targets <span class="kw">in</span> loader:</span>
+<span id="cb19-35"><a href="#cb19-35" aria-hidden="true" tabindex="-1"></a>            optimizer.zero_grad(set_to_none<span class="op">=</span><span class="va">True</span>)</span>
+<span id="cb19-36"><a href="#cb19-36" aria-hidden="true" tabindex="-1"></a>            predictions <span class="op">=</span> model(sequences, target_calendar)</span>
+<span id="cb19-37"><a href="#cb19-37" aria-hidden="true" tabindex="-1"></a>            loss <span class="op">=</span> F.mse_loss(predictions, targets)</span>
+<span id="cb19-38"><a href="#cb19-38" aria-hidden="true" tabindex="-1"></a>            loss.backward()</span>
+<span id="cb19-39"><a href="#cb19-39" aria-hidden="true" tabindex="-1"></a>            gradient_norm <span class="op">=</span> nn.utils.clip_grad_norm_(model.parameters(), max_norm<span class="op">=</span><span class="fl">1.0</span>)</span>
+<span id="cb19-40"><a href="#cb19-40" aria-hidden="true" tabindex="-1"></a>            optimizer.step()</span>
+<span id="cb19-41"><a href="#cb19-41" aria-hidden="true" tabindex="-1"></a>            loss_sum <span class="op">+=</span> loss.item() <span class="op">*</span> <span class="bu">len</span>(targets)</span>
+<span id="cb19-42"><a href="#cb19-42" aria-hidden="true" tabindex="-1"></a>        epoch_row <span class="op">=</span> {</span>
+<span id="cb19-43"><a href="#cb19-43" aria-hidden="true" tabindex="-1"></a>            <span class="st">"época"</span>: epoch,</span>
+<span id="cb19-44"><a href="#cb19-44" aria-hidden="true" tabindex="-1"></a>            <span class="st">"MSE ajuste"</span>: loss_sum <span class="op">/</span> <span class="bu">len</span>(train_tensors[<span class="st">"y"</span>]),</span>
+<span id="cb19-45"><a href="#cb19-45" aria-hidden="true" tabindex="-1"></a>            <span class="st">"norma gradiente último batch"</span>: <span class="bu">float</span>(gradient_norm),</span>
+<span id="cb19-46"><a href="#cb19-46" aria-hidden="true" tabindex="-1"></a>        }</span>
+<span id="cb19-47"><a href="#cb19-47" aria-hidden="true" tabindex="-1"></a>        <span class="cf">if</span> monitored_tensors <span class="kw">is</span> <span class="kw">not</span> <span class="va">None</span>:</span>
+<span id="cb19-48"><a href="#cb19-48" aria-hidden="true" tabindex="-1"></a>            monitored_prediction <span class="op">=</span> predict_model(model, monitored_tensors)</span>
+<span id="cb19-49"><a href="#cb19-49" aria-hidden="true" tabindex="-1"></a>            monitored_truth <span class="op">=</span> raw_demand[monitored_tensors[<span class="st">"positions"</span>]]</span>
+<span id="cb19-50"><a href="#cb19-50" aria-hidden="true" tabindex="-1"></a>            epoch_row[<span class="st">"MAE evaluación"</span>] <span class="op">=</span> regression_metrics(</span>
+<span id="cb19-51"><a href="#cb19-51" aria-hidden="true" tabindex="-1"></a>                monitored_truth, monitored_prediction</span>
+<span id="cb19-52"><a href="#cb19-52" aria-hidden="true" tabindex="-1"></a>            )[<span class="st">"MAE"</span>]</span>
+<span id="cb19-53"><a href="#cb19-53" aria-hidden="true" tabindex="-1"></a>        history.append(epoch_row)</span>
+<span id="cb19-54"><a href="#cb19-54" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> {</span>
+<span id="cb19-55"><a href="#cb19-55" aria-hidden="true" tabindex="-1"></a>        <span class="st">"model"</span>: model,</span>
+<span id="cb19-56"><a href="#cb19-56" aria-hidden="true" tabindex="-1"></a>        <span class="st">"history"</span>: pd.DataFrame(history),</span>
+<span id="cb19-57"><a href="#cb19-57" aria-hidden="true" tabindex="-1"></a>        <span class="st">"seconds"</span>: perf_counter() <span class="op">-</span> started,</span>
+<span id="cb19-58"><a href="#cb19-58" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb19-59"><a href="#cb19-59" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-60"><a href="#cb19-60" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-61"><a href="#cb19-61" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> fit_linear(train_tensors, evaluation_tensors):</span>
+<span id="cb19-62"><a href="#cb19-62" aria-hidden="true" tabindex="-1"></a>    train_x <span class="op">=</span> np.column_stack([</span>
+<span id="cb19-63"><a href="#cb19-63" aria-hidden="true" tabindex="-1"></a>        train_tensors[<span class="st">"x"</span>][:, :, <span class="dv">0</span>].numpy(),</span>
+<span id="cb19-64"><a href="#cb19-64" aria-hidden="true" tabindex="-1"></a>        train_tensors[<span class="st">"calendar"</span>].numpy(),</span>
+<span id="cb19-65"><a href="#cb19-65" aria-hidden="true" tabindex="-1"></a>    ]).astype(<span class="st">"float64"</span>)</span>
+<span id="cb19-66"><a href="#cb19-66" aria-hidden="true" tabindex="-1"></a>    evaluation_x <span class="op">=</span> np.column_stack([</span>
+<span id="cb19-67"><a href="#cb19-67" aria-hidden="true" tabindex="-1"></a>        evaluation_tensors[<span class="st">"x"</span>][:, :, <span class="dv">0</span>].numpy(),</span>
+<span id="cb19-68"><a href="#cb19-68" aria-hidden="true" tabindex="-1"></a>        evaluation_tensors[<span class="st">"calendar"</span>].numpy(),</span>
+<span id="cb19-69"><a href="#cb19-69" aria-hidden="true" tabindex="-1"></a>    ]).astype(<span class="st">"float64"</span>)</span>
+<span id="cb19-70"><a href="#cb19-70" aria-hidden="true" tabindex="-1"></a>    train_x <span class="op">=</span> torch.from_numpy(train_x)</span>
+<span id="cb19-71"><a href="#cb19-71" aria-hidden="true" tabindex="-1"></a>    evaluation_x <span class="op">=</span> torch.from_numpy(evaluation_x)</span>
+<span id="cb19-72"><a href="#cb19-72" aria-hidden="true" tabindex="-1"></a>    train_y <span class="op">=</span> train_tensors[<span class="st">"y"</span>].squeeze(<span class="dv">1</span>).to(torch.float64)</span>
+<span id="cb19-73"><a href="#cb19-73" aria-hidden="true" tabindex="-1"></a>    x_mean <span class="op">=</span> train_x.mean(dim<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb19-74"><a href="#cb19-74" aria-hidden="true" tabindex="-1"></a>    y_mean <span class="op">=</span> train_y.mean()</span>
+<span id="cb19-75"><a href="#cb19-75" aria-hidden="true" tabindex="-1"></a>    centered_x <span class="op">=</span> train_x <span class="op">-</span> x_mean</span>
+<span id="cb19-76"><a href="#cb19-76" aria-hidden="true" tabindex="-1"></a>    centered_y <span class="op">=</span> train_y <span class="op">-</span> y_mean</span>
+<span id="cb19-77"><a href="#cb19-77" aria-hidden="true" tabindex="-1"></a>    identity <span class="op">=</span> torch.eye(centered_x.shape[<span class="dv">1</span>], dtype<span class="op">=</span>torch.float64)</span>
+<span id="cb19-78"><a href="#cb19-78" aria-hidden="true" tabindex="-1"></a>    coefficients <span class="op">=</span> torch.linalg.solve(</span>
+<span id="cb19-79"><a href="#cb19-79" aria-hidden="true" tabindex="-1"></a>        centered_x.T <span class="op">@</span> centered_x <span class="op">+</span> identity,</span>
+<span id="cb19-80"><a href="#cb19-80" aria-hidden="true" tabindex="-1"></a>        centered_x.T <span class="op">@</span> centered_y,</span>
+<span id="cb19-81"><a href="#cb19-81" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb19-82"><a href="#cb19-82" aria-hidden="true" tabindex="-1"></a>    scaled <span class="op">=</span> ((evaluation_x <span class="op">-</span> x_mean) <span class="op">@</span> coefficients <span class="op">+</span> y_mean).numpy()</span>
+<span id="cb19-83"><a href="#cb19-83" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> restore_prediction(</span>
+<span id="cb19-84"><a href="#cb19-84" aria-hidden="true" tabindex="-1"></a>        scaled, evaluation_tensors[<span class="st">"mean"</span>], evaluation_tensors[<span class="st">"std"</span>]</span>
+<span id="cb19-85"><a href="#cb19-85" aria-hidden="true" tabindex="-1"></a>    )</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+</details>
+</div>
+<p>Barajar ventanas dentro de ajuste cambia el orden de SGD, no mueve objetivos entre periodos. Cada ventana conserva internamente su orden de 168 pasos.</p>
+</section>
+<section id="comprobar-convergencia-en-junio" class="level2" data-number="8.13">
+<h2 data-number="8.13" class="anchored" data-anchor-id="comprobar-convergencia-en-junio"><span class="header-section-number">8.13</span> Comprobar convergencia en junio</h2>
+<p>Junio es el único periodo usado para inspeccionar la receta antes del backtesting. No elegimos la mejor época: las 12 se ejecutarán en todos los orígenes.</p>
+<div id="f5cc7d70" class="cell" data-execution_count="14">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb20"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a>development_train <span class="op">=</span> make_training_tensors(DEVELOPMENT_FIT_END)</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a>development_evaluation <span class="op">=</span> make_tensors(</span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a>    DEVELOPMENT_FIT_END, DEVELOPMENT_START, DEVELOPMENT_END</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a>development_run <span class="op">=</span> train_model(</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a>    development_train, REPRESENTATIVE_SEED, monitored_tensors<span class="op">=</span>development_evaluation</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb20-8"><a href="#cb20-8" aria-hidden="true" tabindex="-1"></a>development_run[<span class="st">"history"</span>]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="14">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">época</th>
+<th data-quarto-table-cell-role="th">MSE ajuste</th>
+<th data-quarto-table-cell-role="th">norma gradiente último batch</th>
+<th data-quarto-table-cell-role="th">MAE evaluación</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>1</td>
+<td>0.309266</td>
+<td>1.030469</td>
+<td>106.301498</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>2</td>
+<td>0.105738</td>
+<td>0.373150</td>
+<td>71.256638</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>3</td>
+<td>0.077360</td>
+<td>0.917169</td>
+<td>63.721127</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>4</td>
+<td>0.068737</td>
+<td>0.736954</td>
+<td>51.213715</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>5</td>
+<td>0.062433</td>
+<td>1.020463</td>
+<td>52.256077</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>6</td>
+<td>0.057637</td>
+<td>0.296720</td>
+<td>39.045868</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>7</td>
+<td>0.053846</td>
+<td>0.715168</td>
+<td>45.580948</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>8</td>
+<td>0.053030</td>
+<td>0.986479</td>
+<td>38.853874</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>9</td>
+<td>0.051679</td>
+<td>0.442040</td>
+<td>39.728462</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>10</td>
+<td>0.048675</td>
+<td>0.426601</td>
+<td>37.073078</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">10</th>
+<td>11</td>
+<td>0.046608</td>
+<td>0.313438</td>
+<td>38.018211</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11</th>
+<td>12</td>
+<td>0.045422</td>
+<td>1.312084</td>
+<td>38.720921</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-rnn-development" class="cell" data-fig-height="3.8" data-fig-width="9" data-execution_count="15">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb21"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a>history <span class="op">=</span> development_run[<span class="st">"history"</span>]</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">3.8</span>))</span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].plot(history[<span class="st">"época"</span>], history[<span class="st">"MSE ajuste"</span>], marker<span class="op">=</span><span class="st">"o"</span>, color<span class="op">=</span><span class="st">"#48639C"</span>)</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].plot(history[<span class="st">"época"</span>], history[<span class="st">"MAE evaluación"</span>], marker<span class="op">=</span><span class="st">"o"</span>, color<span class="op">=</span><span class="st">"#C1666B"</span>)</span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"época"</span>, ylabel<span class="op">=</span><span class="st">"MSE estandarizado"</span>, title<span class="op">=</span><span class="st">"Ajuste"</span>)</span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"época"</span>, ylabel<span class="op">=</span><span class="st">"MAE en bicicletas"</span>, title<span class="op">=</span><span class="st">"Junio"</span>)</span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a>    axis.set_xticks([<span class="dv">1</span>, <span class="dv">3</span>, <span class="dv">6</span>, <span class="dv">9</span>, <span class="dv">12</span>])</span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-rnn-development" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Dos paneles muestran MSE de ajuste y MAE temporal a lo largo de doce épocas.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-development-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter08_files/figure-html/fig-rnn-development-output-1.png" alt="Dos paneles muestran MSE de ajuste y MAE temporal a lo largo de doce épocas." width="854" height="356" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-development-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8.2: Trayectoria de ajuste y MAE de junio para la receta fija.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="ejecutar-tres-orígenes-expansivos" class="level2" data-number="8.14">
+<h2 data-number="8.14" class="anchored" data-anchor-id="ejecutar-tres-orígenes-expansivos"><span class="header-section-number">8.14</span> Ejecutar tres orígenes expansivos</h2>
+<p>En cada origen recalculamos la media y desviación con el pasado, ajustamos una regresión lineal y entrenamos tres RNN. Los baselines no estiman parámetros.</p>
+<div id="eb346fd9" class="cell" data-execution_count="16">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb22"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a>backtest_rows <span class="op">=</span> []</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a>backtest_runs <span class="op">=</span> {}</span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> fold_name, fit_end, evaluation_start, evaluation_end <span class="kw">in</span> BACKTEST_FOLDS:</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>    train_tensors <span class="op">=</span> make_training_tensors(fit_end)</span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>    evaluation_tensors <span class="op">=</span> make_tensors(fit_end, evaluation_start, evaluation_end)</span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a>    positions <span class="op">=</span> evaluation_tensors[<span class="st">"positions"</span>]</span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>    truth <span class="op">=</span> raw_demand[positions]</span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>    baseline_specs <span class="op">=</span> {</span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Persistencia 1 h"</span>: naive_prediction(positions, <span class="dv">1</span>),</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Estacional 24 h"</span>: naive_prediction(positions, <span class="dv">24</span>),</span>
+<span id="cb22-13"><a href="#cb22-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Estacional 168 h"</span>: naive_prediction(positions, <span class="dv">168</span>),</span>
+<span id="cb22-14"><a href="#cb22-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Lineal con rezagos + calendario"</span>: fit_linear(</span>
+<span id="cb22-15"><a href="#cb22-15" aria-hidden="true" tabindex="-1"></a>            train_tensors, evaluation_tensors</span>
+<span id="cb22-16"><a href="#cb22-16" aria-hidden="true" tabindex="-1"></a>        ),</span>
+<span id="cb22-17"><a href="#cb22-17" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb22-18"><a href="#cb22-18" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> protocol, prediction <span class="kw">in</span> baseline_specs.items():</span>
+<span id="cb22-19"><a href="#cb22-19" aria-hidden="true" tabindex="-1"></a>        backtest_rows.append({</span>
+<span id="cb22-20"><a href="#cb22-20" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mes"</span>: fold_name,</span>
+<span id="cb22-21"><a href="#cb22-21" aria-hidden="true" tabindex="-1"></a>            <span class="st">"protocolo"</span>: protocol,</span>
+<span id="cb22-22"><a href="#cb22-22" aria-hidden="true" tabindex="-1"></a>            <span class="st">"semilla"</span>: np.nan,</span>
+<span id="cb22-23"><a href="#cb22-23" aria-hidden="true" tabindex="-1"></a>            <span class="op">**</span>regression_metrics(truth, prediction),</span>
+<span id="cb22-24"><a href="#cb22-24" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos"</span>: <span class="fl">0.0</span>,</span>
+<span id="cb22-25"><a href="#cb22-25" aria-hidden="true" tabindex="-1"></a>            <span class="st">"ventanas"</span>: <span class="bu">len</span>(positions),</span>
+<span id="cb22-26"><a href="#cb22-26" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb22-27"><a href="#cb22-27" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-28"><a href="#cb22-28" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb22-29"><a href="#cb22-29" aria-hidden="true" tabindex="-1"></a>        run <span class="op">=</span> train_model(train_tensors, seed)</span>
+<span id="cb22-30"><a href="#cb22-30" aria-hidden="true" tabindex="-1"></a>        prediction <span class="op">=</span> predict_model(run[<span class="st">"model"</span>], evaluation_tensors)</span>
+<span id="cb22-31"><a href="#cb22-31" aria-hidden="true" tabindex="-1"></a>        backtest_runs[(fold_name, seed)] <span class="op">=</span> run</span>
+<span id="cb22-32"><a href="#cb22-32" aria-hidden="true" tabindex="-1"></a>        backtest_rows.append({</span>
+<span id="cb22-33"><a href="#cb22-33" aria-hidden="true" tabindex="-1"></a>            <span class="st">"mes"</span>: fold_name,</span>
+<span id="cb22-34"><a href="#cb22-34" aria-hidden="true" tabindex="-1"></a>            <span class="st">"protocolo"</span>: <span class="st">"RNN"</span>,</span>
+<span id="cb22-35"><a href="#cb22-35" aria-hidden="true" tabindex="-1"></a>            <span class="st">"semilla"</span>: seed,</span>
+<span id="cb22-36"><a href="#cb22-36" aria-hidden="true" tabindex="-1"></a>            <span class="op">**</span>regression_metrics(truth, prediction),</span>
+<span id="cb22-37"><a href="#cb22-37" aria-hidden="true" tabindex="-1"></a>            <span class="st">"segundos"</span>: run[<span class="st">"seconds"</span>],</span>
+<span id="cb22-38"><a href="#cb22-38" aria-hidden="true" tabindex="-1"></a>            <span class="st">"ventanas"</span>: <span class="bu">len</span>(positions),</span>
+<span id="cb22-39"><a href="#cb22-39" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb22-40"><a href="#cb22-40" aria-hidden="true" tabindex="-1"></a>        <span class="bu">print</span>(</span>
+<span id="cb22-41"><a href="#cb22-41" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"</span><span class="sc">{</span>fold_name<span class="sc">:10s}</span><span class="ss"> | semilla </span><span class="sc">{</span>seed<span class="sc">}</span><span class="ss"> | "</span></span>
+<span id="cb22-42"><a href="#cb22-42" aria-hidden="true" tabindex="-1"></a>            <span class="ss">f"MAE </span><span class="sc">{</span>backtest_rows[<span class="op">-</span><span class="dv">1</span>][<span class="st">'MAE'</span>]<span class="sc">:.2f}</span><span class="ss"> | </span><span class="sc">{</span>run[<span class="st">'seconds'</span>]<span class="sc">:.1f}</span><span class="ss"> s"</span></span>
+<span id="cb22-43"><a href="#cb22-43" aria-hidden="true" tabindex="-1"></a>        )</span>
+<span id="cb22-44"><a href="#cb22-44" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-45"><a href="#cb22-45" aria-hidden="true" tabindex="-1"></a>backtest_results <span class="op">=</span> pd.DataFrame(backtest_rows)</span>
+<span id="cb22-46"><a href="#cb22-46" aria-hidden="true" tabindex="-1"></a>backtest_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>julio      | semilla 17 | MAE 45.95 | 4.9 s
+julio      | semilla 29 | MAE 35.60 | 5.0 s
+julio      | semilla 43 | MAE 47.77 | 4.9 s
+agosto     | semilla 17 | MAE 37.79 | 6.5 s
+agosto     | semilla 29 | MAE 35.92 | 5.9 s
+agosto     | semilla 43 | MAE 38.56 | 5.0 s
+septiembre | semilla 17 | MAE 46.68 | 5.4 s
+septiembre | semilla 29 | MAE 38.95 | 5.3 s
+septiembre | semilla 43 | MAE 52.82 | 5.3 s</code></pre>
+</div>
+<div class="cell-output cell-output-display" data-execution_count="16">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mes</th>
+<th data-quarto-table-cell-role="th">protocolo</th>
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th">MAE</th>
+<th data-quarto-table-cell-role="th">RMSE</th>
+<th data-quarto-table-cell-role="th">WAPE</th>
+<th data-quarto-table-cell-role="th">segundos</th>
+<th data-quarto-table-cell-role="th">ventanas</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>julio</td>
+<td>Persistencia 1 h</td>
+<td>NaN</td>
+<td>89.181450</td>
+<td>132.106247</td>
+<td>0.325878</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>julio</td>
+<td>Estacional 24 h</td>
+<td>NaN</td>
+<td>86.423386</td>
+<td>139.807587</td>
+<td>0.315800</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>julio</td>
+<td>Estacional 168 h</td>
+<td>NaN</td>
+<td>64.205643</td>
+<td>101.885048</td>
+<td>0.234614</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>julio</td>
+<td>Lineal con rezagos + calendario</td>
+<td>NaN</td>
+<td>40.930418</td>
+<td>59.834585</td>
+<td>0.149564</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>julio</td>
+<td>RNN</td>
+<td>17.0</td>
+<td>45.951424</td>
+<td>68.899620</td>
+<td>0.167911</td>
+<td>4.948606</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>julio</td>
+<td>RNN</td>
+<td>29.0</td>
+<td>35.599125</td>
+<td>55.137985</td>
+<td>0.130083</td>
+<td>5.022085</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>julio</td>
+<td>RNN</td>
+<td>43.0</td>
+<td>47.770889</td>
+<td>73.969818</td>
+<td>0.174560</td>
+<td>4.872218</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">7</th>
+<td>agosto</td>
+<td>Persistencia 1 h</td>
+<td>NaN</td>
+<td>96.455643</td>
+<td>139.874573</td>
+<td>0.334555</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">8</th>
+<td>agosto</td>
+<td>Estacional 24 h</td>
+<td>NaN</td>
+<td>74.830643</td>
+<td>129.177704</td>
+<td>0.259549</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">9</th>
+<td>agosto</td>
+<td>Estacional 168 h</td>
+<td>NaN</td>
+<td>42.220428</td>
+<td>77.215279</td>
+<td>0.146441</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">10</th>
+<td>agosto</td>
+<td>Lineal con rezagos + calendario</td>
+<td>NaN</td>
+<td>36.305585</td>
+<td>57.692695</td>
+<td>0.125925</td>
+<td>0.000000</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">11</th>
+<td>agosto</td>
+<td>RNN</td>
+<td>17.0</td>
+<td>37.794945</td>
+<td>60.467010</td>
+<td>0.131091</td>
+<td>6.484441</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">12</th>
+<td>agosto</td>
+<td>RNN</td>
+<td>29.0</td>
+<td>35.920177</td>
+<td>57.182621</td>
+<td>0.124589</td>
+<td>5.919609</td>
+<td>744</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">13</th>
+<td>agosto</td>
+<td>RNN</td>
+<td>43.0</td>
+<td>38.561260</td>
+<td>58.692226</td>
+<td>0.133749</td>
+<td>4.977458</td>
+<td>744</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">14</th>
+<td>septiembre</td>
+<td>Persistencia 1 h</td>
+<td>NaN</td>
+<td>100.062500</td>
+<td>146.714920</td>
+<td>0.329615</td>
+<td>0.000000</td>
+<td>720</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">15</th>
+<td>septiembre</td>
+<td>Estacional 24 h</td>
+<td>NaN</td>
+<td>90.026390</td>
+<td>150.349411</td>
+<td>0.296555</td>
+<td>0.000000</td>
+<td>720</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">16</th>
+<td>septiembre</td>
+<td>Estacional 168 h</td>
+<td>NaN</td>
+<td>61.752777</td>
+<td>111.802704</td>
+<td>0.203419</td>
+<td>0.000000</td>
+<td>720</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">17</th>
+<td>septiembre</td>
+<td>Lineal con rezagos + calendario</td>
+<td>NaN</td>
+<td>41.657567</td>
+<td>65.190053</td>
+<td>0.137224</td>
+<td>0.000000</td>
+<td>720</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">18</th>
+<td>septiembre</td>
+<td>RNN</td>
+<td>17.0</td>
+<td>46.684143</td>
+<td>73.403000</td>
+<td>0.153782</td>
+<td>5.365565</td>
+<td>720</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">19</th>
+<td>septiembre</td>
+<td>RNN</td>
+<td>29.0</td>
+<td>38.952457</td>
+<td>61.510094</td>
+<td>0.128313</td>
+<td>5.332060</td>
+<td>720</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">20</th>
+<td>septiembre</td>
+<td>RNN</td>
+<td>43.0</td>
+<td>52.815971</td>
+<td>83.758217</td>
+<td>0.173981</td>
+<td>5.268859</td>
+<td>720</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+</section>
+<section id="leer-estabilidad-y-skill" class="level2" data-number="8.15">
+<h2 data-number="8.15" class="anchored" data-anchor-id="leer-estabilidad-y-skill"><span class="header-section-number">8.15</span> Leer estabilidad y skill</h2>
+<p>Primero resumimos las tres semillas; luego las comparamos con la mejor regla estacional de cada mes. La regresión lineal ayuda a interpretar recurrencia, pero no define el umbral predeclarado.</p>
+<div id="b54e6961" class="cell" data-execution_count="17">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb24"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a>rnn_monthly <span class="op">=</span> (</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a>    backtest_results[backtest_results[<span class="st">"protocolo"</span>] <span class="op">==</span> <span class="st">"RNN"</span>]</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a>    .groupby(<span class="st">"mes"</span>, sort<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a>    .agg(</span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a>        MAE_mediano<span class="op">=</span>(<span class="st">"MAE"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a>        MAE_mínimo<span class="op">=</span>(<span class="st">"MAE"</span>, <span class="st">"min"</span>),</span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a>        MAE_máximo<span class="op">=</span>(<span class="st">"MAE"</span>, <span class="st">"max"</span>),</span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a>        RMSE_mediano<span class="op">=</span>(<span class="st">"RMSE"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a>        segundos_medianos<span class="op">=</span>(<span class="st">"segundos"</span>, <span class="st">"median"</span>),</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a>        ventanas<span class="op">=</span>(<span class="st">"ventanas"</span>, <span class="st">"first"</span>),</span>
+<span id="cb24-11"><a href="#cb24-11" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb24-12"><a href="#cb24-12" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-13"><a href="#cb24-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-14"><a href="#cb24-14" aria-hidden="true" tabindex="-1"></a>seasonal <span class="op">=</span> backtest_results[</span>
+<span id="cb24-15"><a href="#cb24-15" aria-hidden="true" tabindex="-1"></a>    backtest_results[<span class="st">"protocolo"</span>].isin([<span class="st">"Estacional 24 h"</span>, <span class="st">"Estacional 168 h"</span>])</span>
+<span id="cb24-16"><a href="#cb24-16" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb24-17"><a href="#cb24-17" aria-hidden="true" tabindex="-1"></a>best_seasonal <span class="op">=</span> seasonal.loc[seasonal.groupby(<span class="st">"mes"</span>)[<span class="st">"MAE"</span>].idxmin()].set_index(<span class="st">"mes"</span>)</span>
+<span id="cb24-18"><a href="#cb24-18" aria-hidden="true" tabindex="-1"></a>skill_table <span class="op">=</span> rnn_monthly.join(</span>
+<span id="cb24-19"><a href="#cb24-19" aria-hidden="true" tabindex="-1"></a>    best_seasonal[[<span class="st">"protocolo"</span>, <span class="st">"MAE"</span>]].rename(</span>
+<span id="cb24-20"><a href="#cb24-20" aria-hidden="true" tabindex="-1"></a>        columns<span class="op">=</span>{<span class="st">"protocolo"</span>: <span class="st">"mejor baseline"</span>, <span class="st">"MAE"</span>: <span class="st">"MAE baseline"</span>}</span>
+<span id="cb24-21"><a href="#cb24-21" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb24-22"><a href="#cb24-22" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb24-23"><a href="#cb24-23" aria-hidden="true" tabindex="-1"></a>skill_table[<span class="st">"skill MAE"</span>] <span class="op">=</span> <span class="dv">1</span> <span class="op">-</span> skill_table[<span class="st">"MAE_mediano"</span>] <span class="op">/</span> skill_table[<span class="st">"MAE baseline"</span>]</span>
+<span id="cb24-24"><a href="#cb24-24" aria-hidden="true" tabindex="-1"></a>skill_table</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="17">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">MAE_mediano</th>
+<th data-quarto-table-cell-role="th">MAE_mínimo</th>
+<th data-quarto-table-cell-role="th">MAE_máximo</th>
+<th data-quarto-table-cell-role="th">RMSE_mediano</th>
+<th data-quarto-table-cell-role="th">segundos_medianos</th>
+<th data-quarto-table-cell-role="th">ventanas</th>
+<th data-quarto-table-cell-role="th">mejor baseline</th>
+<th data-quarto-table-cell-role="th">MAE baseline</th>
+<th data-quarto-table-cell-role="th">skill MAE</th>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">mes</th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th"></th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">julio</th>
+<td>45.951424</td>
+<td>35.599125</td>
+<td>47.770889</td>
+<td>68.899620</td>
+<td>4.948606</td>
+<td>744</td>
+<td>Estacional 168 h</td>
+<td>64.205643</td>
+<td>0.284309</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">agosto</th>
+<td>37.794945</td>
+<td>35.920177</td>
+<td>38.561260</td>
+<td>58.692226</td>
+<td>5.919609</td>
+<td>744</td>
+<td>Estacional 168 h</td>
+<td>42.220428</td>
+<td>0.104819</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">septiembre</th>
+<td>46.684143</td>
+<td>38.952457</td>
+<td>52.815971</td>
+<td>73.403000</td>
+<td>5.332060</td>
+<td>720</td>
+<td>Estacional 168 h</td>
+<td>61.752777</td>
+<td>0.244015</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-rnn-backtest" class="cell" data-fig-height="4.5" data-fig-width="9" data-execution_count="18">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a>protocol_order <span class="op">=</span> [</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Persistencia 1 h"</span>, <span class="st">"Estacional 24 h"</span>, <span class="st">"Estacional 168 h"</span>,</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal con rezagos + calendario"</span>, <span class="st">"RNN"</span>,</span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a>]</span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a>colors <span class="op">=</span> {</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Persistencia 1 h"</span>: <span class="st">"#7A7A7A"</span>,</span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Estacional 24 h"</span>: <span class="st">"#3C8DAD"</span>,</span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Estacional 168 h"</span>: <span class="st">"#2A6F4E"</span>,</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal con rezagos + calendario"</span>: <span class="st">"#D18B31"</span>,</span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"RNN"</span>: <span class="st">"#8E4A9E"</span>,</span>
+<span id="cb25-11"><a href="#cb25-11" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb25-12"><a href="#cb25-12" aria-hidden="true" tabindex="-1"></a>fig, axis <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">4.5</span>))</span>
+<span id="cb25-13"><a href="#cb25-13" aria-hidden="true" tabindex="-1"></a>month_positions <span class="op">=</span> {name: index <span class="cf">for</span> index, name <span class="kw">in</span> <span class="bu">enumerate</span>(skill_table.index)}</span>
+<span id="cb25-14"><a href="#cb25-14" aria-hidden="true" tabindex="-1"></a>offsets <span class="op">=</span> {name: offset <span class="cf">for</span> name, offset <span class="kw">in</span> <span class="bu">zip</span>(protocol_order, np.linspace(<span class="op">-</span><span class="fl">0.24</span>, <span class="fl">0.24</span>, <span class="dv">5</span>))}</span>
+<span id="cb25-15"><a href="#cb25-15" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> row <span class="kw">in</span> backtest_results.itertuples():</span>
+<span id="cb25-16"><a href="#cb25-16" aria-hidden="true" tabindex="-1"></a>    axis.scatter(</span>
+<span id="cb25-17"><a href="#cb25-17" aria-hidden="true" tabindex="-1"></a>        month_positions[row.mes] <span class="op">+</span> offsets[row.protocolo], row.MAE,</span>
+<span id="cb25-18"><a href="#cb25-18" aria-hidden="true" tabindex="-1"></a>        color<span class="op">=</span>colors[row.protocolo], alpha<span class="op">=</span><span class="fl">0.85</span>, s<span class="op">=</span><span class="dv">45</span>,</span>
+<span id="cb25-19"><a href="#cb25-19" aria-hidden="true" tabindex="-1"></a>        label<span class="op">=</span>row.protocolo,</span>
+<span id="cb25-20"><a href="#cb25-20" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb25-21"><a href="#cb25-21" aria-hidden="true" tabindex="-1"></a>handles, labels <span class="op">=</span> axis.get_legend_handles_labels()</span>
+<span id="cb25-22"><a href="#cb25-22" aria-hidden="true" tabindex="-1"></a>unique <span class="op">=</span> <span class="bu">dict</span>(<span class="bu">zip</span>(labels, handles))</span>
+<span id="cb25-23"><a href="#cb25-23" aria-hidden="true" tabindex="-1"></a>axis.legend(unique.values(), unique.keys(), frameon<span class="op">=</span><span class="va">False</span>, ncol<span class="op">=</span><span class="dv">2</span>, fontsize<span class="op">=</span><span class="dv">8</span>)</span>
+<span id="cb25-24"><a href="#cb25-24" aria-hidden="true" tabindex="-1"></a>axis.set_xticks(<span class="bu">range</span>(<span class="bu">len</span>(month_positions)), <span class="bu">list</span>(month_positions))</span>
+<span id="cb25-25"><a href="#cb25-25" aria-hidden="true" tabindex="-1"></a>axis.<span class="bu">set</span>(ylabel<span class="op">=</span><span class="st">"MAE en bicicletas"</span>, xlabel<span class="op">=</span><span class="st">"mes"</span>)</span>
+<span id="cb25-26"><a href="#cb25-26" aria-hidden="true" tabindex="-1"></a>axis.grid(axis<span class="op">=</span><span class="st">"y"</span>, alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb25-27"><a href="#cb25-27" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb25-28"><a href="#cb25-28" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-rnn-backtest" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Puntos por mes comparan persistencia, estacionalidad, autorregresión y tres semillas recurrentes.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-backtest-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter08_files/figure-html/fig-rnn-backtest-output-1.png" alt="Puntos por mes comparan persistencia, estacionalidad, autorregresión y tres semillas recurrentes." width="854" height="422" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-backtest-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8.3: MAE mensual de baselines y semillas de la RNN durante backtesting.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div id="c93d6cd0" class="cell" data-execution_count="19">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb26"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a>median_skill <span class="op">=</span> <span class="bu">float</span>(skill_table[<span class="st">"skill MAE"</span>].median())</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a>monthly_wins <span class="op">=</span> <span class="bu">int</span>((skill_table[<span class="st">"skill MAE"</span>] <span class="op">&gt;</span> <span class="dv">0</span>).<span class="bu">sum</span>())</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a>hypothesis_result <span class="op">=</span> pd.Series({</span>
+<span id="cb26-4"><a href="#cb26-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"skill MAE mediano"</span>: median_skill,</span>
+<span id="cb26-5"><a href="#cb26-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"meses ganados"</span>: monthly_wins,</span>
+<span id="cb26-6"><a href="#cb26-6" aria-hidden="true" tabindex="-1"></a>    <span class="st">"alcanza mejora material del 5%"</span>: <span class="bu">bool</span>(</span>
+<span id="cb26-7"><a href="#cb26-7" aria-hidden="true" tabindex="-1"></a>        median_skill <span class="op">&gt;=</span> <span class="fl">0.05</span> <span class="kw">and</span> monthly_wins <span class="op">&gt;=</span> <span class="dv">2</span></span>
+<span id="cb26-8"><a href="#cb26-8" aria-hidden="true" tabindex="-1"></a>    ),</span>
+<span id="cb26-9"><a href="#cb26-9" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb26-10"><a href="#cb26-10" aria-hidden="true" tabindex="-1"></a>hypothesis_result</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="19">
+<pre><code>skill MAE mediano                 0.244015
+meses ganados                            3
+alcanza mejora material del 5%        True
+dtype: object</code></pre>
+</div>
+</div>
+<p>La RNN alcanza MAE mediano de 45,95 en julio, 37,79 en agosto y 46,68 en septiembre. Frente a la estacionalidad semanal, el skill es 28,4%, 10,5% y 24,4%: gana los tres meses y supera el umbral material. Sin embargo, julio varía entre 35,60 y 47,77 según la semilla; ganar en mediana no elimina inestabilidad. Cambiar ventana, unidades o épocas ahora convertiría el backtesting en otro periodo de ajuste.</p>
+</section>
+<section id="abrir-el-test-una-sola-vez" class="level2" data-number="8.16">
+<h2 data-number="8.16" class="anchored" data-anchor-id="abrir-el-test-una-sola-vez"><span class="header-section-number">8.16</span> Abrir el test una sola vez</h2>
+<p>Con la receta cerrada, cada semilla se reajusta con observaciones hasta septiembre. Octubre-diciembre se usa únicamente para evaluación final.</p>
+<div id="e90ed82d" class="cell" data-execution_count="20">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a>FINAL_FIT_END <span class="op">=</span> pd.Timestamp(<span class="st">"2012-09-30 23:00"</span>)</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>final_train <span class="op">=</span> make_training_tensors(FINAL_FIT_END)</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>test_tensors <span class="op">=</span> make_tensors(FINAL_FIT_END, TEST_START, TEST_END)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>test_positions <span class="op">=</span> test_tensors[<span class="st">"positions"</span>]</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>test_truth <span class="op">=</span> raw_demand[test_positions]</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>test_rows <span class="op">=</span> []</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>test_predictions <span class="op">=</span> {}</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> protocol, prediction <span class="kw">in</span> {</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Persistencia 1 h"</span>: naive_prediction(test_positions, <span class="dv">1</span>),</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Estacional 24 h"</span>: naive_prediction(test_positions, <span class="dv">24</span>),</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Estacional 168 h"</span>: naive_prediction(test_positions, <span class="dv">168</span>),</span>
+<span id="cb28-13"><a href="#cb28-13" aria-hidden="true" tabindex="-1"></a>    <span class="st">"Lineal con rezagos + calendario"</span>: fit_linear(final_train, test_tensors),</span>
+<span id="cb28-14"><a href="#cb28-14" aria-hidden="true" tabindex="-1"></a>}.items():</span>
+<span id="cb28-15"><a href="#cb28-15" aria-hidden="true" tabindex="-1"></a>    test_predictions[protocol] <span class="op">=</span> prediction</span>
+<span id="cb28-16"><a href="#cb28-16" aria-hidden="true" tabindex="-1"></a>    test_rows.append({</span>
+<span id="cb28-17"><a href="#cb28-17" aria-hidden="true" tabindex="-1"></a>        <span class="st">"protocolo"</span>: protocol, <span class="st">"semilla"</span>: np.nan,</span>
+<span id="cb28-18"><a href="#cb28-18" aria-hidden="true" tabindex="-1"></a>        <span class="op">**</span>regression_metrics(test_truth, prediction),</span>
+<span id="cb28-19"><a href="#cb28-19" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb28-20"><a href="#cb28-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-21"><a href="#cb28-21" aria-hidden="true" tabindex="-1"></a>final_runs <span class="op">=</span> {}</span>
+<span id="cb28-22"><a href="#cb28-22" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb28-23"><a href="#cb28-23" aria-hidden="true" tabindex="-1"></a>    run <span class="op">=</span> train_model(final_train, seed)</span>
+<span id="cb28-24"><a href="#cb28-24" aria-hidden="true" tabindex="-1"></a>    prediction <span class="op">=</span> predict_model(run[<span class="st">"model"</span>], test_tensors)</span>
+<span id="cb28-25"><a href="#cb28-25" aria-hidden="true" tabindex="-1"></a>    final_runs[seed] <span class="op">=</span> run</span>
+<span id="cb28-26"><a href="#cb28-26" aria-hidden="true" tabindex="-1"></a>    test_predictions[(<span class="st">"RNN"</span>, seed)] <span class="op">=</span> prediction</span>
+<span id="cb28-27"><a href="#cb28-27" aria-hidden="true" tabindex="-1"></a>    test_rows.append({</span>
+<span id="cb28-28"><a href="#cb28-28" aria-hidden="true" tabindex="-1"></a>        <span class="st">"protocolo"</span>: <span class="st">"RNN"</span>, <span class="st">"semilla"</span>: seed,</span>
+<span id="cb28-29"><a href="#cb28-29" aria-hidden="true" tabindex="-1"></a>        <span class="op">**</span>regression_metrics(test_truth, prediction),</span>
+<span id="cb28-30"><a href="#cb28-30" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb28-31"><a href="#cb28-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb28-32"><a href="#cb28-32" aria-hidden="true" tabindex="-1"></a>test_results <span class="op">=</span> pd.DataFrame(test_rows)</span>
+<span id="cb28-33"><a href="#cb28-33" aria-hidden="true" tabindex="-1"></a>test_results</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="20">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">protocolo</th>
+<th data-quarto-table-cell-role="th">semilla</th>
+<th data-quarto-table-cell-role="th">MAE</th>
+<th data-quarto-table-cell-role="th">RMSE</th>
+<th data-quarto-table-cell-role="th">WAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>Persistencia 1 h</td>
+<td>NaN</td>
+<td>82.402573</td>
+<td>126.404839</td>
+<td>0.352465</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Estacional 24 h</td>
+<td>NaN</td>
+<td>79.638702</td>
+<td>131.842682</td>
+<td>0.340643</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>Estacional 168 h</td>
+<td>NaN</td>
+<td>62.533829</td>
+<td>104.687370</td>
+<td>0.267479</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>Lineal con rezagos + calendario</td>
+<td>NaN</td>
+<td>37.374080</td>
+<td>59.491378</td>
+<td>0.159862</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">4</th>
+<td>RNN</td>
+<td>17.0</td>
+<td>35.222309</td>
+<td>59.540462</td>
+<td>0.150658</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">5</th>
+<td>RNN</td>
+<td>29.0</td>
+<td>36.559265</td>
+<td>58.971310</td>
+<td>0.156377</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">6</th>
+<td>RNN</td>
+<td>43.0</td>
+<td>38.369034</td>
+<td>63.398529</td>
+<td>0.164118</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="f858e816" class="cell" data-execution_count="21">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>rnn_test_summary <span class="op">=</span> (</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>    test_results[test_results[<span class="st">"protocolo"</span>] <span class="op">==</span> <span class="st">"RNN"</span>]</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a>    .agg({<span class="st">"MAE"</span>: [<span class="st">"median"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>], <span class="st">"RMSE"</span>: [<span class="st">"median"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>],</span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a>          <span class="st">"WAPE"</span>: [<span class="st">"median"</span>, <span class="st">"min"</span>, <span class="st">"max"</span>]})</span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a>rnn_test_summary</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="21">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">MAE</th>
+<th data-quarto-table-cell-role="th">RMSE</th>
+<th data-quarto-table-cell-role="th">WAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">median</th>
+<td>36.559265</td>
+<td>59.540462</td>
+<td>0.156377</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">min</th>
+<td>35.222309</td>
+<td>58.971310</td>
+<td>0.150658</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">max</th>
+<td>38.369034</td>
+<td>63.398529</td>
+<td>0.164118</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>En test, la RNN obtiene MAE mediano 36,56, frente a 62,53 de la regla semanal: una reducción de 41,5%. El modelo lineal con rezagos y calendario queda cerca; alcanza 37,37 y la semilla 43 de la RNN es peor que ese modelo lineal. La recurrencia gana en mediana, pero su margen no justifica afirmar que una transformación no lineal sea siempre necesaria.</p>
+</section>
+<section id="pronosticar-24-horas-por-retroalimentación" class="level2" data-number="8.17">
+<h2 data-number="8.17" class="anchored" data-anchor-id="pronosticar-24-horas-por-retroalimentación"><span class="header-section-number">8.17</span> Pronosticar 24 horas por retroalimentación</h2>
+<p>El modelo fue ajustado para un paso usando historia observada. Para alcanzar 24 horas, insertamos cada predicción en la ventana siguiente. Así, un error temprano modifica entradas posteriores. Esta diferencia suele llamarse <strong>exposición</strong>: durante ajuste el contexto es real; durante inferencia recursiva puede contener salidas del modelo.</p>
+<div id="ecb1a74b" class="cell" data-execution_count="22">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb30"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a>multi_positions <span class="op">=</span> contiguous_positions(TEST_START, TEST_END, future<span class="op">=</span><span class="dv">24</span>)</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a><span class="at">@torch.inference_mode</span>()</span>
+<span id="cb30-5"><a href="#cb30-5" aria-hidden="true" tabindex="-1"></a><span class="kw">def</span> recursive_forecast(model, origins, mean, std, horizon<span class="op">=</span><span class="dv">24</span>):</span>
+<span id="cb30-6"><a href="#cb30-6" aria-hidden="true" tabindex="-1"></a>    history_positions <span class="op">=</span> origins[:, <span class="va">None</span>] <span class="op">+</span> np.arange(<span class="op">-</span>HISTORY, <span class="dv">0</span>)</span>
+<span id="cb30-7"><a href="#cb30-7" aria-hidden="true" tabindex="-1"></a>    standardized_demand <span class="op">=</span> (</span>
+<span id="cb30-8"><a href="#cb30-8" aria-hidden="true" tabindex="-1"></a>        (log_demand[history_positions] <span class="op">-</span> mean) <span class="op">/</span> std</span>
+<span id="cb30-9"><a href="#cb30-9" aria-hidden="true" tabindex="-1"></a>    ).astype(<span class="st">"float32"</span>)</span>
+<span id="cb30-10"><a href="#cb30-10" aria-hidden="true" tabindex="-1"></a>    sequence <span class="op">=</span> np.concatenate([</span>
+<span id="cb30-11"><a href="#cb30-11" aria-hidden="true" tabindex="-1"></a>        standardized_demand[:, :, <span class="va">None</span>],</span>
+<span id="cb30-12"><a href="#cb30-12" aria-hidden="true" tabindex="-1"></a>        calendar_features[history_positions],</span>
+<span id="cb30-13"><a href="#cb30-13" aria-hidden="true" tabindex="-1"></a>    ], axis<span class="op">=</span><span class="dv">2</span>)</span>
+<span id="cb30-14"><a href="#cb30-14" aria-hidden="true" tabindex="-1"></a>    predictions <span class="op">=</span> np.empty((<span class="bu">len</span>(origins), horizon), dtype<span class="op">=</span><span class="st">"float32"</span>)</span>
+<span id="cb30-15"><a href="#cb30-15" aria-hidden="true" tabindex="-1"></a>    model.<span class="bu">eval</span>()</span>
+<span id="cb30-16"><a href="#cb30-16" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> step <span class="kw">in</span> <span class="bu">range</span>(horizon):</span>
+<span id="cb30-17"><a href="#cb30-17" aria-hidden="true" tabindex="-1"></a>        target_positions <span class="op">=</span> origins <span class="op">+</span> step</span>
+<span id="cb30-18"><a href="#cb30-18" aria-hidden="true" tabindex="-1"></a>        scaled <span class="op">=</span> model(</span>
+<span id="cb30-19"><a href="#cb30-19" aria-hidden="true" tabindex="-1"></a>            torch.from_numpy(sequence),</span>
+<span id="cb30-20"><a href="#cb30-20" aria-hidden="true" tabindex="-1"></a>            torch.from_numpy(calendar_features[target_positions]),</span>
+<span id="cb30-21"><a href="#cb30-21" aria-hidden="true" tabindex="-1"></a>        ).squeeze(<span class="dv">1</span>).numpy()</span>
+<span id="cb30-22"><a href="#cb30-22" aria-hidden="true" tabindex="-1"></a>        prediction <span class="op">=</span> restore_prediction(scaled, mean, std).astype(<span class="st">"float32"</span>)</span>
+<span id="cb30-23"><a href="#cb30-23" aria-hidden="true" tabindex="-1"></a>        predictions[:, step] <span class="op">=</span> prediction</span>
+<span id="cb30-24"><a href="#cb30-24" aria-hidden="true" tabindex="-1"></a>        next_rows <span class="op">=</span> np.column_stack([</span>
+<span id="cb30-25"><a href="#cb30-25" aria-hidden="true" tabindex="-1"></a>            (np.log1p(prediction) <span class="op">-</span> mean) <span class="op">/</span> std,</span>
+<span id="cb30-26"><a href="#cb30-26" aria-hidden="true" tabindex="-1"></a>            calendar_features[target_positions],</span>
+<span id="cb30-27"><a href="#cb30-27" aria-hidden="true" tabindex="-1"></a>        ]).astype(<span class="st">"float32"</span>)</span>
+<span id="cb30-28"><a href="#cb30-28" aria-hidden="true" tabindex="-1"></a>        sequence <span class="op">=</span> np.concatenate([sequence[:, <span class="dv">1</span>:], next_rows[:, <span class="va">None</span>, :]], axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb30-29"><a href="#cb30-29" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> np.isfinite(predictions).<span class="bu">all</span>()</span>
+<span id="cb30-30"><a href="#cb30-30" aria-hidden="true" tabindex="-1"></a>    <span class="cf">return</span> predictions</span>
+<span id="cb30-31"><a href="#cb30-31" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-32"><a href="#cb30-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-33"><a href="#cb30-33" aria-hidden="true" tabindex="-1"></a>recursive_by_seed <span class="op">=</span> {</span>
+<span id="cb30-34"><a href="#cb30-34" aria-hidden="true" tabindex="-1"></a>    seed: recursive_forecast(</span>
+<span id="cb30-35"><a href="#cb30-35" aria-hidden="true" tabindex="-1"></a>        run[<span class="st">"model"</span>], multi_positions, test_tensors[<span class="st">"mean"</span>], test_tensors[<span class="st">"std"</span>]</span>
+<span id="cb30-36"><a href="#cb30-36" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb30-37"><a href="#cb30-37" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> seed, run <span class="kw">in</span> final_runs.items()</span>
+<span id="cb30-38"><a href="#cb30-38" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb30-39"><a href="#cb30-39" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-40"><a href="#cb30-40" aria-hidden="true" tabindex="-1"></a>one_step_indices <span class="op">=</span> np.searchsorted(test_positions, multi_positions)</span>
+<span id="cb30-41"><a href="#cb30-41" aria-hidden="true" tabindex="-1"></a><span class="cf">assert</span> np.array_equal(test_positions[one_step_indices], multi_positions)</span>
+<span id="cb30-42"><a href="#cb30-42" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb30-43"><a href="#cb30-43" aria-hidden="true" tabindex="-1"></a>    <span class="cf">assert</span> np.allclose(</span>
+<span id="cb30-44"><a href="#cb30-44" aria-hidden="true" tabindex="-1"></a>        recursive_by_seed[seed][:, <span class="dv">0</span>],</span>
+<span id="cb30-45"><a href="#cb30-45" aria-hidden="true" tabindex="-1"></a>        test_predictions[(<span class="st">"RNN"</span>, seed)][one_step_indices],</span>
+<span id="cb30-46"><a href="#cb30-46" aria-hidden="true" tabindex="-1"></a>        rtol<span class="op">=</span><span class="fl">1e-5</span>,</span>
+<span id="cb30-47"><a href="#cb30-47" aria-hidden="true" tabindex="-1"></a>        atol<span class="op">=</span><span class="fl">1e-4</span>,</span>
+<span id="cb30-48"><a href="#cb30-48" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb30-49"><a href="#cb30-49" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-50"><a href="#cb30-50" aria-hidden="true" tabindex="-1"></a>steps <span class="op">=</span> np.arange(<span class="dv">24</span>)</span>
+<span id="cb30-51"><a href="#cb30-51" aria-hidden="true" tabindex="-1"></a>multi_truth <span class="op">=</span> raw_demand[multi_positions[:, <span class="va">None</span>] <span class="op">+</span> steps]</span>
+<span id="cb30-52"><a href="#cb30-52" aria-hidden="true" tabindex="-1"></a>daily_seasonal <span class="op">=</span> raw_demand[multi_positions[:, <span class="va">None</span>] <span class="op">+</span> steps <span class="op">-</span> <span class="dv">24</span>]</span>
+<span id="cb30-53"><a href="#cb30-53" aria-hidden="true" tabindex="-1"></a>weekly_seasonal <span class="op">=</span> raw_demand[multi_positions[:, <span class="va">None</span>] <span class="op">+</span> steps <span class="op">-</span> <span class="dv">168</span>]</span>
+<span id="cb30-54"><a href="#cb30-54" aria-hidden="true" tabindex="-1"></a>persistence_24 <span class="op">=</span> np.repeat(raw_demand[multi_positions <span class="op">-</span> <span class="dv">1</span>, <span class="va">None</span>], <span class="dv">24</span>, axis<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb30-55"><a href="#cb30-55" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-56"><a href="#cb30-56" aria-hidden="true" tabindex="-1"></a>horizon_rows <span class="op">=</span> []</span>
+<span id="cb30-57"><a href="#cb30-57" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> horizon <span class="kw">in</span> <span class="bu">range</span>(<span class="dv">24</span>):</span>
+<span id="cb30-58"><a href="#cb30-58" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> protocol, prediction <span class="kw">in</span> {</span>
+<span id="cb30-59"><a href="#cb30-59" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Persistencia"</span>: persistence_24[:, horizon],</span>
+<span id="cb30-60"><a href="#cb30-60" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Estacional 24 h"</span>: daily_seasonal[:, horizon],</span>
+<span id="cb30-61"><a href="#cb30-61" aria-hidden="true" tabindex="-1"></a>        <span class="st">"Estacional 168 h"</span>: weekly_seasonal[:, horizon],</span>
+<span id="cb30-62"><a href="#cb30-62" aria-hidden="true" tabindex="-1"></a>    }.items():</span>
+<span id="cb30-63"><a href="#cb30-63" aria-hidden="true" tabindex="-1"></a>        horizon_rows.append({</span>
+<span id="cb30-64"><a href="#cb30-64" aria-hidden="true" tabindex="-1"></a>            <span class="st">"horizonte"</span>: horizon <span class="op">+</span> <span class="dv">1</span>, <span class="st">"protocolo"</span>: protocol, <span class="st">"semilla"</span>: np.nan,</span>
+<span id="cb30-65"><a href="#cb30-65" aria-hidden="true" tabindex="-1"></a>            <span class="op">**</span>regression_metrics(multi_truth[:, horizon], prediction),</span>
+<span id="cb30-66"><a href="#cb30-66" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb30-67"><a href="#cb30-67" aria-hidden="true" tabindex="-1"></a>    <span class="cf">for</span> seed <span class="kw">in</span> PAIR_SEEDS:</span>
+<span id="cb30-68"><a href="#cb30-68" aria-hidden="true" tabindex="-1"></a>        horizon_rows.append({</span>
+<span id="cb30-69"><a href="#cb30-69" aria-hidden="true" tabindex="-1"></a>            <span class="st">"horizonte"</span>: horizon <span class="op">+</span> <span class="dv">1</span>, <span class="st">"protocolo"</span>: <span class="st">"RNN recursiva"</span>, <span class="st">"semilla"</span>: seed,</span>
+<span id="cb30-70"><a href="#cb30-70" aria-hidden="true" tabindex="-1"></a>            <span class="op">**</span>regression_metrics(</span>
+<span id="cb30-71"><a href="#cb30-71" aria-hidden="true" tabindex="-1"></a>                multi_truth[:, horizon], recursive_by_seed[seed][:, horizon]</span>
+<span id="cb30-72"><a href="#cb30-72" aria-hidden="true" tabindex="-1"></a>            ),</span>
+<span id="cb30-73"><a href="#cb30-73" aria-hidden="true" tabindex="-1"></a>        })</span>
+<span id="cb30-74"><a href="#cb30-74" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb30-75"><a href="#cb30-75" aria-hidden="true" tabindex="-1"></a>horizon_results <span class="op">=</span> pd.DataFrame(horizon_rows)</span>
+<span id="cb30-76"><a href="#cb30-76" aria-hidden="true" tabindex="-1"></a>horizon_summary <span class="op">=</span> (</span>
+<span id="cb30-77"><a href="#cb30-77" aria-hidden="true" tabindex="-1"></a>    horizon_results.groupby([<span class="st">"protocolo"</span>, <span class="st">"horizonte"</span>], sort<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb30-78"><a href="#cb30-78" aria-hidden="true" tabindex="-1"></a>    .agg(MAE<span class="op">=</span>(<span class="st">"MAE"</span>, <span class="st">"median"</span>), RMSE<span class="op">=</span>(<span class="st">"RMSE"</span>, <span class="st">"median"</span>), WAPE<span class="op">=</span>(<span class="st">"WAPE"</span>, <span class="st">"median"</span>))</span>
+<span id="cb30-79"><a href="#cb30-79" aria-hidden="true" tabindex="-1"></a>    .reset_index()</span>
+<span id="cb30-80"><a href="#cb30-80" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb30-81"><a href="#cb30-81" aria-hidden="true" tabindex="-1"></a>horizon_summary[horizon_summary[<span class="st">"horizonte"</span>].isin([<span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">24</span>])]</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="22">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">protocolo</th>
+<th data-quarto-table-cell-role="th">horizonte</th>
+<th data-quarto-table-cell-role="th">MAE</th>
+<th data-quarto-table-cell-role="th">RMSE</th>
+<th data-quarto-table-cell-role="th">WAPE</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>Persistencia</td>
+<td>1</td>
+<td>83.593071</td>
+<td>127.949326</td>
+<td>0.351422</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>Estacional 24 h</td>
+<td>1</td>
+<td>79.915581</td>
+<td>132.525024</td>
+<td>0.335962</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>Estacional 168 h</td>
+<td>1</td>
+<td>60.890331</td>
+<td>103.487976</td>
+<td>0.255981</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">3</th>
+<td>RNN recursiva</td>
+<td>1</td>
+<td>36.230782</td>
+<td>60.395027</td>
+<td>0.152313</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">20</th>
+<td>Persistencia</td>
+<td>6</td>
+<td>247.637085</td>
+<td>308.609711</td>
+<td>1.046118</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">21</th>
+<td>Estacional 24 h</td>
+<td>6</td>
+<td>79.875183</td>
+<td>132.560532</td>
+<td>0.337425</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">22</th>
+<td>Estacional 168 h</td>
+<td>6</td>
+<td>60.317459</td>
+<td>102.227936</td>
+<td>0.254805</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">23</th>
+<td>RNN recursiva</td>
+<td>6</td>
+<td>71.971779</td>
+<td>108.549606</td>
+<td>0.304038</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">44</th>
+<td>Persistencia</td>
+<td>12</td>
+<td>278.192627</td>
+<td>338.404541</td>
+<td>1.177990</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">45</th>
+<td>Estacional 24 h</td>
+<td>12</td>
+<td>79.436508</td>
+<td>130.912003</td>
+<td>0.336369</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">46</th>
+<td>Estacional 168 h</td>
+<td>12</td>
+<td>60.950939</td>
+<td>102.528549</td>
+<td>0.258093</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">47</th>
+<td>RNN recursiva</td>
+<td>12</td>
+<td>73.238770</td>
+<td>110.495987</td>
+<td>0.310125</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">92</th>
+<td>Persistencia</td>
+<td>24</td>
+<td>79.969696</td>
+<td>131.532608</td>
+<td>0.343849</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">93</th>
+<td>Estacional 24 h</td>
+<td>24</td>
+<td>79.969696</td>
+<td>131.532608</td>
+<td>0.343849</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">94</th>
+<td>Estacional 168 h</td>
+<td>24</td>
+<td>63.218616</td>
+<td>105.087715</td>
+<td>0.271824</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">95</th>
+<td>RNN recursiva</td>
+<td>24</td>
+<td>77.926994</td>
+<td>118.215836</td>
+<td>0.335066</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Cada horizonte reúne todas las horas del día, por lo que no queda fijado a una hora como ocurriría si todos los pronósticos se emitieran a medianoche. Las ventanas se superponen: las curvas describen cómo cambia el error, pero no constituyen 1.386 experimentos independientes.</p>
+<p>La RNN obtiene MAE mediano 36,23 a una hora y aumenta a 71,97, 73,24 y 77,93 en los horizontes 6, 12 y 24. La regla semanal permanece cerca de 60–63 y supera a la RNN desde el horizonte 6. La ventaja a un paso no sobrevive al contexto retroalimentado: este es un fallo medible, no una razón para cambiar la receta después de abrir test.</p>
+<div id="cell-fig-rnn-horizons" class="cell" data-fig-height="4.5" data-fig-width="9" data-execution_count="23">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a>fig, axis <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">4.5</span>))</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> protocol, rows <span class="kw">in</span> horizon_summary.groupby(<span class="st">"protocolo"</span>, sort<span class="op">=</span><span class="va">False</span>):</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>    axis.plot(rows[<span class="st">"horizonte"</span>], rows[<span class="st">"MAE"</span>], marker<span class="op">=</span><span class="st">"o"</span>, markersize<span class="op">=</span><span class="dv">3</span>, label<span class="op">=</span>protocol)</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>axis.<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"horizonte (horas)"</span>, ylabel<span class="op">=</span><span class="st">"MAE en bicicletas"</span>)</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>axis.set_xticks([<span class="dv">1</span>, <span class="dv">6</span>, <span class="dv">12</span>, <span class="dv">18</span>, <span class="dv">24</span>])</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>axis.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-rnn-horizons" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Cuatro curvas muestran cómo cambia el error entre una y veinticuatro horas.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-horizons-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter08_files/figure-html/fig-rnn-horizons-output-1.png" alt="Cuatro curvas muestran cómo cambia el error entre una y veinticuatro horas." width="854" height="422" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-horizons-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8.4: MAE mediano por horizonte desde todos los orígenes horarios continuos.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<div id="cell-fig-rnn-day-example" class="cell" data-fig-height="4.2" data-fig-width="9" data-execution_count="24">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a>example_index <span class="op">=</span> <span class="bu">len</span>(multi_positions) <span class="op">//</span> <span class="dv">2</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a>example_origin <span class="op">=</span> timestamps[multi_positions[example_index]]</span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a>hours <span class="op">=</span> np.arange(<span class="dv">1</span>, <span class="dv">25</span>)</span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a>fig, axis <span class="op">=</span> plt.subplots(figsize<span class="op">=</span>(<span class="dv">9</span>, <span class="fl">4.2</span>))</span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a>axis.plot(hours, multi_truth[example_index], marker<span class="op">=</span><span class="st">"o"</span>, label<span class="op">=</span><span class="st">"observado"</span>, color<span class="op">=</span><span class="st">"#222222"</span>)</span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a>axis.plot(</span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a>    hours, recursive_by_seed[REPRESENTATIVE_SEED][example_index],</span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a>    marker<span class="op">=</span><span class="st">"o"</span>, label<span class="op">=</span><span class="st">"RNN, semilla 29"</span>, color<span class="op">=</span><span class="st">"#8E4A9E"</span>,</span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a>axis.plot(hours, daily_seasonal[example_index], linestyle<span class="op">=</span><span class="st">"--"</span>, label<span class="op">=</span><span class="st">"día anterior"</span>, color<span class="op">=</span><span class="st">"#3C8DAD"</span>)</span>
+<span id="cb32-11"><a href="#cb32-11" aria-hidden="true" tabindex="-1"></a>axis.<span class="bu">set</span>(</span>
+<span id="cb32-12"><a href="#cb32-12" aria-hidden="true" tabindex="-1"></a>    xlabel<span class="op">=</span><span class="st">"horizonte (horas)"</span>, ylabel<span class="op">=</span><span class="st">"bicicletas"</span>,</span>
+<span id="cb32-13"><a href="#cb32-13" aria-hidden="true" tabindex="-1"></a>    title<span class="op">=</span><span class="ss">f"Origen: </span><span class="sc">{</span>example_origin<span class="sc">:</span><span class="op">%</span>Y<span class="op">-%</span>m<span class="op">-%</span>d <span class="op">%</span>H<span class="sc">:</span><span class="op">%</span>M<span class="sc">}</span><span class="ss">"</span>,</span>
+<span id="cb32-14"><a href="#cb32-14" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb32-15"><a href="#cb32-15" aria-hidden="true" tabindex="-1"></a>axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb32-16"><a href="#cb32-16" aria-hidden="true" tabindex="-1"></a>axis.legend(frameon<span class="op">=</span><span class="va">False</span>)</span>
+<span id="cb32-17"><a href="#cb32-17" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb32-18"><a href="#cb32-18" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-rnn-day-example" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Tres líneas comparan demanda horaria real, RNN recursiva y valores del día anterior.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-day-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter08_files/figure-html/fig-rnn-day-example-output-1.png" alt="Tres líneas comparan demanda horaria real, RNN recursiva y valores del día anterior." width="853" height="394" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-day-example-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8.5: Ejemplo de pronóstico recursivo de 24 horas frente a demanda observada y baseline diario.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+<p>No implementamos un decoder con <em>teacher forcing</em>: eso requeriría otra arquitectura y mezclaría la pregunta central con secuencia-a-secuencia. Aquí la retroalimentación del pronosticador a un paso basta para mostrar por qué el horizonte cambia el problema.</p>
+</section>
+<section id="diagnosticar-cuándo-falla" class="level2" data-number="8.18">
+<h2 data-number="8.18" class="anchored" data-anchor-id="diagnosticar-cuándo-falla"><span class="header-section-number">8.18</span> Diagnosticar cuándo falla</h2>
+<p>Usamos la semilla representativa 29 para localizar errores, no para elegir otra receta después de test. Las tablas anteriores conservan las tres semillas.</p>
+<div id="395de393" class="cell" data-execution_count="25">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb33"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a>rnn_representative_prediction <span class="op">=</span> test_predictions[(<span class="st">"RNN"</span>, REPRESENTATIVE_SEED)]</span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a>test_diagnostics <span class="op">=</span> pd.DataFrame({</span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a>    <span class="st">"timestamp"</span>: timestamps[test_positions],</span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a>    <span class="st">"observado"</span>: test_truth,</span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a>    <span class="st">"predicción"</span>: rnn_representative_prediction,</span>
+<span id="cb33-6"><a href="#cb33-6" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb33-7"><a href="#cb33-7" aria-hidden="true" tabindex="-1"></a>test_diagnostics[<span class="st">"error"</span>] <span class="op">=</span> test_diagnostics[<span class="st">"predicción"</span>] <span class="op">-</span> test_diagnostics[<span class="st">"observado"</span>]</span>
+<span id="cb33-8"><a href="#cb33-8" aria-hidden="true" tabindex="-1"></a>test_diagnostics[<span class="st">"error absoluto"</span>] <span class="op">=</span> test_diagnostics[<span class="st">"error"</span>].<span class="bu">abs</span>()</span>
+<span id="cb33-9"><a href="#cb33-9" aria-hidden="true" tabindex="-1"></a>test_diagnostics[<span class="st">"hora"</span>] <span class="op">=</span> test_diagnostics[<span class="st">"timestamp"</span>].dt.hour</span>
+<span id="cb33-10"><a href="#cb33-10" aria-hidden="true" tabindex="-1"></a>test_diagnostics[<span class="st">"mes"</span>] <span class="op">=</span> test_diagnostics[<span class="st">"timestamp"</span>].dt.month_name(locale<span class="op">=</span><span class="st">"C"</span>)</span>
+<span id="cb33-11"><a href="#cb33-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb33-12"><a href="#cb33-12" aria-hidden="true" tabindex="-1"></a>hourly_error <span class="op">=</span> test_diagnostics.groupby(<span class="st">"hora"</span>)[<span class="st">"error absoluto"</span>].mean()</span>
+<span id="cb33-13"><a href="#cb33-13" aria-hidden="true" tabindex="-1"></a>monthly_error <span class="op">=</span> test_diagnostics.groupby(test_diagnostics[<span class="st">"timestamp"</span>].dt.month)[</span>
+<span id="cb33-14"><a href="#cb33-14" aria-hidden="true" tabindex="-1"></a>    <span class="st">"error absoluto"</span></span>
+<span id="cb33-15"><a href="#cb33-15" aria-hidden="true" tabindex="-1"></a>].agg([<span class="st">"mean"</span>, <span class="st">"count"</span>])</span>
+<span id="cb33-16"><a href="#cb33-16" aria-hidden="true" tabindex="-1"></a>monthly_error.index <span class="op">=</span> [<span class="st">"octubre"</span>, <span class="st">"noviembre"</span>, <span class="st">"diciembre"</span>]</span>
+<span id="cb33-17"><a href="#cb33-17" aria-hidden="true" tabindex="-1"></a>monthly_error</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="25">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">mean</th>
+<th data-quarto-table-cell-role="th">count</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">octubre</th>
+<td>40.422546</td>
+<td>673</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">noviembre</th>
+<td>36.115818</td>
+<td>373</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">diciembre</th>
+<td>30.923655</td>
+<td>432</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<div id="cell-fig-rnn-diagnostics" class="cell" data-fig-height="4" data-fig-width="10" data-execution_count="26">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a>fig, axes <span class="op">=</span> plt.subplots(<span class="dv">1</span>, <span class="dv">2</span>, figsize<span class="op">=</span>(<span class="dv">10</span>, <span class="dv">4</span>))</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].bar(hourly_error.index, hourly_error.values, color<span class="op">=</span><span class="st">"#4C78A8"</span>)</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">0</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"hora"</span>, ylabel<span class="op">=</span><span class="st">"MAE"</span>, title<span class="op">=</span><span class="st">"Error por hora"</span>)</span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].scatter(</span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    test_diagnostics[<span class="st">"timestamp"</span>], test_diagnostics[<span class="st">"error"</span>],</span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a>    s<span class="op">=</span><span class="dv">8</span>, alpha<span class="op">=</span><span class="fl">0.45</span>, color<span class="op">=</span><span class="st">"#B24C63"</span>,</span>
+<span id="cb34-7"><a href="#cb34-7" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb34-8"><a href="#cb34-8" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].axhline(<span class="dv">0</span>, color<span class="op">=</span><span class="st">"black"</span>, linewidth<span class="op">=</span><span class="dv">1</span>)</span>
+<span id="cb34-9"><a href="#cb34-9" aria-hidden="true" tabindex="-1"></a>axes[<span class="dv">1</span>].<span class="bu">set</span>(xlabel<span class="op">=</span><span class="st">"fecha"</span>, ylabel<span class="op">=</span><span class="st">"predicción - observado"</span>, title<span class="op">=</span><span class="st">"Residuos"</span>)</span>
+<span id="cb34-10"><a href="#cb34-10" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> axis <span class="kw">in</span> axes:</span>
+<span id="cb34-11"><a href="#cb34-11" aria-hidden="true" tabindex="-1"></a>    axis.grid(alpha<span class="op">=</span><span class="fl">0.2</span>)</span>
+<span id="cb34-12"><a href="#cb34-12" aria-hidden="true" tabindex="-1"></a>fig.tight_layout()</span>
+<span id="cb34-13"><a href="#cb34-13" aria-hidden="true" tabindex="-1"></a>plt.show()</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display">
+<div id="fig-rnn-diagnostics" class="quarto-float quarto-figure quarto-figure-center anchored" alt="Un panel muestra MAE horario y otro residuos dispersos alrededor de cero.">
+<figure class="quarto-float quarto-float-fig figure">
+<div aria-describedby="fig-rnn-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+<img src="chapter08_files/figure-html/fig-rnn-diagnostics-output-1.png" alt="Un panel muestra MAE horario y otro residuos dispersos alrededor de cero." width="950" height="374" class="figure-img">
+</div>
+<figcaption class="quarto-float-caption-bottom quarto-float-caption quarto-float-fig" id="fig-rnn-diagnostics-caption-0ceaefa1-69ba-4598-a22c-09a6ac19f8ca">
+Figura&nbsp;8.6: Error absoluto por hora y residuos en el test continuo disponible.
+</figcaption>
+</figure>
+</div>
+</div>
+</div>
+</section>
+<section id="medir-cobertura-no-esconderla" class="level2" data-number="8.19">
+<h2 data-number="8.19" class="anchored" data-anchor-id="medir-cobertura-no-esconderla"><span class="header-section-number">8.19</span> Medir cobertura, no esconderla</h2>
+<p>El sistema solo emite un pronóstico cuando dispone de una semana continua. Esta es una política explícita de abstención, no solución al dato ausente.</p>
+<div id="641ad4c6" class="cell" data-execution_count="27">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb35"><pre class="sourceCode python code-with-copy"><code class="sourceCode python"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a>coverage_rows <span class="op">=</span> []</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> name, start, end <span class="kw">in</span> [</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"ajuste hasta junio"</span>, timestamps.<span class="bu">min</span>(), pd.Timestamp(<span class="st">"2012-06-30 23:00"</span>)),</span>
+<span id="cb35-4"><a href="#cb35-4" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"backtesting"</span>, pd.Timestamp(<span class="st">"2012-07-01"</span>), pd.Timestamp(<span class="st">"2012-09-30 23:00"</span>)),</span>
+<span id="cb35-5"><a href="#cb35-5" aria-hidden="true" tabindex="-1"></a>    (<span class="st">"test"</span>, TEST_START, TEST_END),</span>
+<span id="cb35-6"><a href="#cb35-6" aria-hidden="true" tabindex="-1"></a>]:</span>
+<span id="cb35-7"><a href="#cb35-7" aria-hidden="true" tabindex="-1"></a>    observed_targets <span class="op">=</span> <span class="bu">int</span>(((timestamps <span class="op">&gt;=</span> start) <span class="op">&amp;</span> (timestamps <span class="op">&lt;=</span> end)).<span class="bu">sum</span>())</span>
+<span id="cb35-8"><a href="#cb35-8" aria-hidden="true" tabindex="-1"></a>    one_step <span class="op">=</span> <span class="bu">len</span>(contiguous_positions(start, end, future<span class="op">=</span><span class="dv">1</span>))</span>
+<span id="cb35-9"><a href="#cb35-9" aria-hidden="true" tabindex="-1"></a>    full_day <span class="op">=</span> <span class="bu">len</span>(contiguous_positions(start, end, future<span class="op">=</span><span class="dv">24</span>))</span>
+<span id="cb35-10"><a href="#cb35-10" aria-hidden="true" tabindex="-1"></a>    coverage_rows.append({</span>
+<span id="cb35-11"><a href="#cb35-11" aria-hidden="true" tabindex="-1"></a>        <span class="st">"periodo"</span>: name,</span>
+<span id="cb35-12"><a href="#cb35-12" aria-hidden="true" tabindex="-1"></a>        <span class="st">"horas observadas"</span>: observed_targets,</span>
+<span id="cb35-13"><a href="#cb35-13" aria-hidden="true" tabindex="-1"></a>        <span class="st">"orígenes válidos a 1 h"</span>: one_step,</span>
+<span id="cb35-14"><a href="#cb35-14" aria-hidden="true" tabindex="-1"></a>        <span class="st">"cobertura a 1 h"</span>: one_step <span class="op">/</span> observed_targets,</span>
+<span id="cb35-15"><a href="#cb35-15" aria-hidden="true" tabindex="-1"></a>        <span class="st">"orígenes válidos a 24 h"</span>: full_day,</span>
+<span id="cb35-16"><a href="#cb35-16" aria-hidden="true" tabindex="-1"></a>        <span class="st">"cobertura a 24 h"</span>: full_day <span class="op">/</span> observed_targets,</span>
+<span id="cb35-17"><a href="#cb35-17" aria-hidden="true" tabindex="-1"></a>    })</span>
+<span id="cb35-18"><a href="#cb35-18" aria-hidden="true" tabindex="-1"></a>coverage_table <span class="op">=</span> pd.DataFrame(coverage_rows)</span>
+<span id="cb35-19"><a href="#cb35-19" aria-hidden="true" tabindex="-1"></a>coverage_table</span></code></pre></div><button title="Copiar al portapapeles" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-display" data-execution_count="27">
+<div>
+
+
+<table class="dataframe caption-top table table-sm table-striped small" data-border="1">
+<thead>
+<tr class="header">
+<th data-quarto-table-cell-role="th"></th>
+<th data-quarto-table-cell-role="th">periodo</th>
+<th data-quarto-table-cell-role="th">horas observadas</th>
+<th data-quarto-table-cell-role="th">orígenes válidos a 1 h</th>
+<th data-quarto-table-cell-role="th">cobertura a 1 h</th>
+<th data-quarto-table-cell-role="th">orígenes válidos a 24 h</th>
+<th data-quarto-table-cell-role="th">cobertura a 24 h</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">0</th>
+<td>ajuste hasta junio</td>
+<td>13003</td>
+<td>8154</td>
+<td>0.627086</td>
+<td>7832</td>
+<td>0.602323</td>
+</tr>
+<tr class="even">
+<th data-quarto-table-cell-role="th">1</th>
+<td>backtesting</td>
+<td>2208</td>
+<td>2208</td>
+<td>1.000000</td>
+<td>2185</td>
+<td>0.989583</td>
+</tr>
+<tr class="odd">
+<th data-quarto-table-cell-role="th">2</th>
+<td>test</td>
+<td>2168</td>
+<td>1478</td>
+<td>0.681734</td>
+<td>1386</td>
+<td>0.639299</td>
+</tr>
+</tbody>
+</table>
+
+</div>
+</div>
+</div>
+<p>Octubre incluye un salto de 37 horas alrededor del huracán Sandy. Exigir continuidad elimina no solo esas horas, sino la semana posterior necesaria para reconstruir contexto. Por tanto, las métricas describen periodos con historia completa y pueden ser optimistas respecto a una operación que deba continuar durante interrupciones.</p>
+<p>Persistencia y estacionalidad diaria podrían operar con una historia más corta. Aquí se evalúan sobre los mismos objetivos elegibles de la RNN para que el error sea comparable; la tabla no afirma que todos los protocolos tengan la misma cobertura operacional.</p>
+</section>
+<section id="qué-permite-concluir-el-experimento" class="level2" data-number="8.20">
+<h2 data-number="8.20" class="anchored" data-anchor-id="qué-permite-concluir-el-experimento"><span class="header-section-number">8.20</span> Qué permite concluir el experimento</h2>
+<ul>
+<li>Compartir pesos permite procesar una semana sin crear una capa por hora.</li>
+<li>La equivalencia numérica separa la fórmula recurrente de la implementación.</li>
+<li>BPTT atribuye la pérdida a pasos anteriores a través del estado.</li>
+<li>Los baselines estacionales son adversarios necesarios en demanda horaria.</li>
+<li>Backtesting expansivo revela variación entre meses y evita entrenar con futuro.</li>
+<li>Un buen resultado a un paso no garantiza estabilidad al retroalimentar 24 predicciones.</li>
+</ul>
+<p>No permite afirmar que:</p>
+<ul>
+<li>una fila ausente equivalga a demanda cero;</li>
+<li>el clima observado esté disponible al emitir un pronóstico futuro;</li>
+<li>la misma receta funcione en otra ciudad, sistema tarifario o periodo;</li>
+<li>las ventanas superpuestas sean observaciones estadísticamente independientes;</li>
+<li>una RNN simple conserve información a cualquier distancia; ni</li>
+<li>abstenerse después de una interrupción resuelva continuidad operacional.</li>
 </ul>
 </section>
-<section id="ruta-de-desarrollo" class="level2" data-number="8.2">
-<h2 data-number="8.2" class="anchored" data-anchor-id="ruta-de-desarrollo"><span class="header-section-number">8.2</span> Ruta de desarrollo</h2>
+<section id="limitaciones-y-condiciones-de-uso" class="level2" data-number="8.21">
+<h2 data-number="8.21" class="anchored" data-anchor-id="limitaciones-y-condiciones-de-uso"><span class="header-section-number">8.21</span> Limitaciones y condiciones de uso</h2>
+<ul>
+<li>UCI declara diez instancias más de las contenidas en <code>hour.csv</code>.</li>
+<li>Las 165 horas ausentes no incluyen una causa documentada por fila.</li>
+<li>Las ventanas de 168 horas reducen cobertura, especialmente tras interrupciones.</li>
+<li>Los datos terminan en 2012 y pueden no representar movilidad actual.</li>
+<li>El objetivo agregado no distingue estaciones llenas de estaciones vacías.</li>
+<li>Festivos, eventos, capacidad, tarifas y pronósticos meteorológicos no forman parte del modelo.</li>
+<li>MAE y RMSE sobre ventanas solapadas son resúmenes descriptivos, no intervalos de incertidumbre independientes.</li>
+<li>Tres semillas describen inicialización, no incertidumbre poblacional o cambio de régimen.</li>
+</ul>
+</section>
+<section id="cierre" class="level2" data-number="8.22">
+<h2 data-number="8.22" class="anchored" data-anchor-id="cierre"><span class="header-section-number">8.22</span> Cierre</h2>
+<ul>
+<li>Una secuencia exige definir qué información existe en cada instante.</li>
+<li>Ventanas, escalas y particiones forman parte del modelo experimental.</li>
+<li>Una RNN resume el pasado mediante un estado actualizado con pesos compartidos.</li>
+<li><code>nn.RNN</code> implementa la misma recurrencia que un bucle explícito.</li>
+<li>La evaluación temporal debe comparar contra persistencia y estacionalidad.</li>
+<li>Horizonte y cobertura deben reportarse junto con el error.</li>
+</ul>
+</section>
+<section id="ejercicios" class="level2" data-number="8.23">
+<h2 data-number="8.23" class="anchored" data-anchor-id="ejercicios"><span class="header-section-number">8.23</span> Ejercicios</h2>
 <ol type="1">
-<li>Línea base de persistencia.</li>
-<li>Ventanas y partición temporal.</li>
-<li>RNN desde tensores.</li>
-<li>Implementación con <code>nn.RNN</code>.</li>
-<li>Teacher forcing y horizontes.</li>
-<li>Evaluación temporal y residuos.</li>
+<li>Calcula las formas de <span class="math inline">\(W_{xh}\)</span>, <span class="math inline">\(W_{hh}\)</span> y <span class="math inline">\(W_{hy}\)</span> para este capítulo.</li>
+<li>Sustituye 168 por 24 horas y compara cobertura y MAE sin consultar nuevamente el test para elegir.</li>
+<li>Elimina el calendario objetivo y cuantifica su aporte durante desarrollo.</li>
+<li>Cambia <code>tanh</code> por ReLU en la implementación manual y vuelve a verificar equivalencia con <code>nn.RNN</code>.</li>
+<li>Añade un baseline que promedie las cuatro semanas anteriores de la misma hora.</li>
+<li>Calcula MAE separado para horas de alta y baja demanda usando un umbral fijado con ajuste.</li>
+<li>Evalúa pronóstico recursivo a 48 horas y describe cómo cambia la cobertura.</li>
+<li>Diseña una máscara de observación para no descartar ventanas con interrupciones.</li>
+<li>Explica por qué barajar ventanas de ajuste no equivale a una partición aleatoria.</li>
+<li>Propón un intervalo de predicción y una métrica para evaluar su cobertura.</li>
 </ol>
 </section>
-<section id="referencia-conceptual" class="level2" data-number="8.3">
-<h2 data-number="8.3" class="anchored" data-anchor-id="referencia-conceptual"><span class="header-section-number">8.3</span> Referencia conceptual</h2>
-<p>Secuencias, modelos de lenguaje y RNN en <span class="citation" data-cites="zhang2023dive">(<a href="../references.html#ref-zhang2023dive" role="doc-biblioref">Zhang et&nbsp;al. 2023</a>)</span>.</p>
+<section id="reto" class="level2" data-number="8.24">
+<h2 data-number="8.24" class="anchored" data-anchor-id="reto"><span class="header-section-number">8.24</span> Reto</h2>
+<p>Diseña un protocolo operacional que deba seguir produciendo pronósticos cuando falten horas. Debe distinguir demanda cero de dato ausente, definir cómo se actualiza el estado, incluir un indicador de calidad de entrada y evaluar error y cobertura durante interrupciones sin ajustar decisiones con el test actual.</p>
+<div class="callout callout-style-simple callout-important callout-titled" title="Puente a memoria prolongada">
+<div class="callout-header d-flex align-content-center">
+<div class="callout-icon-container">
+<i class="callout-icon"></i>
+</div>
+<div class="callout-title-container flex-fill">
+<span class="screen-reader-only">Importante</span>Puente a memoria prolongada
+</div>
+</div>
+<div class="callout-body-container callout-body">
+<p>La RNN simple multiplica transformaciones al retroceder por el tiempo. En el Capítulo 9 construiremos una tarea donde esa ruta larga sea indispensable y compararemos cómo LSTM y GRU controlan qué recordar, olvidar y exponer.</p>
+</div>
+</div>
 
 
 <div id="refs" class="references csl-bib-body hanging-indent" role="list" style="display: none">
-<div id="ref-zhang2023dive" class="csl-entry" role="listitem">
-Zhang, Aston, Zachary C. Lipton, Mu Li, y Alexander J. Smola. 2023. <em>Dive into Deep Learning</em>. Cambridge University Press. <a href="https://doi.org/10.1017/9781009389433">https://doi.org/10.1017/9781009389433</a>.
+<div id="ref-elman1990finding" class="csl-entry" role="listitem">
+Elman, Jeffrey L. 1990. <span>«Finding Structure in Time»</span>. <em>Cognitive Science</em> 14 (2): 179-211. <a href="https://doi.org/10.1207/S15516709COG1402_1">https://doi.org/10.1207/S15516709COG1402_1</a>.
+</div>
+<div id="ref-fanaee2013bike" class="csl-entry" role="listitem">
+Fanaee-T, Hadi. 2013. <span>«Bike Sharing»</span>. UCI Machine Learning Repository. <a href="https://doi.org/10.24432/C5W894">https://doi.org/10.24432/C5W894</a>.
+</div>
+<div id="ref-fanaee2014event" class="csl-entry" role="listitem">
+Fanaee-T, Hadi, y João Gama. 2014. <span>«Event Labeling Combining Ensemble Detectors and Background Knowledge»</span>. <em>Progress in Artificial Intelligence</em> 2 (2–3): 113-27. <a href="https://doi.org/10.1007/s13748-013-0040-3">https://doi.org/10.1007/s13748-013-0040-3</a>.
+</div>
+<div id="ref-werbos1990bptt" class="csl-entry" role="listitem">
+Werbos, Paul J. 1990. <span>«Backpropagation Through Time: What It Does and How to Do It»</span>. <em>Proceedings of the IEEE</em> 78 (10): 1550-60. <a href="https://doi.org/10.1109/5.58337">https://doi.org/10.1109/5.58337</a>.
 </div>
 </div>
 </section>
