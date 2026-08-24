@@ -85,3 +85,9 @@ The Bike Sharing dataset used in Chapter 8 was created by Hadi Fanaee-T and is
 distributed by the UCI Machine Learning Repository under CC BY 4.0. Dataset
 DOI: <https://doi.org/10.24432/C5W894>. This repository does not redistribute
 the archive; the chapter downloads it from UCI and verifies its SHA-256 digest.
+
+The Spoken Arabic Digit dataset used in Chapter 9 was created by Mouldi Bedda
+and Nacereddine Hammami and is distributed by the UCI Machine Learning
+Repository under CC BY 4.0. Dataset DOI:
+<https://doi.org/10.24432/C52C9Q>. This repository does not redistribute the
+archive; the chapter downloads it from UCI and verifies its SHA-256 digest.

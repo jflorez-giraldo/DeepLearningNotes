@@ -1,28 +1,1846 @@
 ---
 title: "¿Cómo conservar información durante más tiempo?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> modelar dependencias que
-una RNN simple olvida a medida que aumenta la distancia temporal.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-LSTM y GRU se compararán por mecanismo, estabilidad y costo.
+<div class="problem-banner">
+<strong>Problema:</strong> clasificar o resumir una secuencia cuando la señal
+relevante apareció muchos pasos antes y una RNN simple debe multiplicar
+transformaciones para recuperarla.
+</div>
+
+## Cuando compartir pesos no basta
+
+El Capítulo 8 mostró que una RNN procesa una semana con los mismos parámetros en
+cada hora. También dejó una pregunta abierta: ¿qué ocurre cuando la pérdida
+final depende de información distante? El gradiente debe recorrer toda la cadena
+de estados, y compartir pesos no garantiza que la señal sobreviva.
+
+LSTM y GRU incorporan compuertas que aprenden cuánto conservar, escribir y
+exponer [@hochreiter1997lstm; @cho2014gru]. Primero controlaremos la distancia en
+una tarea sintética. Después clasificaremos dígitos árabes hablados, cuyas
+secuencias tienen longitudes diferentes.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- relacionar productos de Jacobianos con gradientes que se atenúan o crecen;
+- interpretar e implementar las compuertas de LSTM y GRU;
+- comprobar celdas manuales contra `nn.LSTM` y `nn.GRU`;
+- construir lotes con padding, máscaras y secuencias empacadas;
+- distinguir procesamiento causal y bidireccional;
+- comparar arquitecturas con presupuesto, semillas y test bloqueado; y
+- decidir entre desempeño, latencia y disponibilidad de contexto.
 :::
 
-## Objetivos
+## Preparar el entorno
 
-- relacionar recurrencia prolongada y gradientes inestables;
-- interpretar las compuertas de LSTM y GRU;
-- usar secuencias de longitud variable y enmascaramiento;
-- distinguir redes causales y bidireccionales;
-- comparar RNN, GRU y LSTM con varias semillas; y
-- justificar el modelo según latencia y desempeño.
+```{python}
+from collections import defaultdict
+from copy import deepcopy
+from hashlib import sha256
+from io import BytesIO
+import html
+import math
+from pathlib import Path
+import random
+import re
+from time import perf_counter
+from urllib.request import urlretrieve
+import zipfile
 
-## Experimento central
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import sklearn
+import torch
+from sklearn.metrics import accuracy_score, confusion_matrix, f1_score
+from torch import nn
+from torch.nn import functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_sequence
+from torch.utils.data import DataLoader, Dataset
 
-Construir una tarea sintética de memoria y un caso real para observar cuándo
-las compuertas producen una mejora medible.
+PAIR_SEEDS = [17, 29, 43]
+REPRESENTATIVE_SEED = 29
+SYNTHETIC_LENGTHS = [20, 50, 100, 200]
+SYNTHETIC_STEPS = 600
+REAL_EPOCHS = 15
+BATCH_SIZE = 128
 
-## Referencia conceptual
+random.seed(REPRESENTATIVE_SEED)
+np.random.seed(REPRESENTATIVE_SEED)
+torch.manual_seed(REPRESENTATIVE_SEED)
+torch.set_num_threads(1)
+torch.use_deterministic_algorithms(True)
+device = torch.device("cpu")
 
-Redes recurrentes modernas en [@zhang2023dive].
+print(
+    f"PyTorch {torch.__version__} | scikit-learn {sklearn.__version__} | "
+    f"dispositivo: {device} | hilos: {torch.get_num_threads()}"
+)
+```
+
+CPU y un hilo reducen variación local, pero los segundos no son comparables
+entre máquinas. El laboratorio usa modelos pequeños y no requiere paquetes
+adicionales a los del libro.
+
+## Una tarea donde la distancia es controlable
+
+Construiremos secuencias con dos canales. El primero contiene valores uniformes
+entre cero y uno. El segundo marca dos posiciones: una en el primer 10% y otra
+entre el primer y segundo tercio. La salida es la suma de los dos valores
+marcados. Todo lo demás es distractor.
+
+```{python}
+def adding_batch(length, size, generator):
+    values = torch.rand(size, length, generator=generator)
+    marker = torch.zeros(size, length)
+    first = torch.randint(
+        0, max(1, length // 10), (size,), generator=generator
+    )
+    second = torch.randint(
+        length // 3, length // 2, (size,), generator=generator
+    )
+    rows = torch.arange(size)
+    marker[rows, first] = 1
+    marker[rows, second] = 1
+    sequences = torch.stack([values, marker], dim=2)
+    targets = values[rows, first] + values[rows, second]
+    return sequences, targets
+
+
+example_generator = torch.Generator().manual_seed(9000)
+example_sequence, example_target = adding_batch(50, 1, example_generator)
+example_markers = torch.where(example_sequence[0, :, 1] == 1)[0]
+pd.Series({
+    "longitud": example_sequence.shape[1],
+    "posiciones marcadas": example_markers.tolist(),
+    "valores marcados": example_sequence[0, example_markers, 0].tolist(),
+    "objetivo": example_target.item(),
+})
+```
+
+```{python}
+#| label: fig-memory-task
+#| fig-cap: "Tarea de suma marcada: dos valores tempranos deben llegar a la salida final."
+#| fig-alt: "Dos paneles muestran valores aleatorios y dos impulsos que marcan cuáles sumar."
+#| fig-width: 9
+#| fig-height: 3.8
+
+fig, axes = plt.subplots(2, 1, figsize=(9, 3.8), sharex=True)
+axes[0].plot(example_sequence[0, :, 0], color="#386FA4")
+axes[0].scatter(
+    example_markers,
+    example_sequence[0, example_markers, 0],
+    color="#C44536", zorder=3, label="valores objetivo",
+)
+axes[0].set_ylabel("valor")
+axes[0].legend(frameon=False)
+axes[1].stem(example_sequence[0, :, 1], linefmt="#C44536", markerfmt="o")
+axes[1].set(xlabel="paso", ylabel="marca")
+for axis in axes:
+    axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+Predecir siempre 1 es una línea base razonable: cada valor marcado tiene media
+0,5. Un modelo que solo aprende esa constante tendrá RMSE cercano a
+$\sqrt{1/6}\approx0{,}408$.
+
+## Por qué el gradiente recorre una cadena
+
+Para una RNN simple, el efecto de $h_t$ sobre un estado posterior es
+
+$$
+\frac{\partial h_T}{\partial h_t}
+=\prod_{k=t+1}^{T}\frac{\partial h_k}{\partial h_{k-1}}.
+$$
+
+Valores singulares repetidamente menores que uno atenúan la señal; mayores que
+uno pueden hacerla crecer. Esta dificultad fue formalizada antes de LSTM
+[@bengio1994long]. `tanh` añade otro factor: cuando se satura, su derivada se
+aproxima a cero.
+
+```{python}
+weights = [0.8, 1.0, 1.2]
+distances = np.arange(0, 51)
+jacobian_paths = pd.DataFrame({
+    "distancia": np.tile(distances, len(weights)),
+    "peso recurrente": np.repeat(weights, len(distances)),
+    "producto lineal": np.concatenate([weight ** distances for weight in weights]),
+})
+```
+
+```{python}
+#| label: fig-jacobian-products
+#| fig-cap: "Un factor repetido transforma pequeñas diferencias en atenuación o crecimiento exponencial."
+#| fig-alt: "Escala logarítmica muestra productos decrecientes para 0.8, constantes para 1 y crecientes para 1.2."
+#| fig-width: 8
+#| fig-height: 4.2
+
+fig, axis = plt.subplots(figsize=(8, 4.2))
+for weight, rows in jacobian_paths.groupby("peso recurrente"):
+    axis.plot(rows["distancia"], rows["producto lineal"], label=f"factor {weight}")
+axis.set(xlabel="distancia", ylabel="magnitud del producto", yscale="log")
+axis.grid(alpha=0.2)
+axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+El clipping limita una actualización grande después de calcular el gradiente;
+no crea una ruta de memoria. Las compuertas modifican la dinámica interna antes
+de que ese gradiente exista.
+
+## LSTM: separar memoria y exposición
+
+Una LSTM calcula cuatro bloques:
+
+$$
+\begin{aligned}
+i_t &= \sigma(W_{ii}x_t+b_{ii}+W_{hi}h_{t-1}+b_{hi}),\\
+f_t &= \sigma(W_{if}x_t+b_{if}+W_{hf}h_{t-1}+b_{hf}),\\
+g_t &= \tanh(W_{ig}x_t+b_{ig}+W_{hg}h_{t-1}+b_{hg}),\\
+o_t &= \sigma(W_{io}x_t+b_{io}+W_{ho}h_{t-1}+b_{ho}),
+\end{aligned}
+$$
+
+$$
+c_t=f_t\odot c_{t-1}+i_t\odot g_t,
+\qquad h_t=o_t\odot\tanh(c_t).
+$$
+
+La compuerta de olvido $f_t$ regula la ruta del estado de celda; entrada y
+salida controlan escritura y exposición [@hochreiter1997lstm]. Que exista esa
+ruta no implica que el optimizador encuentre una solución.
+
+```{python}
+class ManualLSTM(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.weight_ih = nn.Parameter(torch.empty(4 * hidden_size, input_size))
+        self.weight_hh = nn.Parameter(torch.empty(4 * hidden_size, hidden_size))
+        self.bias_ih = nn.Parameter(torch.empty(4 * hidden_size))
+        self.bias_hh = nn.Parameter(torch.empty(4 * hidden_size))
+        nn.init.uniform_(self.weight_ih, -0.2, 0.2)
+        nn.init.uniform_(self.weight_hh, -0.2, 0.2)
+        nn.init.uniform_(self.bias_ih, -0.1, 0.1)
+        nn.init.uniform_(self.bias_hh, -0.1, 0.1)
+
+    def forward(self, inputs, initial_state=None):
+        batch = inputs.shape[0]
+        if initial_state is None:
+            hidden = inputs.new_zeros(batch, self.hidden_size)
+            cell = inputs.new_zeros(batch, self.hidden_size)
+        else:
+            hidden, cell = initial_state
+        outputs = []
+        for step in range(inputs.shape[1]):
+            gates = (
+                F.linear(inputs[:, step], self.weight_ih, self.bias_ih)
+                + F.linear(hidden, self.weight_hh, self.bias_hh)
+            )
+            input_gate, forget_gate, candidate, output_gate = gates.chunk(4, dim=1)
+            input_gate = torch.sigmoid(input_gate)
+            forget_gate = torch.sigmoid(forget_gate)
+            candidate = torch.tanh(candidate)
+            output_gate = torch.sigmoid(output_gate)
+            cell = forget_gate * cell + input_gate * candidate
+            hidden = output_gate * torch.tanh(cell)
+            outputs.append(hidden)
+        return torch.stack(outputs, dim=1), (hidden, cell)
+```
+
+## GRU: actualizar un único estado
+
+GRU combina memoria y salida en $h_t$. En la convención implementada por
+PyTorch:
+
+$$
+\begin{aligned}
+r_t &= \sigma(W_{ir}x_t+b_{ir}+W_{hr}h_{t-1}+b_{hr}),\\
+z_t &= \sigma(W_{iz}x_t+b_{iz}+W_{hz}h_{t-1}+b_{hz}),\\
+n_t &= \tanh(W_{in}x_t+b_{in}+r_t\odot(W_{hn}h_{t-1}+b_{hn})),\\
+h_t &= (1-z_t)\odot n_t+z_t\odot h_{t-1}.
+\end{aligned}
+$$
+
+La posición de $r_t$ respecto al término recurrente cambia entre formulaciones.
+Implementaremos la usada por `nn.GRU`, no una mezcla silenciosa de variantes.
+
+```{python}
+class ManualGRU(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+        self.hidden_size = hidden_size
+        self.weight_ih = nn.Parameter(torch.empty(3 * hidden_size, input_size))
+        self.weight_hh = nn.Parameter(torch.empty(3 * hidden_size, hidden_size))
+        self.bias_ih = nn.Parameter(torch.empty(3 * hidden_size))
+        self.bias_hh = nn.Parameter(torch.empty(3 * hidden_size))
+        nn.init.uniform_(self.weight_ih, -0.2, 0.2)
+        nn.init.uniform_(self.weight_hh, -0.2, 0.2)
+        nn.init.uniform_(self.bias_ih, -0.1, 0.1)
+        nn.init.uniform_(self.bias_hh, -0.1, 0.1)
+
+    def forward(self, inputs, initial_state=None):
+        batch = inputs.shape[0]
+        hidden = (
+            inputs.new_zeros(batch, self.hidden_size)
+            if initial_state is None else initial_state
+        )
+        outputs = []
+        for step in range(inputs.shape[1]):
+            input_parts = F.linear(
+                inputs[:, step], self.weight_ih, self.bias_ih
+            ).chunk(3, dim=1)
+            hidden_parts = F.linear(
+                hidden, self.weight_hh, self.bias_hh
+            ).chunk(3, dim=1)
+            reset = torch.sigmoid(input_parts[0] + hidden_parts[0])
+            update = torch.sigmoid(input_parts[1] + hidden_parts[1])
+            candidate = torch.tanh(input_parts[2] + reset * hidden_parts[2])
+            hidden = (1 - update) * candidate + update * hidden
+            outputs.append(hidden)
+        return torch.stack(outputs, dim=1), hidden
+```
+
+## Verificar las celdas manuales
+
+Copiamos parámetros a las capas oficiales y comparamos salida, estado y
+gradientes. La verificación usa precisamente el orden de compuertas documentado
+por PyTorch [@pytorch].
+
+```{python}
+def verify_manual_recurrence(kind):
+    torch.manual_seed(909)
+    manual = ManualLSTM(3, 4) if kind == "LSTM" else ManualGRU(3, 4)
+    builtin = (
+        nn.LSTM(3, 4, batch_first=True)
+        if kind == "LSTM" else nn.GRU(3, 4, batch_first=True)
+    )
+    with torch.no_grad():
+        builtin.weight_ih_l0.copy_(manual.weight_ih)
+        builtin.weight_hh_l0.copy_(manual.weight_hh)
+        builtin.bias_ih_l0.copy_(manual.bias_ih)
+        builtin.bias_hh_l0.copy_(manual.bias_hh)
+
+    manual_input = torch.randn(2, 7, 3, requires_grad=True)
+    builtin_input = manual_input.detach().clone().requires_grad_(True)
+    initial_hidden = torch.randn(2, 4)
+
+    if kind == "LSTM":
+        initial_cell = torch.randn(2, 4)
+        manual_output, manual_state = manual(
+            manual_input, (initial_hidden.clone(), initial_cell.clone())
+        )
+        builtin_output, builtin_state = builtin(
+            builtin_input,
+            (initial_hidden.unsqueeze(0).clone(), initial_cell.unsqueeze(0).clone()),
+        )
+        builtin_hidden, builtin_cell = builtin_state
+        assert builtin_hidden.shape == (1, 2, 4)
+        assert builtin_cell.shape == (1, 2, 4)
+        state_difference = max(
+            (manual_state[0] - builtin_hidden.squeeze(0)).abs().max(),
+            (manual_state[1] - builtin_cell.squeeze(0)).abs().max(),
+        )
+        manual_loss = manual_output.sum() + manual_state[0].sum() + manual_state[1].sum()
+        builtin_loss = builtin_output.sum() + builtin_hidden.sum() + builtin_cell.sum()
+    else:
+        manual_output, manual_state = manual(manual_input, initial_hidden.clone())
+        builtin_output, builtin_state = builtin(
+            builtin_input, initial_hidden.unsqueeze(0).clone()
+        )
+        assert builtin_state.shape == (1, 2, 4)
+        state_difference = (manual_state - builtin_state.squeeze(0)).abs().max()
+        manual_loss = manual_output.sum() + manual_state.sum()
+        builtin_loss = builtin_output.sum() + builtin_state.sum()
+
+    manual_loss.backward()
+    builtin_loss.backward()
+    result = {
+        "celda": kind,
+        "diferencia salida": float(
+            (manual_output - builtin_output).abs().max().detach()
+        ),
+        "diferencia estado": float(state_difference.detach()),
+        "diferencia gradiente entrada": float(
+            (manual_input.grad - builtin_input.grad).abs().max().detach()
+        ),
+        "diferencia gradiente W_ih": float(
+            (manual.weight_ih.grad - builtin.weight_ih_l0.grad).abs().max().detach()
+        ),
+        "diferencia gradiente W_hh": float(
+            (manual.weight_hh.grad - builtin.weight_hh_l0.grad).abs().max().detach()
+        ),
+        "diferencia gradiente b_ih": float(
+            (manual.bias_ih.grad - builtin.bias_ih_l0.grad).abs().max().detach()
+        ),
+        "diferencia gradiente b_hh": float(
+            (manual.bias_hh.grad - builtin.bias_hh_l0.grad).abs().max().detach()
+        ),
+    }
+    assert max(value for key, value in result.items() if key != "celda") < 1e-6
+    return result
+
+
+equivalence_table = pd.DataFrame([
+    verify_manual_recurrence("LSTM"),
+    verify_manual_recurrence("GRU"),
+])
+equivalence_table
+```
+
+La igualdad numérica valida las ecuaciones y el orden de bloques. No demuestra
+que una celda aprenda la tarea ni que una arquitectura sea superior.
+
+## Comparar con un presupuesto común
+
+Una LSTM con ancho $H$ tiene cuatro bloques de parámetros; una GRU tiene tres y
+una RNN uno. Compararlas con el mismo ancho confundiría mecanismo y cantidad de
+pesos. Elegiremos el mayor ancho que no exceda un presupuesto.
+
+```{python}
+class RecurrentModel(nn.Module):
+    def __init__(
+        self, input_size, hidden_size, output_size, cell,
+        bidirectional=False,
+    ):
+        super().__init__()
+        recurrent_class = {"RNN": nn.RNN, "GRU": nn.GRU, "LSTM": nn.LSTM}[cell]
+        self.recurrent = recurrent_class(
+            input_size,
+            hidden_size,
+            batch_first=True,
+            bidirectional=bidirectional,
+        )
+        directions = 2 if bidirectional else 1
+        self.head = nn.Linear(hidden_size * directions, output_size)
+
+    def features_from_state(self, state):
+        hidden = state[0] if isinstance(state, tuple) else state
+        if self.recurrent.bidirectional:
+            return torch.cat([hidden[-2], hidden[-1]], dim=1)
+        return hidden[-1]
+
+    def forward_dense(self, sequence):
+        _, state = self.recurrent(sequence)
+        return self.head(self.features_from_state(state))
+
+    def forward(self, padded, lengths):
+        if padded.ndim != 3 or lengths.ndim != 1 or len(padded) != len(lengths):
+            raise ValueError("Formas incompatibles para secuencias y longitudes")
+        if (lengths <= 0).any() or lengths.max() > padded.shape[1]:
+            raise ValueError("Longitud fuera del lote acolchado")
+        packed = pack_padded_sequence(
+            padded,
+            lengths.cpu(),
+            batch_first=True,
+            enforce_sorted=False,
+        )
+        _, state = self.recurrent(packed)
+        return self.head(self.features_from_state(state))
+
+
+def model_under_budget(
+    input_size, output_size, cell, budget, bidirectional=False
+):
+    best = None
+    for hidden_size in range(1, 256):
+        model = RecurrentModel(
+            input_size, hidden_size, output_size, cell, bidirectional
+        )
+        parameters = sum(parameter.numel() for parameter in model.parameters())
+        if parameters > budget:
+            break
+        best = {"hidden": hidden_size, "parámetros": parameters}
+    return best
+
+
+synthetic_configs = {
+    cell: model_under_budget(2, 1, cell, budget=8_000)
+    for cell in ["RNN", "GRU", "LSTM"]
+}
+pd.DataFrame(synthetic_configs).T
+```
+
+El presupuesto iguala grados de libertad de forma aproximada, no capacidad,
+dinámica ni operaciones por paso. La RNN puede usar más unidades porque cada una
+cuesta menos.
+
+## Fijar el experimento sintético
+
+Cada arquitectura recibe exactamente los mismos lotes dentro de una semilla.
+Entrenamos 600 actualizaciones con AdamW, batch 128, clipping de norma 1 y
+checkpoint cada 50 pasos según RMSE de validación. Validación y test son fijos y
+no se regeneran por modelo.
+
+::: {.callout-important title="Hipótesis sintética fijada"}
+En longitud 200, consideraremos material una reducción de al menos 30% en RMSE
+mediano de algún modelo con compuertas frente a la RNN, con ventaja en al menos
+dos de tres semillas. No cambiaremos inicialización ni número de pasos después
+de observar qué celda aprende.
+:::
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar entrenamiento de memoria sintética"
+
+def fixed_adding_sets(seed, size):
+    generator = torch.Generator().manual_seed(seed)
+    return {
+        length: adding_batch(length, size, generator)
+        for length in SYNTHETIC_LENGTHS
+    }
+
+
+synthetic_validation = fixed_adding_sets(9101, 300)
+synthetic_test = fixed_adding_sets(9102, 600)
+
+
+@torch.inference_mode()
+def synthetic_rmse(model, datasets):
+    squared_errors = []
+    by_length = {}
+    model.eval()
+    for length, (sequences, targets) in datasets.items():
+        predictions = model.forward_dense(sequences).squeeze(1)
+        errors = predictions - targets
+        squared_errors.append(errors.square())
+        by_length[length] = {
+            "RMSE": errors.square().mean().sqrt().item(),
+            "MAE": errors.abs().mean().item(),
+        }
+    overall = torch.cat(squared_errors).mean().sqrt().item()
+    return overall, by_length
+
+
+def train_synthetic(cell, seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    config = synthetic_configs[cell]
+    model = RecurrentModel(2, config["hidden"], 1, cell)
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=3e-3, weight_decay=1e-4
+    )
+    generator = torch.Generator().manual_seed(seed + 9_000)
+    best_rmse = math.inf
+    best_state = None
+    best_step = None
+    history = []
+    started = perf_counter()
+
+    for step in range(1, SYNTHETIC_STEPS + 1):
+        length = SYNTHETIC_LENGTHS[(step - 1) % len(SYNTHETIC_LENGTHS)]
+        sequences, targets = adding_batch(length, BATCH_SIZE, generator)
+        optimizer.zero_grad(set_to_none=True)
+        predictions = model.forward_dense(sequences).squeeze(1)
+        loss = F.mse_loss(predictions, targets)
+        loss.backward()
+        gradient_norm = nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+        optimizer.step()
+
+        if step % 50 == 0:
+            validation_rmse, _ = synthetic_rmse(model, synthetic_validation)
+            history.append({
+                "paso": step,
+                "RMSE validación": validation_rmse,
+                "norma gradiente": float(gradient_norm),
+            })
+            if validation_rmse < best_rmse:
+                best_rmse = validation_rmse
+                best_state = deepcopy(model.state_dict())
+                best_step = step
+
+    model.load_state_dict(best_state)
+    return {
+        "model": model,
+        "history": pd.DataFrame(history),
+        "best_rmse": best_rmse,
+        "best_step": best_step,
+        "seconds": perf_counter() - started,
+    }
+
+
+synthetic_runs = {}
+for cell in ["RNN", "GRU", "LSTM"]:
+    for seed in PAIR_SEEDS:
+        run = train_synthetic(cell, seed)
+        synthetic_runs[(cell, seed)] = run
+        print(
+            f"{cell:4s} | semilla {seed} | paso {run['best_step']:3d} | "
+            f"RMSE val {run['best_rmse']:.3f} | {run['seconds']:.1f} s"
+        )
+```
+
+Solo después de completar las nueve corridas evaluamos el conjunto sintético de
+test.
+
+```{python}
+synthetic_rows = []
+for (cell, seed), run in synthetic_runs.items():
+    _, metrics_by_length = synthetic_rmse(run["model"], synthetic_test)
+    for length, metrics in metrics_by_length.items():
+        synthetic_rows.append({
+            "celda": cell,
+            "semilla": seed,
+            "longitud": length,
+            **metrics,
+            "segundos": run["seconds"],
+            "paso checkpoint": run["best_step"],
+            "hidden": synthetic_configs[cell]["hidden"],
+            "parámetros": synthetic_configs[cell]["parámetros"],
+        })
+synthetic_results = pd.DataFrame(synthetic_rows)
+synthetic_summary = (
+    synthetic_results.groupby(["celda", "longitud"], sort=False)
+    .agg(
+        RMSE_mediano=("RMSE", "median"),
+        RMSE_mínimo=("RMSE", "min"),
+        RMSE_máximo=("RMSE", "max"),
+    )
+    .reset_index()
+)
+synthetic_summary
+```
+
+```{python}
+#| label: fig-memory-results
+#| fig-cap: "RMSE sintético por longitud y semilla bajo presupuestos similares."
+#| fig-alt: "Puntos de tres semillas muestran que GRU aprende la suma y RNN y LSTM permanecen cerca del baseline."
+#| fig-width: 9
+#| fig-height: 4.5
+
+colors = {"RNN": "#6C757D", "GRU": "#2A9D8F", "LSTM": "#8E5EA2"}
+fig, axis = plt.subplots(figsize=(9, 4.5))
+for cell in ["RNN", "GRU", "LSTM"]:
+    rows = synthetic_results[synthetic_results["celda"] == cell]
+    for seed in PAIR_SEEDS:
+        seed_rows = rows[rows["semilla"] == seed]
+        axis.plot(
+            seed_rows["longitud"], seed_rows["RMSE"],
+            color=colors[cell], alpha=0.35, marker="o",
+        )
+    medians = synthetic_summary[synthetic_summary["celda"] == cell]
+    axis.plot(
+        medians["longitud"], medians["RMSE_mediano"],
+        color=colors[cell], linewidth=3, marker="o", label=f"{cell}, mediana",
+    )
+axis.axhline(math.sqrt(1 / 6), color="black", linestyle="--", label="constante 1")
+axis.set(xlabel="longitud", ylabel="RMSE")
+axis.set_xticks(SYNTHETIC_LENGTHS)
+axis.grid(alpha=0.2)
+axis.legend(frameon=False, ncol=2)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+length_200 = synthetic_results[synthetic_results["longitud"] == 200]
+paired_synthetic = length_200.pivot(
+    index="semilla", columns="celda", values="RMSE"
+)
+synthetic_validation_results = pd.DataFrame([
+    {
+        "celda": cell,
+        "semilla": seed,
+        "RMSE validación": run["best_rmse"],
+    }
+    for (cell, seed), run in synthetic_runs.items()
+])
+gated_validation_medians = (
+    synthetic_validation_results[
+        synthetic_validation_results["celda"].isin(["GRU", "LSTM"])
+    ]
+    .groupby("celda")["RMSE validación"]
+    .median()
+)
+best_gated_synthetic = gated_validation_medians.idxmin()
+synthetic_reduction = 1 - (
+    paired_synthetic[best_gated_synthetic].median()
+    / paired_synthetic["RNN"].median()
+)
+synthetic_wins = int(
+    (paired_synthetic[best_gated_synthetic] < paired_synthetic["RNN"]).sum()
+)
+pd.Series({
+    "mejor celda con compuertas": best_gated_synthetic,
+    "reducción mediana RMSE a longitud 200": synthetic_reduction,
+    "semillas ganadas": synthetic_wins,
+    "alcanza criterio": bool(synthetic_reduction >= 0.30 and synthetic_wins >= 2),
+})
+```
+
+La GRU reduce 45,0% el RMSE mediano de la RNN a longitud 200 y gana en las tres
+semillas. Su RMSE crece de 0,095 a longitud 20 a 0,228 a longitud 200: las
+compuertas ayudan, pero la distancia sigue teniendo costo. RNN y LSTM permanecen
+cerca del baseline constante, alrededor de 0,415 en la secuencia más larga.
+
+La compuerta es una posibilidad de aprendizaje, no una garantía. La LSTM usa la
+inicialización estándar de PyTorch y el mismo límite de 600 actualizaciones; no
+añadiremos después un sesgo de olvido favorable para rescatar su resultado.
+
+## Inspeccionar gradientes en una secuencia
+
+Tomamos el primer ejemplo de longitud 200 y derivamos la predicción respecto al
+canal de valores. Esta figura describe sensibilidad local de una corrida; no es
+una explicación causal ni una métrica de selección.
+
+```{python}
+gradient_rows = []
+gradient_example = synthetic_test[200][0][0:1].clone()
+marked_steps = torch.where(gradient_example[0, :, 1] == 1)[0].numpy()
+for cell in ["RNN", "GRU", "LSTM"]:
+    sequence = gradient_example.clone().requires_grad_(True)
+    prediction = synthetic_runs[(cell, REPRESENTATIVE_SEED)]["model"].forward_dense(
+        sequence
+    ).squeeze()
+    prediction.backward()
+    for step, value in enumerate(sequence.grad[0, :, 0].abs().numpy()):
+        gradient_rows.append({
+            "celda": cell,
+            "paso": step,
+            "distancia": len(sequence[0]) - 1 - step,
+            "gradiente absoluto": max(float(value), 1e-12),
+        })
+gradient_frame = pd.DataFrame(gradient_rows)
+```
+
+```{python}
+#| label: fig-memory-gradients
+#| fig-cap: "Sensibilidad de la salida al canal de valores en una secuencia de 200 pasos."
+#| fig-alt: "Curvas logarítmicas muestran cómo la sensibilidad cambia con la distancia; líneas verticales marcan los valores objetivo."
+#| fig-width: 9
+#| fig-height: 4.5
+
+fig, axis = plt.subplots(figsize=(9, 4.5))
+for cell, rows in gradient_frame.groupby("celda", sort=False):
+    axis.plot(rows["paso"], rows["gradiente absoluto"], color=colors[cell], label=cell)
+for step in marked_steps:
+    axis.axvline(step, color="#C44536", linestyle="--", alpha=0.8)
+axis.set(xlabel="paso", ylabel="|d predicción / d valor|", yscale="log")
+axis.grid(alpha=0.2)
+axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+## Padding no es información
+
+Las grabaciones reales no tienen la misma longitud. `pad_sequence` completa el
+lote, una máscara distingue posiciones válidas y `pack_padded_sequence` evita
+que la recurrencia procese el relleno.
+
+```{python}
+toy_sequences = [torch.randn(length, 3) for length in [4, 7, 2]]
+toy_lengths = torch.tensor([len(sequence) for sequence in toy_sequences])
+toy_padded = pad_sequence(toy_sequences, batch_first=True)
+toy_mask = torch.arange(toy_padded.shape[1])[None, :] < toy_lengths[:, None]
+pd.DataFrame(toy_mask.numpy(), index=["secuencia 1", "secuencia 2", "secuencia 3"])
+```
+
+```{python}
+#| label: fig-padding-mask
+#| fig-cap: "Máscara de posiciones válidas para tres secuencias de distinta longitud."
+#| fig-alt: "Matriz binaria muestra pasos válidos al inicio y padding al final de cada fila."
+#| fig-width: 7
+#| fig-height: 3.2
+
+fig, axis = plt.subplots(figsize=(7, 3.2))
+axis.imshow(toy_mask, aspect="auto", cmap="Blues", vmin=0, vmax=1)
+axis.set(xlabel="paso", ylabel="secuencia")
+axis.set_yticks(range(3), ["longitud 4", "longitud 7", "longitud 2"])
+fig.tight_layout()
+plt.show()
+```
+
+El último índice de la matriz acolchada no es el último paso real de todas las
+secuencias. Para clasificación usamos `h_n` devuelto por la recurrencia empacada.
+
+```{python}
+corrupted_padding = toy_padded.clone()
+corrupted_padding[~toy_mask] = 999
+packing_checks = []
+torch.manual_seed(99)
+for cell, bidirectional in [
+    ("RNN", False), ("GRU", False), ("LSTM", False), ("GRU", True)
+]:
+    model = RecurrentModel(3, 5, 2, cell, bidirectional)
+    with torch.inference_mode():
+        packed_clean = model(toy_padded, toy_lengths)
+        packed_corrupted = model(corrupted_padding, toy_lengths)
+        individual = torch.cat([
+            model.forward_dense(sequence.unsqueeze(0))
+            for sequence in toy_sequences
+        ])
+    padding_difference = (packed_clean - packed_corrupted).abs().max().item()
+    individual_difference = (packed_clean - individual).abs().max().item()
+    assert padding_difference == 0
+    assert individual_difference < 1e-6
+    packing_checks.append({
+        "celda": "BiGRU" if bidirectional else cell,
+        "diferencia al cambiar padding": padding_difference,
+        "diferencia lote-individual": individual_difference,
+    })
+pd.DataFrame(packing_checks)
+```
+
+## Obtener Spoken Arabic Digit
+
+Spoken Arabic Digit contiene 8.800 secuencias de 13 coeficientes cepstrales
+MFCC para diez dígitos, producidas por 88 hablantes [@bedda2008spoken]. UCI lo
+distribuye bajo CC BY 4.0. El archivo no contiene audio original.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar descarga verificada"
+
+DATA_URL = "https://archive.ics.uci.edu/static/public/195/spoken+arabic+digit.zip"
+DATA_DIR = Path(".cache/chapter09")
+ARCHIVE_PATH = DATA_DIR / "spoken-arabic-digit.zip"
+ARCHIVE_SHA256 = "3c8c83404289c49631605421830872be337d92d887e61798385aacbe9423010d"
+TRAIN_SHA256 = "cecd3ee9951658e5391f0342e9b6467ba7c0e7ecff5c9012b9c1ed9f81b97bc6"
+TEST_SHA256 = "de40eac66ce18fca8924bad592002ee7ef646fc84d48b065ce21ac9f88946922"
+
+
+def file_sha256(path, chunk_size=1 << 20):
+    digest = sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verified_download(url, path, expected_hash):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if path.exists() and file_sha256(path) == expected_hash:
+        return "caché verificada"
+    temporary = path.with_suffix(path.suffix + ".download")
+    temporary.unlink(missing_ok=True)
+    urlretrieve(url, temporary)
+    actual_hash = file_sha256(temporary)
+    if actual_hash != expected_hash:
+        temporary.unlink(missing_ok=True)
+        raise ValueError(f"SHA-256 inesperado: {actual_hash}")
+    temporary.replace(path)
+    return "descarga verificada"
+
+
+download_status = verified_download(DATA_URL, ARCHIVE_PATH, ARCHIVE_SHA256)
+print(download_status, "|", file_sha256(ARCHIVE_PATH))
+```
+
+## Reconstruir bloques y metadatos documentados
+
+Cada línea es un frame de 13 MFCC y una línea vacía termina la secuencia. El
+archivo ordena bloques por dígito, sexo registrado, hablante y repetición. Nos
+apoyamos en esa documentación y comprobamos todas las cuentas.
+
+```{python}
+def parse_sequence_blocks(raw_bytes):
+    byte_blocks = []
+    tensor_blocks = []
+    current = []
+    for line in raw_bytes.splitlines():
+        line = line.strip()
+        if line:
+            values = [float(value) for value in line.split()]
+            if len(values) != 13 or not np.isfinite(values).all():
+                raise ValueError("Frame inválido")
+            current.append(line)
+        elif current:
+            byte_blocks.append(b"\n".join(current))
+            tensor_blocks.append(torch.tensor([
+                [float(value) for value in row.split()] for row in current
+            ], dtype=torch.float32))
+            current = []
+    if current:
+        byte_blocks.append(b"\n".join(current))
+        tensor_blocks.append(torch.tensor([
+            [float(value) for value in row.split()] for row in current
+        ], dtype=torch.float32))
+    return byte_blocks, tensor_blocks
+
+
+with zipfile.ZipFile(ARCHIVE_PATH) as archive:
+    if archive.testzip() is not None:
+        raise ValueError("ZIP corrupto")
+    members = {member.filename for member in archive.infolist()}
+    expected_members = {
+        "Train_Arabic_Digit.txt", "Test_Arabic_Digit.txt",
+        "documentation.html", "graphic.jpg",
+    }
+    assert members == expected_members
+    train_bytes = archive.read("Train_Arabic_Digit.txt")
+    test_bytes = archive.read("Test_Arabic_Digit.txt")
+    documentation_text = archive.read("documentation.html").decode("latin-1")
+
+documentation_text = html.unescape(re.sub(r"<[^>]+>", " ", documentation_text))
+documentation_text = re.sub(r"\s+", " ", documentation_text)
+assert "10 utterances of /0/ from 66 speakers" in documentation_text
+assert re.search(
+    r"S\s*peakers in the test dataset are different",
+    documentation_text,
+    flags=re.IGNORECASE,
+)
+
+assert sha256(train_bytes).hexdigest() == TRAIN_SHA256
+assert sha256(test_bytes).hexdigest() == TEST_SHA256
+train_blocks, train_sequences_all = parse_sequence_blocks(train_bytes)
+test_blocks, test_sequences_raw = parse_sequence_blocks(test_bytes)
+assert len(train_sequences_all) == 6_600
+assert len(test_sequences_raw) == 2_200
+```
+
+```{python}
+def documented_metadata(index, per_class, speakers_per_sex, source):
+    label = index // per_class
+    within_class = index % per_class
+    half = per_class // 2
+    if within_class < half:
+        recorded_sex = "masculino"
+        speaker = within_class // 10
+    else:
+        recorded_sex = "femenino"
+        speaker = speakers_per_sex + (within_class - half) // 10
+    repetition = within_class % 10
+    return {
+        "etiqueta": label,
+        "hablante": f"{source}-{speaker:02d}",
+        "sexo registrado": recorded_sex,
+        "repetición": repetition,
+    }
+
+
+train_metadata = pd.DataFrame([
+    documented_metadata(index, 660, 33, "train")
+    for index in range(len(train_sequences_all))
+])
+test_metadata = pd.DataFrame([
+    documented_metadata(index, 220, 11, "test")
+    for index in range(len(test_sequences_raw))
+])
+train_metadata["longitud"] = [len(sequence) for sequence in train_sequences_all]
+test_metadata["longitud"] = [len(sequence) for sequence in test_sequences_raw]
+train_metadata["hash"] = [sha256(block).hexdigest() for block in train_blocks]
+test_metadata["hash"] = [sha256(block).hexdigest() for block in test_blocks]
+
+assert train_metadata.groupby(["hablante", "etiqueta"]).size().eq(10).all()
+assert test_metadata.groupby(["hablante", "etiqueta"]).size().eq(10).all()
+assert train_metadata.groupby(
+    ["hablante", "etiqueta"]
+)["repetición"].nunique().eq(10).all()
+assert test_metadata.groupby(
+    ["hablante", "etiqueta"]
+)["repetición"].nunique().eq(10).all()
+assert train_metadata.groupby(
+    "sexo registrado"
+)["hablante"].nunique().to_dict() == {"femenino": 33, "masculino": 33}
+assert test_metadata.groupby(
+    "sexo registrado"
+)["hablante"].nunique().to_dict() == {"femenino": 11, "masculino": 11}
+
+pd.DataFrame({
+    "partición oficial": ["train", "test bloqueado"],
+    "secuencias": [len(train_metadata), len(test_metadata)],
+    "frames": [train_metadata["longitud"].sum(), test_metadata["longitud"].sum()],
+    "longitud mínima": [train_metadata["longitud"].min(), test_metadata["longitud"].min()],
+    "longitud mediana": [train_metadata["longitud"].median(), test_metadata["longitud"].median()],
+    "longitud máxima": [train_metadata["longitud"].max(), test_metadata["longitud"].max()],
+})
+```
+
+## Auditar duplicados y separar hablantes
+
+Hay bloques exactos repetidos, pero ninguno cruza el train oficial y el test.
+Dentro de train, cada hash repetido pertenece al mismo hablante y dígito.
+
+```{python}
+train_duplicate_groups = train_metadata.groupby("hash")
+duplicate_hashes = [
+    name for name, rows in train_duplicate_groups if len(rows) > 1
+]
+assert all(
+    train_duplicate_groups.get_group(name)["hablante"].nunique() == 1
+    and train_duplicate_groups.get_group(name)["etiqueta"].nunique() == 1
+    for name in duplicate_hashes
+)
+
+speaker_split_generator = np.random.default_rng(909)
+validation_speakers = {
+    *(f"train-{index:02d}" for index in speaker_split_generator.choice(
+        np.arange(33), 6, replace=False
+    )),
+    *(f"train-{index:02d}" for index in speaker_split_generator.choice(
+        np.arange(33, 66), 6, replace=False
+    )),
+}
+train_metadata["partición"] = np.where(
+    train_metadata["hablante"].isin(validation_speakers),
+    "validación", "ajuste",
+)
+test_metadata["partición"] = "test bloqueado"
+
+fit_speakers = set(
+    train_metadata.loc[train_metadata["partición"] == "ajuste", "hablante"]
+)
+assert fit_speakers.isdisjoint(validation_speakers)
+assert len(fit_speakers) == 54 and len(validation_speakers) == 12
+assert train_metadata.groupby(["partición", "etiqueta"]).size().to_dict() == {
+    **{("ajuste", label): 540 for label in range(10)},
+    **{("validación", label): 120 for label in range(10)},
+}
+
+fit_hashes = set(train_metadata.loc[train_metadata["partición"] == "ajuste", "hash"])
+validation_hashes = set(
+    train_metadata.loc[train_metadata["partición"] == "validación", "hash"]
+)
+test_hashes = set(test_metadata["hash"])
+
+duplicate_audit = pd.Series({
+    "duplicados adicionales en train": int(train_metadata["hash"].duplicated().sum()),
+    "duplicados adicionales en test": int(test_metadata["hash"].duplicated().sum()),
+    "hashes ajuste-validación": len(fit_hashes & validation_hashes),
+    "hashes train-test": len(set(train_metadata["hash"]) & test_hashes),
+})
+assert duplicate_audit[["hashes ajuste-validación", "hashes train-test"]].sum() == 0
+duplicate_audit
+```
+
+```{python}
+split_summary = (
+    pd.concat([train_metadata, test_metadata])
+    .groupby("partición", sort=False)
+    .agg(
+        secuencias=("etiqueta", "size"),
+        hablantes=("hablante", "nunique"),
+        clases=("etiqueta", "nunique"),
+        longitud_mínima=("longitud", "min"),
+        longitud_mediana=("longitud", "median"),
+        longitud_máxima=("longitud", "max"),
+    )
+)
+assert split_summary.loc["ajuste", "secuencias"] == 5_400
+assert split_summary.loc["validación", "secuencias"] == 1_200
+assert split_summary.loc["test bloqueado", "secuencias"] == 2_200
+split_summary
+```
+
+Los 12 hablantes de validación se eligen con semilla 909 antes de entrenar e
+incluyen seis de cada sexo registrado; no son los últimos ordinales del archivo.
+El test oficial contiene otros 22 hablantes según la documentación, pero sus
+identificadores reales no están publicados. No podemos comprobar identidad
+acústica a partir de MFCC ni inferir categorías demográficas más amplias.
+
+```{python}
+#| label: fig-arabic-lengths
+#| fig-cap: "Distribución de longitudes por partición y sexo registrado."
+#| fig-alt: "Histogramas superpuestos muestran secuencias de aproximadamente 4 a 93 frames."
+#| fig-width: 9
+#| fig-height: 4.2
+
+all_metadata = pd.concat([train_metadata, test_metadata], ignore_index=True)
+fig, axes = plt.subplots(1, 2, figsize=(9, 4.2), sharey=True)
+for partition, rows in all_metadata.groupby("partición", sort=False):
+    axes[0].hist(rows["longitud"], bins=25, alpha=0.45, label=partition)
+for recorded_sex, rows in all_metadata.groupby("sexo registrado", sort=False):
+    axes[1].hist(rows["longitud"], bins=25, alpha=0.45, label=recorded_sex)
+axes[0].set(xlabel="frames", ylabel="secuencias", title="Partición")
+axes[1].set(xlabel="frames", title="Sexo documentado")
+for axis in axes:
+    axis.grid(alpha=0.2)
+    axis.legend(frameon=False, fontsize=8)
+fig.tight_layout()
+plt.show()
+```
+
+## Estandarizar solo con frames de ajuste
+
+```{python}
+fit_indices = train_metadata.index[train_metadata["partición"] == "ajuste"].to_numpy()
+validation_indices = train_metadata.index[
+    train_metadata["partición"] == "validación"
+].to_numpy()
+
+fit_frames = torch.cat([train_sequences_all[index] for index in fit_indices])
+frame_mean = fit_frames.mean(dim=0)
+frame_std = fit_frames.std(dim=0, unbiased=False).clamp_min(1e-6)
+
+
+def standardize_sequences(sequences):
+    return [(sequence - frame_mean) / frame_std for sequence in sequences]
+
+
+fit_sequences = standardize_sequences([
+    train_sequences_all[index] for index in fit_indices
+])
+validation_sequences = standardize_sequences([
+    train_sequences_all[index] for index in validation_indices
+])
+test_sequences = standardize_sequences(test_sequences_raw)
+fit_targets = train_metadata.loc[fit_indices, "etiqueta"].tolist()
+validation_targets = train_metadata.loc[validation_indices, "etiqueta"].tolist()
+test_targets = test_metadata["etiqueta"].tolist()
+
+assert torch.allclose(
+    torch.cat(fit_sequences).mean(0), torch.zeros(13), atol=1e-5
+)
+```
+
+## Construir datasets y lotes empacados
+
+```{python}
+class SequenceDataset(Dataset):
+    def __init__(self, sequences, targets):
+        if len(sequences) != len(targets) or not sequences:
+            raise ValueError("Secuencias y objetivos incompatibles")
+        if any(
+            sequence.ndim != 2 or len(sequence) == 0
+            for sequence in sequences
+        ):
+            raise ValueError("Cada secuencia debe ser una matriz no vacía")
+        self.sequences = sequences
+        self.targets = targets
+
+    def __len__(self):
+        return len(self.sequences)
+
+    def __getitem__(self, index):
+        return self.sequences[index], self.targets[index], index
+
+
+def collate_sequences(batch):
+    sequences, targets, indices = zip(*batch)
+    lengths = torch.tensor([len(sequence) for sequence in sequences])
+    padded = pad_sequence(sequences, batch_first=True)
+    return (
+        padded,
+        lengths,
+        torch.tensor(targets, dtype=torch.long),
+        torch.tensor(indices, dtype=torch.long),
+    )
+
+
+fit_dataset = SequenceDataset(fit_sequences, fit_targets)
+validation_dataset = SequenceDataset(validation_sequences, validation_targets)
+test_dataset = SequenceDataset(test_sequences, test_targets)
+```
+
+## Una línea base sin orden
+
+La línea base resume cada secuencia mediante media y desviación de los 13 MFCC,
+más log-longitud: 27 atributos. Un clasificador lineal sobre esos resúmenes puede
+ganar sin conocer el orden de los frames.
+
+```{python}
+def summary_features(dataset):
+    rows = []
+    for sequence in dataset.sequences:
+        rows.append(torch.cat([
+            sequence.mean(0),
+            sequence.std(0, unbiased=False),
+            torch.log(torch.tensor([len(sequence)], dtype=torch.float32)),
+        ]))
+    return torch.stack(rows)
+
+
+summary_fit = summary_features(fit_dataset)
+summary_validation = summary_features(validation_dataset)
+summary_mean = summary_fit.mean(0)
+summary_std = summary_fit.std(0, unbiased=False).clamp_min(1e-6)
+summary_fit = (summary_fit - summary_mean) / summary_std
+summary_validation = (summary_validation - summary_mean) / summary_std
+
+torch.manual_seed(909)
+linear_baseline = nn.Linear(summary_fit.shape[1], 10)
+linear_optimizer = torch.optim.LBFGS(
+    linear_baseline.parameters(),
+    lr=1.0,
+    max_iter=200,
+    line_search_fn="strong_wolfe",
+)
+fit_target_tensor = torch.tensor(fit_targets)
+
+
+def linear_closure():
+    linear_optimizer.zero_grad(set_to_none=True)
+    loss = F.cross_entropy(linear_baseline(summary_fit), fit_target_tensor)
+    loss.backward()
+    return loss
+
+
+linear_optimizer.step(linear_closure)
+with torch.inference_mode():
+    linear_validation_logits = linear_baseline(summary_validation)
+    linear_validation_prediction = linear_validation_logits.argmax(1)
+linear_validation_metrics = pd.Series({
+    "macro-F1": f1_score(
+        validation_targets, linear_validation_prediction, average="macro"
+    ),
+    "exactitud": accuracy_score(validation_targets, linear_validation_prediction),
+})
+linear_validation_metrics
+```
+
+Este baseline obliga a las redes recurrentes a superar estadísticas globales,
+no solo el azar de diez clases. Alcanza macro-F1 0,855 en los 12 hablantes de
+validación.
+
+## Predeclarar los protocolos reales
+
+Comparamos RNN, GRU y LSTM unidireccionales, más una GRU bidireccional. Esta
+última puede usar la grabación completa; no serviría sin esperar el final
+[@schuster1997bidirectional]. Todos quedan bajo 12.000 parámetros.
+
+```{python}
+REAL_PROTOCOLS = {
+    "RNN": {"cell": "RNN", "bidirectional": False},
+    "GRU": {"cell": "GRU", "bidirectional": False},
+    "LSTM": {"cell": "LSTM", "bidirectional": False},
+    "BiGRU": {"cell": "GRU", "bidirectional": True},
+}
+real_configs = {
+    name: model_under_budget(
+        13, 10, specification["cell"], 12_000,
+        specification["bidirectional"],
+    )
+    for name, specification in REAL_PROTOCOLS.items()
+}
+pd.DataFrame(real_configs).T
+```
+
+Entrenaremos como máximo 15 épocas con AdamW, batch 128 y clipping de norma 1.
+Cada corrida conserva el checkpoint de mayor macro-F1 de validación; un empate
+se resuelve por menor entropía cruzada.
+
+::: {.callout-important title="Hipótesis y selección antes de test"}
+
+- Compuertas serán materialmente útiles si la mejor GRU/LSTM supera la RNN en
+  al menos 0,03 de macro-F1 mediano y gana dos de tres semillas pareadas.
+- Bidireccionalidad será material si BiGRU supera GRU en al menos 0,02 de mediana.
+- Elegiremos el mayor macro-F1 mediano. Protocolos a menos de 0,01 se resolverán
+  por menor latencia; diferencias de latencia menores al 10% se resolverán por
+  menos parámetros.
+- Solo el protocolo elegido y la línea base abrirán el test oficial.
+:::
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar entrenamiento y evaluación recurrente"
+
+@torch.inference_mode()
+def evaluate_classifier(model, dataset, return_outputs=False):
+    loader = DataLoader(
+        dataset, batch_size=256, shuffle=False, collate_fn=collate_sequences
+    )
+    logits_parts = []
+    target_parts = []
+    index_parts = []
+    model.eval()
+    for padded, lengths, targets, indices in loader:
+        logits_parts.append(model(padded, lengths))
+        target_parts.append(targets)
+        index_parts.append(indices)
+    logits = torch.cat(logits_parts)
+    targets = torch.cat(target_parts)
+    indices = torch.cat(index_parts)
+    predictions = logits.argmax(1)
+    result = {
+        "macro_f1": f1_score(targets, predictions, average="macro"),
+        "accuracy": accuracy_score(targets, predictions),
+        "loss": F.cross_entropy(logits, targets).item(),
+    }
+    if return_outputs:
+        result.update({
+            "logits": logits,
+            "targets": targets,
+            "predictions": predictions,
+            "indices": indices,
+        })
+    return result
+
+
+@torch.inference_mode()
+def inference_milliseconds(model, dataset, repetitions=10):
+    loader = DataLoader(
+        dataset, batch_size=256, shuffle=False, collate_fn=collate_sequences
+    )
+    model.eval()
+    for padded, lengths, _, _ in loader:
+        model(padded, lengths)
+    started = perf_counter()
+    for _ in range(repetitions):
+        for padded, lengths, _, _ in loader:
+            model(padded, lengths)
+    return 1_000 * (perf_counter() - started) / (repetitions * len(dataset))
+
+
+def train_real_protocol(protocol, seed):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    specification = REAL_PROTOCOLS[protocol]
+    config = real_configs[protocol]
+    model = RecurrentModel(
+        13,
+        config["hidden"],
+        10,
+        specification["cell"],
+        specification["bidirectional"],
+    )
+    optimizer = torch.optim.AdamW(
+        model.parameters(), lr=3e-3, weight_decay=1e-4
+    )
+    loader = DataLoader(
+        fit_dataset,
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        collate_fn=collate_sequences,
+        generator=torch.Generator().manual_seed(seed + 2_000),
+        num_workers=0,
+    )
+    best = {"macro_f1": -math.inf, "loss": math.inf}
+    best_state = None
+    best_epoch = None
+    history = []
+    started = perf_counter()
+
+    for epoch in range(1, REAL_EPOCHS + 1):
+        model.train()
+        loss_sum = 0.0
+        for padded, lengths, targets, _ in loader:
+            optimizer.zero_grad(set_to_none=True)
+            logits = model(padded, lengths)
+            loss = F.cross_entropy(logits, targets)
+            loss.backward()
+            nn.utils.clip_grad_norm_(model.parameters(), 1.0)
+            optimizer.step()
+            loss_sum += loss.item() * len(targets)
+
+        validation = evaluate_classifier(model, validation_dataset)
+        history.append({
+            "época": epoch,
+            "loss ajuste": loss_sum / len(fit_dataset),
+            "macro-F1 validación": validation["macro_f1"],
+            "loss validación": validation["loss"],
+        })
+        improved = validation["macro_f1"] > best["macro_f1"]
+        tied_better_loss = (
+            validation["macro_f1"] == best["macro_f1"]
+            and validation["loss"] < best["loss"]
+        )
+        if improved or tied_better_loss:
+            best = validation
+            best_state = deepcopy(model.state_dict())
+            best_epoch = epoch
+
+    seconds = perf_counter() - started
+    model.load_state_dict(best_state)
+    latency = inference_milliseconds(model, validation_dataset)
+    return {
+        "model": model,
+        "history": pd.DataFrame(history),
+        "best": best,
+        "best_epoch": best_epoch,
+        "seconds": seconds,
+        "latency_ms": latency,
+    }
+```
+
+## Ejecutar doce corridas
+
+```{python}
+real_runs = {}
+validation_rows = []
+for protocol in REAL_PROTOCOLS:
+    for seed in PAIR_SEEDS:
+        run = train_real_protocol(protocol, seed)
+        real_runs[(protocol, seed)] = run
+        validation_rows.append({
+            "protocolo": protocol,
+            "semilla": seed,
+            "macro-F1": run["best"]["macro_f1"],
+            "exactitud": run["best"]["accuracy"],
+            "loss": run["best"]["loss"],
+            "época": run["best_epoch"],
+            "segundos": run["seconds"],
+            "ms por secuencia": run["latency_ms"],
+            "hidden": real_configs[protocol]["hidden"],
+            "parámetros": real_configs[protocol]["parámetros"],
+        })
+        print(
+            f"{protocol:5s} | semilla {seed} | "
+            f"F1 {run['best']['macro_f1']:.3f} | {run['seconds']:.1f} s"
+        )
+validation_results = pd.DataFrame(validation_rows)
+validation_results
+```
+
+```{python}
+#| label: fig-gated-curves
+#| fig-cap: "Curvas de validación de la semilla representativa bajo receta común."
+#| fig-alt: "Cuatro curvas comparan macro-F1 por época para RNN, GRU, LSTM y BiGRU."
+#| fig-width: 9
+#| fig-height: 4.5
+
+real_colors = {
+    "RNN": "#6C757D", "GRU": "#2A9D8F",
+    "LSTM": "#8E5EA2", "BiGRU": "#D97706",
+}
+fig, axis = plt.subplots(figsize=(9, 4.5))
+for protocol in REAL_PROTOCOLS:
+    history = real_runs[(protocol, REPRESENTATIVE_SEED)]["history"]
+    axis.plot(
+        history["época"], history["macro-F1 validación"],
+        marker="o", color=real_colors[protocol], label=protocol,
+    )
+axis.axhline(
+    linear_validation_metrics["macro-F1"], color="black", linestyle="--",
+    label="lineal sin orden",
+)
+axis.set(xlabel="época", ylabel="macro-F1 de validación")
+axis.grid(alpha=0.2)
+axis.legend(frameon=False, ncol=2)
+fig.tight_layout()
+plt.show()
+```
+
+## Evaluar hipótesis y costo
+
+```{python}
+validation_summary = (
+    validation_results.groupby("protocolo", sort=False)
+    .agg(
+        macro_F1_mediano=("macro-F1", "median"),
+        macro_F1_mínimo=("macro-F1", "min"),
+        macro_F1_máximo=("macro-F1", "max"),
+        segundos_medianos=("segundos", "median"),
+        latencia_mediana_ms=("ms por secuencia", "median"),
+        parámetros=("parámetros", "first"),
+        hidden=("hidden", "first"),
+    )
+    .reset_index()
+)
+validation_summary
+```
+
+```{python}
+paired_validation = validation_results.pivot(
+    index="semilla", columns="protocolo", values="macro-F1"
+)
+best_gated_real = validation_summary[
+    validation_summary["protocolo"].isin(["GRU", "LSTM"])
+].sort_values("macro_F1_mediano", ascending=False).iloc[0]["protocolo"]
+gated_delta = paired_validation[best_gated_real] - paired_validation["RNN"]
+direction_delta = paired_validation["BiGRU"] - paired_validation["GRU"]
+pd.Series({
+    "mejor celda con compuertas": best_gated_real,
+    "delta mediano frente a RNN": gated_delta.median(),
+    "victorias frente a RNN": int((gated_delta > 0).sum()),
+    "compuertas alcanzan criterio": bool(
+        gated_delta.median() >= 0.03 and (gated_delta > 0).sum() >= 2
+    ),
+    "delta mediano BiGRU-GRU": direction_delta.median(),
+    "bidireccionalidad alcanza 0.02": bool(direction_delta.median() >= 0.02),
+})
+```
+
+La regla distingue una diferencia positiva de una mejora material. Disponer de
+ambos sentidos tampoco garantiza superar el umbral una vez se reporta su costo.
+En esta partición, LSTM es la mejor celda unidireccional y mejora 0,159 frente a
+RNN; gana las tres semillas. BiGRU mejora 0,031 frente a GRU y sí supera el
+umbral bidireccional fijado.
+
+```{python}
+#| label: fig-gated-cost
+#| fig-cap: "Desempeño, latencia y parámetros en validación."
+#| fig-alt: "Dispersión de latencia frente a macro-F1; el tamaño representa parámetros y muestra el costo de bidireccionalidad."
+#| fig-width: 8
+#| fig-height: 4.8
+
+fig, axis = plt.subplots(figsize=(8, 4.8))
+for row in validation_summary.itertuples():
+    axis.scatter(
+        row.latencia_mediana_ms, row.macro_F1_mediano,
+        s=70 + row.parámetros / 80,
+        color=real_colors[row.protocolo], edgecolor="black", alpha=0.85,
+    )
+    axis.annotate(
+        row.protocolo,
+        (row.latencia_mediana_ms, row.macro_F1_mediano),
+        xytext=(5, 5), textcoords="offset points",
+    )
+axis.set(xlabel="milisegundos por secuencia", ylabel="macro-F1 mediano")
+axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+## Seleccionar antes de abrir test
+
+```{python}
+best_validation_f1 = validation_summary["macro_F1_mediano"].max()
+eligible = validation_summary[
+    (best_validation_f1 - validation_summary["macro_F1_mediano"]) < 0.01
+].copy()
+latency_order = eligible.sort_values(
+    ["latencia_mediana_ms", "parámetros", "protocolo"]
+)
+fastest_latency = latency_order.iloc[0]["latencia_mediana_ms"]
+decision = latency_order[
+    latency_order["latencia_mediana_ms"] <= 1.10 * fastest_latency
+].sort_values(
+    ["parámetros", "latencia_mediana_ms", "protocolo"]
+).iloc[0]
+selected_protocol = decision["protocolo"]
+pd.Series({
+    "mejor macro-F1 mediano": best_validation_f1,
+    "protocolos dentro de 0.01": ", ".join(eligible["protocolo"]),
+    "protocolo seleccionado": selected_protocol,
+    "latencia mediana ms": decision["latencia_mediana_ms"],
+})
+```
+
+La tabla aplica el margen de desempeño y el desempate de costo sin consultar
+test. Una diferencia pequeña de latencia no se interpreta como una propiedad
+portable a otro equipo. BiGRU es el único protocolo dentro de 0,01 del mejor
+macro-F1 mediano: alcanza 0,975, con aproximadamente 0,038 ms por secuencia en
+esta medición.
+
+::: {.callout-important title="Test se abre después de esta decisión"}
+Arquitecturas, presupuesto, semillas, checkpoints y regla quedaron cerrados.
+Las comparaciones descartadas no se usarán para tomar otra decisión con test.
+:::
+
+## Evaluar hablantes externos
+
+```{python}
+test_rows = []
+test_outputs = {}
+for seed in PAIR_SEEDS:
+    outputs = evaluate_classifier(
+        real_runs[(selected_protocol, seed)]["model"],
+        test_dataset,
+        return_outputs=True,
+    )
+    test_outputs[seed] = outputs
+    test_rows.append({
+        "protocolo": selected_protocol,
+        "semilla": seed,
+        "macro-F1": outputs["macro_f1"],
+        "exactitud": outputs["accuracy"],
+        "loss": outputs["loss"],
+    })
+
+summary_test = (summary_features(test_dataset) - summary_mean) / summary_std
+with torch.inference_mode():
+    linear_test_logits = linear_baseline(summary_test)
+    linear_test_predictions = linear_test_logits.argmax(1)
+test_rows.append({
+    "protocolo": "Lineal sin orden",
+    "semilla": np.nan,
+    "macro-F1": f1_score(test_targets, linear_test_predictions, average="macro"),
+    "exactitud": accuracy_score(test_targets, linear_test_predictions),
+    "loss": F.cross_entropy(
+        linear_test_logits, torch.tensor(test_targets)
+    ).item(),
+})
+test_results = pd.DataFrame(test_rows)
+test_results
+```
+
+```{python}
+selected_test_summary = (
+    test_results[test_results["protocolo"] == selected_protocol]
+    .agg({
+        "macro-F1": ["median", "min", "max"],
+        "exactitud": ["median", "min", "max"],
+        "loss": ["median", "min", "max"],
+    })
+)
+selected_test_summary
+```
+
+El protocolo recurrente seleccionado supera la línea base invariante al orden.
+Esta comparación no aísla el efecto del orden: también cambian no linealidad,
+representación y optimización. BiGRU obtiene macro-F1 mediano 0,958, con rango
+0,957--0,966; la línea base alcanza 0,883.
+
+El test representa hablantes no usados en ajuste o selección. Una mejora allí
+no convierte el sistema en un reconocedor general de árabe: solo cubre diez
+dígitos y las condiciones de esta colección.
+
+## Diagnosticar confusiones y subgrupos
+
+::: {.callout-warning title="Análisis exploratorio después de abrir test"}
+Confusiones, subgrupos y prefijos generan hipótesis sobre estos 22 hablantes. No
+son confirmaciones independientes y requieren una nueva muestra externa.
+:::
+
+Usamos la semilla representativa 29 para visualizar la matriz. Los resúmenes de
+subgrupos incorporan las tres semillas y dispersión por hablante.
+
+```{python}
+representative_outputs = test_outputs[REPRESENTATIVE_SEED]
+representative_predictions = representative_outputs["predictions"].numpy()
+representative_targets = representative_outputs["targets"].numpy()
+representative_indices = representative_outputs["indices"].numpy()
+
+assert np.array_equal(np.sort(representative_indices), np.arange(len(test_dataset)))
+assert len(np.unique(representative_indices)) == len(test_dataset)
+assert np.array_equal(
+    representative_targets,
+    test_metadata.iloc[representative_indices]["etiqueta"].to_numpy(),
+)
+
+matrix = confusion_matrix(
+    representative_targets, representative_predictions, normalize="true"
+)
+```
+
+```{python}
+#| label: fig-gated-confusion
+#| fig-cap: "Matriz de confusión normalizada del protocolo seleccionado, semilla 29."
+#| fig-alt: "Matriz de diez dígitos muestra una diagonal dominante y confusiones residuales."
+#| fig-width: 7
+#| fig-height: 6
+
+fig, axis = plt.subplots(figsize=(7, 6))
+image = axis.imshow(matrix, cmap="Blues", vmin=0, vmax=1)
+axis.set(
+    xlabel="predicción", ylabel="dígito real",
+    xticks=range(10), yticks=range(10),
+)
+fig.colorbar(image, ax=axis, fraction=0.046, label="proporción")
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+length_group_names = np.array(["muy corta", "corta", "larga", "muy larga"])
+length_group_codes = pd.qcut(
+    test_metadata["longitud"], q=4, labels=False, duplicates="raise"
+).to_numpy()
+test_metadata_diagnostic = test_metadata.copy()
+test_metadata_diagnostic["grupo de longitud"] = length_group_names[
+    length_group_codes
+]
+
+subgroup_rows = []
+speaker_rows = []
+for seed in PAIR_SEEDS:
+    outputs = test_outputs[seed]
+    indices = outputs["indices"].numpy()
+    metadata = test_metadata_diagnostic.iloc[indices].reset_index(drop=True).copy()
+    metadata["predicción"] = outputs["predictions"].numpy()
+    metadata["correcta"] = metadata["predicción"] == metadata["etiqueta"]
+    for variable in ["grupo de longitud", "sexo registrado"]:
+        for group, rows in metadata.groupby(variable, observed=True):
+            subgroup_rows.append({
+                "semilla": seed,
+                "variable": variable,
+                "grupo": str(group),
+                "secuencias": len(rows),
+                "mínimo de ejemplos por dígito": int(
+                    rows["etiqueta"].value_counts().reindex(
+                        range(10), fill_value=0
+                    ).min()
+                ),
+                "exactitud": rows["correcta"].mean(),
+                "macro-F1": f1_score(
+                    rows["etiqueta"],
+                    rows["predicción"],
+                    labels=range(10),
+                    average="macro",
+                    zero_division=0,
+                ),
+            })
+    for speaker, rows in metadata.groupby("hablante"):
+        speaker_rows.append({
+            "semilla": seed,
+            "hablante": speaker,
+            "sexo registrado": rows["sexo registrado"].iloc[0],
+            "exactitud": rows["correcta"].mean(),
+        })
+
+subgroup_results = pd.DataFrame(subgroup_rows)
+subgroup_summary = (
+    subgroup_results.groupby(["variable", "grupo"], sort=False)
+    .agg(
+        secuencias=("secuencias", "first"),
+        mínimo_por_dígito=("mínimo de ejemplos por dígito", "first"),
+        exactitud_mediana=("exactitud", "median"),
+        exactitud_mínima=("exactitud", "min"),
+        exactitud_máxima=("exactitud", "max"),
+        macro_F1_mediano=("macro-F1", "median"),
+    )
+    .reset_index()
+)
+speaker_summary = (
+    pd.DataFrame(speaker_rows)
+    .groupby("sexo registrado")["exactitud"]
+    .agg(["median", "min", "max"])
+)
+subgroup_summary, speaker_summary
+```
+
+Los cuartiles no contienen los dígitos en las mismas proporciones, por lo que su
+macro-F1 no aísla causalmente la longitud. La tabla por hablante evita tratar
+cien repeticiones de una persona como cien hablantes independientes, pero sigue
+siendo descriptiva y pequeña. La exactitud mediana baja a 0,904 en secuencias
+muy largas, frente a 0,968--0,986 en los otros cuartiles. Por sexo registrado,
+la mediana por secuencia es 0,985 en el grupo femenino y 0,935 en el masculino;
+entre hablantes individuales el rango llega de 0,81 a 1,00 y de 0,64 a 1,00,
+respectivamente.
+
+Las categorías de sexo proceden del archivo y son binarias. Sirven para detectar
+una diferencia descriptiva dentro de esta muestra, no para inferir identidad,
+causa o desempeño en poblaciones no representadas.
+
+## ¿Cuánto audio debe observarse?
+
+Truncamos cada secuencia al 25%, 50%, 75% y 100%, y volvemos a clasificar con el
+mismo modelo. No reentrenamos ni seleccionamos con este estrés.
+
+```{python}
+prefix_rows = []
+for fraction in [0.25, 0.50, 0.75, 1.00]:
+    prefix_sequences = [
+        sequence[:max(1, math.ceil(len(sequence) * fraction))]
+        for sequence in test_dataset.sequences
+    ]
+    prefix_dataset = SequenceDataset(prefix_sequences, test_targets)
+    for seed in PAIR_SEEDS:
+        model = real_runs[(selected_protocol, seed)]["model"]
+        metrics = evaluate_classifier(model, prefix_dataset)
+        prefix_rows.append({
+            "semilla": seed,
+            "fracción observada": fraction,
+            "macro-F1": metrics["macro_f1"],
+            "exactitud": metrics["accuracy"],
+        })
+prefix_results = pd.DataFrame(prefix_rows)
+prefix_summary = (
+    prefix_results.groupby("fracción observada", sort=False)
+    .agg(
+        macro_F1_mediano=("macro-F1", "median"),
+        macro_F1_mínimo=("macro-F1", "min"),
+        macro_F1_máximo=("macro-F1", "max"),
+        exactitud_mediana=("exactitud", "median"),
+    )
+    .reset_index()
+)
+prefix_summary
+```
+
+La caída con prefijos muestra que modelos entrenados solo con secuencias
+completas no se transfieren bien a esta intervención fuera de distribución. No
+permite localizar cuándo aparece la señal lingüística; para eso habría que
+entrenar y validar un protocolo online. Macro-F1 mediano pasa de 0,464 con 25%
+de los frames a 0,577, 0,883 y 0,958 al observar 50%, 75% y 100%.
+
+```{python}
+#| label: fig-prefix-performance
+#| fig-cap: "Desempeño al clasificar con fracciones crecientes de cada secuencia."
+#| fig-alt: "Curvas de macro-F1 y exactitud aumentan al disponer de más frames de la grabación."
+#| fig-width: 7.5
+#| fig-height: 4.2
+
+fig, axis = plt.subplots(figsize=(7.5, 4.2))
+axis.plot(
+    100 * prefix_summary["fracción observada"], prefix_summary["macro_F1_mediano"],
+    marker="o", label="macro-F1",
+)
+axis.plot(
+    100 * prefix_summary["fracción observada"], prefix_summary["exactitud_mediana"],
+    marker="s", label="exactitud",
+)
+axis.set(xlabel="porcentaje observado", ylabel="métrica")
+axis.set_xticks([25, 50, 75, 100])
+axis.grid(alpha=0.2)
+axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+Una red unidireccional puede actualizarse progresivamente, pero este clasificador
+se entrenó con secuencias completas. El estrés con prefijos no equivale a un
+sistema online calibrado.
+
+## Qué permite concluir el experimento
+
+- Las compuertas crean rutas de actualización que una RNN simple no posee.
+- La equivalencia manual evita atribuir resultados a una ecuación mal implementada.
+- Presupuestos similares hacen visible el costo, aunque no igualan capacidad.
+- Packing evita que el padding altere el estado recurrente.
+- Separar hablantes produce una evaluación más exigente que mezclar repeticiones.
+- Bidireccionalidad usa contexto completo y debe justificarse por disponibilidad.
+
+No permite afirmar que:
+
+- toda LSTM aprenda memoria larga por el solo hecho de tener compuertas;
+- gradientes grandes impliquen generalización o explicación causal;
+- MFCC permitan auditar ruido, contenido o pronunciación original;
+- las categorías binarias documentadas describan toda diversidad de hablantes;
+- clasificar diez dígitos equivalga a reconocer habla continua; ni
+- un estado con compuertas elimine el cuello de botella de tamaño fijo.
+
+## Limitaciones y condiciones de uso
+
+- La tarea sintética favorece actualizaciones selectivas mediante una marca explícita.
+- Los checkpoints reutilizan validación en cada época.
+- Los duplicados exactos reducen diversidad efectiva aunque no crucen particiones.
+- La separación por hablante depende del orden descrito por los autores.
+- Una sola selección sembrada de 12 hablantes puede favorecer condiciones de
+  grabación particulares; no reemplaza validación cruzada por grupos.
+- El test oficial tiene 22 hablantes y una sola colección acústica.
+- Los diagnósticos posteriores a test son exploratorios y reutilizan esos mismos
+  hablantes para varias preguntas.
+- Los modelos comparados tienen parámetros similares, no operaciones idénticas.
+- La latencia incluye padding, packing y DataLoader en esta CPU.
+- Una GRU bidireccional no puede emitir la misma salida antes de recibir el final.
+
+## Cierre
+
+- La memoria prolongada es un problema de dinámica y optimización.
+- LSTM separa estado de celda y estado expuesto; GRU actualiza un solo estado.
+- Una compuerta aprendida puede conservar información, pero también cerrarse mal.
+- Padding, máscara y packing cumplen funciones diferentes.
+- Test por hablante evalúa mejor transferencia que una partición por repetición.
+- Desempeño, parámetros, latencia y disponibilidad temporal forman una decisión.
+
+## Ejercicios
+
+1. Calcula los parámetros de RNN, GRU y LSTM para entrada 13 y ancho 32.
+2. Inicializa el sesgo de olvido de LSTM en uno y repite solo el desarrollo
+   sintético, sin usar test para elegir el cambio.
+3. Mueve la segunda marca al 90% de la secuencia y predice cómo cambiará el RMSE.
+4. Compara `h_n` con `output[:, -1]` en un lote acolchado sin packing.
+5. Ordena el lote por longitud y usa `enforce_sorted=True`.
+6. Iguala ancho en vez de parámetros y separa el efecto de capacidad.
+7. Añade una segunda capa recurrente y reporta costo y estabilidad.
+8. Calcula recall por dígito y localiza la confusión más frecuente.
+9. Entrena un modelo específico para prefijos y compara con el estrés actual.
+10. Diseña una partición externa con micrófonos o regiones diferentes.
+
+## Reto
+
+Construye un clasificador de dígitos estrictamente online. Debe definir cuándo
+puede abstenerse, cómo actualiza estado frame a frame, qué latencia mide y cómo
+evalúa prefijos sin usar frames futuros. Compara GRU y LSTM bajo el mismo
+presupuesto, fija una regla antes de abrir un nuevo conjunto de hablantes y
+reporta exactitud junto con tiempo hasta decisión.
+
+::: {.callout-important title="Puente a atención"}
+RNN, GRU y LSTM todavía comprimen toda la entrada en uno o dos estados finales.
+El Capítulo 10 preguntará cómo consultar directamente estados relevantes en vez
+de confiar únicamente en un resumen de tamaño fijo.
+:::
