@@ -1,34 +1,1194 @@
 ---
 title: "¿Cómo predecir el siguiente valor de una secuencia?"
+jupyter: python3
+execute:
+  enabled: true
+  freeze: auto
 ---
 
-<div class="problem-banner"><strong>Problema:</strong> pronosticar una variable
-ambiental o de demanda cuando el orden temporal contiene información y una
-partición aleatoria sería optimista.</div>
+{{< chapter-actions >}}
 
-::: {.callout-warning title="Capítulo en desarrollo"}
-La evaluación preservará el tiempo y comparará contra baselines de persistencia
-y estacionalidad.
+<div class="problem-banner">
+<strong>Problema:</strong> pronosticar la demanda horaria de bicicletas cuando
+el orden temporal contiene información, algunas horas no están registradas y
+una partición aleatoria permitiría aprender del futuro.
+</div>
+
+## De observaciones aisladas a secuencias
+
+Hasta ahora cada entrada produjo una salida sin conservar memoria entre
+observaciones. En una serie temporal, 200 alquileres a las 08:00 no significan
+lo mismo que 200 alquileres a medianoche: importa qué ocurrió antes y en qué
+momento se emitió el pronóstico.
+
+Una red recurrente reutiliza la misma transformación en cada paso y resume el
+pasado en un **estado oculto**. Estudiaremos esa idea con una RNN simple antes de
+introducir las compuertas de LSTM y GRU en el Capítulo 9.
+
+::: {.callout-note title="Objetivos de aprendizaje"}
+Al terminar este capítulo podrás:
+
+- construir ventanas que no crucen interrupciones ni usen información futura;
+- representar calendario cíclico y ajustar escalas solo con el pasado;
+- implementar recurrencia con tensores y con `nn.RNN`;
+- explicar backpropagation through time sobre una secuencia corta;
+- distinguir evaluación a un paso y pronóstico recursivo multihorizonte;
+- ejecutar backtesting con orígenes expansivos; y
+- diagnosticar error, estabilidad y cobertura temporal.
 :::
 
-## Objetivos
+## Preparar un laboratorio reproducible
 
-- construir ventanas sin usar información futura;
-- formular un estado recurrente;
-- implementar una RNN y backpropagation through time;
-- distinguir pronóstico de un paso y multihorizonte;
-- evaluar con backtesting temporal; y
-- diagnosticar error por horizonte y periodo.
+```{python}
+from hashlib import sha256
+from io import BytesIO
+from pathlib import Path
+import random
+from time import perf_counter
+from urllib.request import urlretrieve
+import zipfile
 
-## Ruta de desarrollo
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import sklearn
+import torch
+from torch import nn
+from torch.nn import functional as F
+from torch.utils.data import DataLoader, TensorDataset
 
-1. Línea base de persistencia.
-2. Ventanas y partición temporal.
-3. RNN desde tensores.
-4. Implementación con `nn.RNN`.
-5. Teacher forcing y horizontes.
-6. Evaluación temporal y residuos.
+PAIR_SEEDS = [17, 29, 43]
+REPRESENTATIVE_SEED = 29
+HISTORY = 168
+HIDDEN_SIZE = 32
+EPOCHS = 12
+BATCH_SIZE = 256
 
-## Referencia conceptual
+random.seed(REPRESENTATIVE_SEED)
+np.random.seed(REPRESENTATIVE_SEED)
+torch.manual_seed(REPRESENTATIVE_SEED)
+torch.set_num_threads(1)
+torch.use_deterministic_algorithms(True)
+device = torch.device("cpu")
 
-Secuencias, modelos de lenguaje y RNN en [@zhang2023dive].
+print(
+    f"PyTorch {torch.__version__} | scikit-learn {sklearn.__version__} | "
+    f"dispositivo: {device} | hilos: {torch.get_num_threads()}"
+)
+```
+
+CPU y un solo hilo reducen variación entre corridas en esta ejecución; los
+tiempos no son comparables entre máquinas. Una GPU puede acelerar el
+entrenamiento, pero no corrige un protocolo temporal inválido.
+
+## Obtener Bike Sharing y verificar sus bytes
+
+Bike Sharing contiene demanda de Capital Bikeshare entre 2011 y 2012, junto con
+calendario y clima [@fanaee2013bike; @fanaee2014event]. UCI lo distribuye bajo
+CC BY 4.0. Descargamos el ZIP oficial y exigimos el SHA-256 observado por esta
+edición antes de leerlo.
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar descarga y verificación"
+
+DATA_URL = (
+    "https://archive.ics.uci.edu/static/public/275/"
+    "bike+sharing+dataset.zip"
+)
+DATA_DIR = Path(".cache/chapter08")
+ARCHIVE_PATH = DATA_DIR / "bike-sharing-dataset.zip"
+ARCHIVE_SHA256 = "b70182d0d0508e9abbb79306ce5c0cec34869000f8220175ac83d11dbe845401"
+HOURLY_SHA256 = "e03de4ee4ef4dc376ac6e04bf829673c6269e8eba5c60fa121640fa2f829504f"
+
+
+def file_sha256(path, chunk_size=1 << 20):
+    digest = sha256()
+    with path.open("rb") as source:
+        for chunk in iter(lambda: source.read(chunk_size), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def verified_download(url, path, expected_hash):
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    if path.exists() and file_sha256(path) == expected_hash:
+        return "caché verificada"
+    temporary = path.with_suffix(path.suffix + ".download")
+    temporary.unlink(missing_ok=True)
+    urlretrieve(url, temporary)
+    actual_hash = file_sha256(temporary)
+    if actual_hash != expected_hash:
+        temporary.unlink(missing_ok=True)
+        raise ValueError(f"SHA-256 inesperado: {actual_hash}")
+    temporary.replace(path)
+    return "descarga verificada"
+
+
+download_status = verified_download(DATA_URL, ARCHIVE_PATH, ARCHIVE_SHA256)
+print(download_status, "|", file_sha256(ARCHIVE_PATH))
+```
+
+La verificación fija los bytes, no garantiza que la serie sea completa o que
+las variables sean apropiadas. Esas son preguntas de auditoría.
+
+## Auditar filas, identidades y tiempo
+
+Leemos únicamente `hour.csv` desde el ZIP y comprobamos su hash. No extraemos ni
+ejecutamos contenido del archivo.
+
+```{python}
+with zipfile.ZipFile(ARCHIVE_PATH) as archive:
+    if archive.testzip() is not None:
+        raise ValueError("El ZIP está corrupto")
+    hourly_bytes = archive.read("hour.csv")
+
+assert sha256(hourly_bytes).hexdigest() == HOURLY_SHA256
+bikes = pd.read_csv(BytesIO(hourly_bytes))
+bikes["timestamp"] = pd.to_datetime(bikes["dteday"]) + pd.to_timedelta(
+    bikes["hr"], unit="h"
+)
+bikes = bikes.sort_values("timestamp").reset_index(drop=True)
+
+pd.Series({
+    "filas reales": len(bikes),
+    "columnas": bikes.shape[1],
+    "inicio": bikes["timestamp"].min(),
+    "fin": bikes["timestamp"].max(),
+    "celdas vacías": int(bikes.isna().sum().sum()),
+    "timestamps duplicados": int(bikes["timestamp"].duplicated().sum()),
+    "fallos casual + registered = cnt": int(
+        (bikes["casual"] + bikes["registered"] != bikes["cnt"]).sum()
+    ),
+})
+```
+
+La ficha web declara 17.389 instancias, pero el archivo contiene 17.379. Esta
+diferencia de diez filas es una discrepancia documental, no diez valores que
+podamos reconstruir. Además, `casual` y `registered` suman exactamente `cnt`:
+usarlos para predecir `cnt` sería entregar la respuesta al modelo.
+
+```{python}
+full_grid = pd.date_range(
+    bikes["timestamp"].min(), bikes["timestamp"].max(), freq="h"
+)
+missing_hours = full_grid.difference(bikes["timestamp"])
+hour_steps = bikes["timestamp"].diff().dt.total_seconds().div(3600)
+
+pd.Series({
+    "horas esperadas": len(full_grid),
+    "horas observadas": len(bikes),
+    "horas ausentes": len(missing_hours),
+    "saltos mayores a una hora": int((hour_steps > 1).sum()),
+    "salto máximo en horas": int(hour_steps.max()),
+    "demanda mínima observada": int(bikes["cnt"].min()),
+    "demanda máxima observada": int(bikes["cnt"].max()),
+})
+```
+
+"Sin valores faltantes" describe las celdas de las filas presentes. No implica
+una cuadrícula horaria completa: faltan 165 horas y el mayor salto dura 37
+horas. La demanda observada nunca vale cero, pero no sabemos si una fila ausente
+significa cero alquileres, cierre del sistema o falta de medición. Imputar cero
+inventaría una interpretación.
+
+```{python}
+#| label: fig-bike-missing
+#| fig-cap: "Horas ausentes por mes; una celda completa no garantiza continuidad temporal."
+#| fig-alt: "Barras mensuales muestran más horas ausentes al inicio de 2011 y en octubre de 2012."
+#| fig-width: 9
+#| fig-height: 3.8
+
+missing_by_month = (
+    pd.Series(1, index=missing_hours)
+    .resample("MS")
+    .sum()
+    .reindex(pd.date_range("2011-01-01", "2012-12-01", freq="MS"), fill_value=0)
+)
+fig, axis = plt.subplots(figsize=(9, 3.8))
+axis.bar(missing_by_month.index, missing_by_month.values, width=22, color="#B24C63")
+axis.set(xlabel="mes", ylabel="horas ausentes")
+axis.grid(axis="y", alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+## Bloquear el futuro
+
+El test comprende octubre, noviembre y diciembre de 2012. Antes de abrirlo,
+junio sirve como periodo de desarrollo y julio-septiembre como tres orígenes de
+backtesting expansivo.
+
+```{python}
+DEVELOPMENT_FIT_END = pd.Timestamp("2012-05-31 23:00")
+DEVELOPMENT_START = pd.Timestamp("2012-06-01 00:00")
+DEVELOPMENT_END = pd.Timestamp("2012-06-30 23:00")
+TEST_START = pd.Timestamp("2012-10-01 00:00")
+TEST_END = pd.Timestamp("2012-12-31 23:00")
+
+BACKTEST_FOLDS = [
+    ("julio", pd.Timestamp("2012-06-30 23:00"),
+     pd.Timestamp("2012-07-01 00:00"), pd.Timestamp("2012-07-31 23:00")),
+    ("agosto", pd.Timestamp("2012-07-31 23:00"),
+     pd.Timestamp("2012-08-01 00:00"), pd.Timestamp("2012-08-31 23:00")),
+    ("septiembre", pd.Timestamp("2012-08-31 23:00"),
+     pd.Timestamp("2012-09-01 00:00"), pd.Timestamp("2012-09-30 23:00")),
+]
+
+assert DEVELOPMENT_FIT_END < DEVELOPMENT_START <= DEVELOPMENT_END
+assert DEVELOPMENT_END < BACKTEST_FOLDS[0][2]
+assert all(fit_end < start <= end for _, fit_end, start, end in BACKTEST_FOLDS)
+assert BACKTEST_FOLDS[-1][3] < TEST_START <= TEST_END
+
+split_table = pd.DataFrame([
+    {"uso": "desarrollo", "inicio": DEVELOPMENT_START, "fin": DEVELOPMENT_END},
+    {"uso": "backtesting", "inicio": BACKTEST_FOLDS[0][2], "fin": BACKTEST_FOLDS[-1][3]},
+    {"uso": "test bloqueado", "inicio": TEST_START, "fin": TEST_END},
+])
+split_table
+```
+
+Los meses ya evaluados pasan a formar parte del ajuste en el siguiente origen.
+Esto reproduce un sistema que se actualiza cuando dispone de nuevos datos. Las
+épocas, la arquitectura y el optimizador permanecerán fijos; el backtesting no
+se usará para reescribir la receta después de cada mes.
+
+## Representar ciclos y escalas
+
+Hora 23 y hora 0 son vecinas. Para una posición $t$ dentro de un ciclo de
+periodo $P$, usamos
+
+$$
+s(t)=\sin\left(2\pi\frac{t}{P}\right),\qquad
+c(t)=\cos\left(2\pi\frac{t}{P}\right).
+$$
+
+Cada paso contiene demanda, hora y día semanal. El instante objetivo aporta su
+calendario, conocido al emitir el pronóstico. No usamos clima: el archivo
+registra clima observado, no un pronóstico meteorológico disponible de forma
+reproducible.
+
+```{python}
+def calendar_array(timestamps):
+    timestamps = pd.DatetimeIndex(timestamps)
+    hour = timestamps.hour.to_numpy()
+    weekday = timestamps.dayofweek.to_numpy()
+    return np.column_stack([
+        np.sin(2 * np.pi * hour / 24),
+        np.cos(2 * np.pi * hour / 24),
+        np.sin(2 * np.pi * weekday / 7),
+        np.cos(2 * np.pi * weekday / 7),
+    ]).astype("float32")
+
+
+timestamps = pd.DatetimeIndex(bikes["timestamp"])
+raw_demand = bikes["cnt"].to_numpy(dtype="float32")
+log_demand = np.log1p(raw_demand)
+calendar_features = calendar_array(timestamps)
+
+
+def contiguous_positions(start, end, history=HISTORY, future=1):
+    positions = []
+    for position in range(history, len(timestamps) - future + 1):
+        target_time = timestamps[position]
+        forecast_end = timestamps[position + future - 1]
+        if target_time < start or forecast_end > end:
+            continue
+        expected_span = pd.Timedelta(hours=history + future - 1)
+        actual_span = timestamps[position + future - 1] - timestamps[position - history]
+        if actual_span == expected_span:
+            positions.append(position)
+    positions = np.asarray(positions, dtype="int64")
+    if len(positions):
+        assert (timestamps[positions] >= start).all()
+        assert (timestamps[positions + future - 1] <= end).all()
+    return positions
+
+
+def fit_scaler(fit_end):
+    fit_values = log_demand[timestamps <= fit_end]
+    return float(fit_values.mean()), float(fit_values.std())
+
+
+def make_tensors(fit_end, start, end):
+    mean, std = fit_scaler(fit_end)
+    positions = contiguous_positions(start, end)
+    sequences = np.empty((len(positions), HISTORY, 5), dtype="float32")
+    for row, position in enumerate(positions):
+        history_slice = slice(position - HISTORY, position)
+        sequences[row, :, 0] = (log_demand[history_slice] - mean) / std
+        sequences[row, :, 1:] = calendar_features[history_slice]
+    target_calendar = calendar_features[positions]
+    targets = ((log_demand[positions] - mean) / std).astype("float32")
+    return {
+        "x": torch.from_numpy(sequences),
+        "calendar": torch.from_numpy(target_calendar),
+        "y": torch.from_numpy(targets).unsqueeze(1),
+        "positions": positions,
+        "mean": mean,
+        "std": std,
+    }
+
+
+def make_training_tensors(fit_end):
+    return make_tensors(
+        fit_end,
+        timestamps[HISTORY],
+        fit_end,
+    )
+```
+
+Una ventana es válida solo si sus 168 horas y su objetivo son consecutivos. Con
+ello evitamos tratar dos observaciones separadas por un cierre como pasos
+adyacentes.
+
+## Establecer líneas base
+
+Para un objetivo $y_t$, las predicciones ingenuas son $y_{t-1}$, $y_{t-24}$ y
+$y_{t-168}$. La última compara la misma hora y día de la semana anterior.
+
+```{python}
+def regression_metrics(y_true, y_pred):
+    errors = np.asarray(y_pred) - np.asarray(y_true)
+    denominator = np.abs(y_true).sum()
+    return {
+        "MAE": float(np.abs(errors).mean()),
+        "RMSE": float(np.sqrt(np.square(errors).mean())),
+        "WAPE": float(np.abs(errors).sum() / denominator),
+    }
+
+
+def naive_prediction(positions, lag):
+    return raw_demand[positions - lag]
+
+
+development_positions = contiguous_positions(DEVELOPMENT_START, DEVELOPMENT_END)
+development_truth = raw_demand[development_positions]
+baseline_development = pd.DataFrame({
+    "Persistencia (1 h)": regression_metrics(
+        development_truth, naive_prediction(development_positions, 1)
+    ),
+    "Estacional diaria (24 h)": regression_metrics(
+        development_truth, naive_prediction(development_positions, 24)
+    ),
+    "Estacional semanal (168 h)": regression_metrics(
+        development_truth, naive_prediction(development_positions, 168)
+    ),
+}).T
+baseline_development.round(3)
+```
+
+Una RNN solo resulta útil si supera reglas que cuestan cero entrenamiento. Una
+partición aleatoria ocultaría precisamente el orden que necesitan estas reglas.
+
+## Formular un estado recurrente
+
+Una RNN de Elman actualiza [@elman1990finding]
+
+$$
+h_t=\tanh(W_{xh}x_t+W_{hh}h_{t-1}+b_h),
+$$
+
+donde los mismos parámetros se reutilizan para cada $t$. La salida usará el
+último estado y el calendario del objetivo:
+
+$$
+\hat z_{t+1}=W_{hy}[h_t;c_{t+1}]+b_y.
+$$
+
+$z$ representa `log1p(cnt)` estandarizado. La transformación estabiliza la cola
+derecha durante el ajuste; MAE, RMSE y WAPE se calculan después de volver a
+bicicletas.
+
+```{python}
+class ManualRNN(nn.Module):
+    def __init__(self, input_size, hidden_size):
+        super().__init__()
+        self.weight_ih = nn.Parameter(torch.empty(hidden_size, input_size))
+        self.weight_hh = nn.Parameter(torch.empty(hidden_size, hidden_size))
+        self.bias = nn.Parameter(torch.empty(hidden_size))
+        nn.init.xavier_uniform_(self.weight_ih)
+        nn.init.orthogonal_(self.weight_hh)
+        nn.init.zeros_(self.bias)
+
+    def forward(self, inputs, initial_state=None):
+        batch_size = inputs.shape[0]
+        if initial_state is None:
+            state = inputs.new_zeros(batch_size, self.weight_hh.shape[0])
+        else:
+            state = initial_state
+        outputs = []
+        for step in range(inputs.shape[1]):
+            state = torch.tanh(
+                F.linear(inputs[:, step], self.weight_ih, self.bias)
+                + F.linear(state, self.weight_hh)
+            )
+            outputs.append(state)
+        return torch.stack(outputs, dim=1), state
+```
+
+El bucle hace explícito que el eje 1 es tiempo y que el estado tiene una fila
+por secuencia del lote. No crea parámetros nuevos al avanzar.
+
+## Comprobar `ManualRNN` contra `nn.RNN`
+
+Copiamos los pesos manuales a la implementación optimizada. PyTorch separa dos
+sesgos; dejamos el recurrente en cero para reproducir un único $b_h$.
+
+```{python}
+torch.manual_seed(808)
+manual = ManualRNN(input_size=3, hidden_size=4)
+builtin = nn.RNN(input_size=3, hidden_size=4, batch_first=True, nonlinearity="tanh")
+
+with torch.no_grad():
+    builtin.weight_ih_l0.copy_(manual.weight_ih)
+    builtin.weight_hh_l0.copy_(manual.weight_hh)
+    builtin.bias_ih_l0.copy_(manual.bias)
+    builtin.bias_hh_l0.zero_()
+
+manual_input = torch.randn(2, 6, 3, requires_grad=True)
+builtin_input = manual_input.detach().clone().requires_grad_(True)
+manual_output, manual_last = manual(manual_input)
+builtin_output, builtin_last = builtin(builtin_input)
+manual_output.sum().backward()
+builtin_output.sum().backward()
+
+equivalence = pd.Series({
+    "máxima diferencia de salidas": float(
+        (manual_output - builtin_output).abs().max().detach()
+    ),
+    "máxima diferencia del último estado": float(
+        (manual_last - builtin_last.squeeze(0)).abs().max().detach()
+    ),
+    "máxima diferencia de gradientes de entrada": float(
+        (manual_input.grad - builtin_input.grad).abs().max().detach()
+    ),
+    "máxima diferencia de gradientes W_ih": float(
+        (manual.weight_ih.grad - builtin.weight_ih_l0.grad).abs().max().detach()
+    ),
+    "máxima diferencia de gradientes W_hh": float(
+        (manual.weight_hh.grad - builtin.weight_hh_l0.grad).abs().max().detach()
+    ),
+})
+assert equivalence.max() < 1e-6
+equivalence
+```
+
+La equivalencia no prueba que la arquitectura pronostique bien; sí verifica que
+el bucle implementa la recurrencia declarada.
+
+## Desenrollar backpropagation through time
+
+Al desenrollar la red, una pérdida final depende de cada estado anterior. BPTT
+aplica la regla de la cadena sobre esas copias temporales [@werbos1990bptt]. En
+el siguiente sistema escalar, el peso recurrente menor que uno atenúa la
+influencia de entradas lejanas.
+
+```{python}
+toy_inputs = torch.ones(6, requires_grad=True)
+recurrent_weight = torch.tensor(0.65, requires_grad=True)
+state = torch.tensor(0.0)
+toy_states = []
+for value in toy_inputs:
+    state = torch.tanh(value + recurrent_weight * state)
+    toy_states.append(state)
+
+toy_states[-1].backward()
+bptt_table = pd.DataFrame({
+    "paso": np.arange(1, 7),
+    "distancia hasta la salida": np.arange(5, -1, -1),
+    "d salida / d entrada": toy_inputs.grad.detach().numpy(),
+})
+bptt_table
+```
+
+Los gradientes dependen también de la derivada de `tanh` y de los estados, no
+solo de $0{,}65^k$. En el Capítulo 9 estudiaremos por qué productos repetidos
+pueden desvanecerse o explotar y cómo las compuertas modifican ese recorrido.
+
+## Construir el pronosticador
+
+La implementación experimental usa una capa recurrente, 32 unidades ocultas y
+una cabeza lineal. No apilamos capas ni recorremos la ventana en ambas
+direcciones. La causalidad proviene de excluir observaciones iguales o
+posteriores al objetivo; una lectura inversa del mismo pasado no violaría por sí
+sola esa condición, pero pertenece a la comparación del Capítulo 9.
+
+```{python}
+class RNNForecaster(nn.Module):
+    def __init__(self, input_size=5, hidden_size=HIDDEN_SIZE):
+        super().__init__()
+        self.rnn = nn.RNN(input_size, hidden_size, batch_first=True)
+        self.head = nn.Linear(hidden_size + 4, 1)
+
+    def forward(self, sequence, target_calendar):
+        _, last_state = self.rnn(sequence)
+        features = torch.cat([last_state.squeeze(0), target_calendar], dim=1)
+        return self.head(features)
+
+
+model_shape_check = RNNForecaster()
+dummy_output = model_shape_check(torch.zeros(7, HISTORY, 5), torch.zeros(7, 4))
+pd.Series({
+    "forma de salida": str(tuple(dummy_output.shape)),
+    "parámetros": sum(parameter.numel() for parameter in model_shape_check.parameters()),
+})
+```
+
+## Fijar la receta antes del backtesting
+
+Usaremos AdamW, tasa $3\times10^{-3}$, 12 épocas, batch 256, MSE sobre el
+objetivo transformado y clipping de norma 1. La semilla cambia inicialización y
+orden de mini-batches; cortes y ventanas permanecen idénticos.
+
+::: {.callout-important title="Hipótesis y evaluación fijadas antes de test"}
+
+- La métrica primaria será MAE en bicicletas; RMSE y WAPE serán secundarias.
+- La RNN se considerará materialmente mejor si reduce al menos 5% el MAE del
+  mejor baseline estacional mediano y gana en dos de tres meses.
+- Se reportarán tres semillas pareadas y tiempos de ajuste.
+- Como análisis secundario fijado ahora, cada RNN producirá 24 pasos recursivos
+  desde todos los orígenes continuos del test. Se resumirá la métrica mediana
+  entre semillas, sin combinar sus predicciones; la semilla 29 ilustrará casos.
+- Octubre-diciembre no se consultará hasta terminar el backtesting.
+:::
+
+```{python}
+#| code-fold: true
+#| code-summary: "Mostrar entrenamiento y evaluación"
+
+def restore_prediction(scaled, mean, std):
+    log_values = np.asarray(scaled) * std + mean
+    return np.maximum(np.expm1(log_values), 0.0)
+
+
+@torch.inference_mode()
+def predict_model(model, tensors):
+    model.eval()
+    predictions = model(tensors["x"], tensors["calendar"]).squeeze(1).numpy()
+    return restore_prediction(predictions, tensors["mean"], tensors["std"])
+
+
+def train_model(train_tensors, seed, monitored_tensors=None):
+    random.seed(seed)
+    np.random.seed(seed)
+    torch.manual_seed(seed)
+    model = RNNForecaster()
+    optimizer = torch.optim.AdamW(model.parameters(), lr=3e-3, weight_decay=1e-4)
+    generator = torch.Generator().manual_seed(seed + 8_000)
+    loader = DataLoader(
+        TensorDataset(
+            train_tensors["x"], train_tensors["calendar"], train_tensors["y"]
+        ),
+        batch_size=BATCH_SIZE,
+        shuffle=True,
+        generator=generator,
+        num_workers=0,
+    )
+    history = []
+    started = perf_counter()
+    for epoch in range(1, EPOCHS + 1):
+        model.train()
+        loss_sum = 0.0
+        for sequences, target_calendar, targets in loader:
+            optimizer.zero_grad(set_to_none=True)
+            predictions = model(sequences, target_calendar)
+            loss = F.mse_loss(predictions, targets)
+            loss.backward()
+            gradient_norm = nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
+            optimizer.step()
+            loss_sum += loss.item() * len(targets)
+        epoch_row = {
+            "época": epoch,
+            "MSE ajuste": loss_sum / len(train_tensors["y"]),
+            "norma gradiente último batch": float(gradient_norm),
+        }
+        if monitored_tensors is not None:
+            monitored_prediction = predict_model(model, monitored_tensors)
+            monitored_truth = raw_demand[monitored_tensors["positions"]]
+            epoch_row["MAE evaluación"] = regression_metrics(
+                monitored_truth, monitored_prediction
+            )["MAE"]
+        history.append(epoch_row)
+    return {
+        "model": model,
+        "history": pd.DataFrame(history),
+        "seconds": perf_counter() - started,
+    }
+
+
+def fit_linear(train_tensors, evaluation_tensors):
+    train_x = np.column_stack([
+        train_tensors["x"][:, :, 0].numpy(),
+        train_tensors["calendar"].numpy(),
+    ]).astype("float64")
+    evaluation_x = np.column_stack([
+        evaluation_tensors["x"][:, :, 0].numpy(),
+        evaluation_tensors["calendar"].numpy(),
+    ]).astype("float64")
+    train_x = torch.from_numpy(train_x)
+    evaluation_x = torch.from_numpy(evaluation_x)
+    train_y = train_tensors["y"].squeeze(1).to(torch.float64)
+    x_mean = train_x.mean(dim=0)
+    y_mean = train_y.mean()
+    centered_x = train_x - x_mean
+    centered_y = train_y - y_mean
+    identity = torch.eye(centered_x.shape[1], dtype=torch.float64)
+    coefficients = torch.linalg.solve(
+        centered_x.T @ centered_x + identity,
+        centered_x.T @ centered_y,
+    )
+    scaled = ((evaluation_x - x_mean) @ coefficients + y_mean).numpy()
+    return restore_prediction(
+        scaled, evaluation_tensors["mean"], evaluation_tensors["std"]
+    )
+```
+
+Barajar ventanas dentro de ajuste cambia el orden de SGD, no mueve objetivos
+entre periodos. Cada ventana conserva internamente su orden de 168 pasos.
+
+## Comprobar convergencia en junio
+
+Junio es el único periodo usado para inspeccionar la receta antes del
+backtesting. No elegimos la mejor época: las 12 se ejecutarán en todos los
+orígenes.
+
+```{python}
+development_train = make_training_tensors(DEVELOPMENT_FIT_END)
+development_evaluation = make_tensors(
+    DEVELOPMENT_FIT_END, DEVELOPMENT_START, DEVELOPMENT_END
+)
+development_run = train_model(
+    development_train, REPRESENTATIVE_SEED, monitored_tensors=development_evaluation
+)
+development_run["history"]
+```
+
+```{python}
+#| label: fig-rnn-development
+#| fig-cap: "Trayectoria de ajuste y MAE de junio para la receta fija."
+#| fig-alt: "Dos paneles muestran MSE de ajuste y MAE temporal a lo largo de doce épocas."
+#| fig-width: 9
+#| fig-height: 3.8
+
+history = development_run["history"]
+fig, axes = plt.subplots(1, 2, figsize=(9, 3.8))
+axes[0].plot(history["época"], history["MSE ajuste"], marker="o", color="#48639C")
+axes[1].plot(history["época"], history["MAE evaluación"], marker="o", color="#C1666B")
+axes[0].set(xlabel="época", ylabel="MSE estandarizado", title="Ajuste")
+axes[1].set(xlabel="época", ylabel="MAE en bicicletas", title="Junio")
+for axis in axes:
+    axis.grid(alpha=0.2)
+    axis.set_xticks([1, 3, 6, 9, 12])
+fig.tight_layout()
+plt.show()
+```
+
+## Ejecutar tres orígenes expansivos
+
+En cada origen recalculamos la media y desviación con el pasado, ajustamos una
+regresión lineal y entrenamos tres RNN. Los baselines no estiman parámetros.
+
+```{python}
+backtest_rows = []
+backtest_runs = {}
+
+for fold_name, fit_end, evaluation_start, evaluation_end in BACKTEST_FOLDS:
+    train_tensors = make_training_tensors(fit_end)
+    evaluation_tensors = make_tensors(fit_end, evaluation_start, evaluation_end)
+    positions = evaluation_tensors["positions"]
+    truth = raw_demand[positions]
+
+    baseline_specs = {
+        "Persistencia 1 h": naive_prediction(positions, 1),
+        "Estacional 24 h": naive_prediction(positions, 24),
+        "Estacional 168 h": naive_prediction(positions, 168),
+        "Lineal con rezagos + calendario": fit_linear(
+            train_tensors, evaluation_tensors
+        ),
+    }
+    for protocol, prediction in baseline_specs.items():
+        backtest_rows.append({
+            "mes": fold_name,
+            "protocolo": protocol,
+            "semilla": np.nan,
+            **regression_metrics(truth, prediction),
+            "segundos": 0.0,
+            "ventanas": len(positions),
+        })
+
+    for seed in PAIR_SEEDS:
+        run = train_model(train_tensors, seed)
+        prediction = predict_model(run["model"], evaluation_tensors)
+        backtest_runs[(fold_name, seed)] = run
+        backtest_rows.append({
+            "mes": fold_name,
+            "protocolo": "RNN",
+            "semilla": seed,
+            **regression_metrics(truth, prediction),
+            "segundos": run["seconds"],
+            "ventanas": len(positions),
+        })
+        print(
+            f"{fold_name:10s} | semilla {seed} | "
+            f"MAE {backtest_rows[-1]['MAE']:.2f} | {run['seconds']:.1f} s"
+        )
+
+backtest_results = pd.DataFrame(backtest_rows)
+backtest_results
+```
+
+## Leer estabilidad y skill
+
+Primero resumimos las tres semillas; luego las comparamos con la mejor regla
+estacional de cada mes. La regresión lineal ayuda a interpretar recurrencia,
+pero no define el umbral predeclarado.
+
+```{python}
+rnn_monthly = (
+    backtest_results[backtest_results["protocolo"] == "RNN"]
+    .groupby("mes", sort=False)
+    .agg(
+        MAE_mediano=("MAE", "median"),
+        MAE_mínimo=("MAE", "min"),
+        MAE_máximo=("MAE", "max"),
+        RMSE_mediano=("RMSE", "median"),
+        segundos_medianos=("segundos", "median"),
+        ventanas=("ventanas", "first"),
+    )
+)
+
+seasonal = backtest_results[
+    backtest_results["protocolo"].isin(["Estacional 24 h", "Estacional 168 h"])
+]
+best_seasonal = seasonal.loc[seasonal.groupby("mes")["MAE"].idxmin()].set_index("mes")
+skill_table = rnn_monthly.join(
+    best_seasonal[["protocolo", "MAE"]].rename(
+        columns={"protocolo": "mejor baseline", "MAE": "MAE baseline"}
+    )
+)
+skill_table["skill MAE"] = 1 - skill_table["MAE_mediano"] / skill_table["MAE baseline"]
+skill_table
+```
+
+```{python}
+#| label: fig-rnn-backtest
+#| fig-cap: "MAE mensual de baselines y semillas de la RNN durante backtesting."
+#| fig-alt: "Puntos por mes comparan persistencia, estacionalidad, autorregresión y tres semillas recurrentes."
+#| fig-width: 9
+#| fig-height: 4.5
+
+protocol_order = [
+    "Persistencia 1 h", "Estacional 24 h", "Estacional 168 h",
+    "Lineal con rezagos + calendario", "RNN",
+]
+colors = {
+    "Persistencia 1 h": "#7A7A7A",
+    "Estacional 24 h": "#3C8DAD",
+    "Estacional 168 h": "#2A6F4E",
+    "Lineal con rezagos + calendario": "#D18B31",
+    "RNN": "#8E4A9E",
+}
+fig, axis = plt.subplots(figsize=(9, 4.5))
+month_positions = {name: index for index, name in enumerate(skill_table.index)}
+offsets = {name: offset for name, offset in zip(protocol_order, np.linspace(-0.24, 0.24, 5))}
+for row in backtest_results.itertuples():
+    axis.scatter(
+        month_positions[row.mes] + offsets[row.protocolo], row.MAE,
+        color=colors[row.protocolo], alpha=0.85, s=45,
+        label=row.protocolo,
+    )
+handles, labels = axis.get_legend_handles_labels()
+unique = dict(zip(labels, handles))
+axis.legend(unique.values(), unique.keys(), frameon=False, ncol=2, fontsize=8)
+axis.set_xticks(range(len(month_positions)), list(month_positions))
+axis.set(ylabel="MAE en bicicletas", xlabel="mes")
+axis.grid(axis="y", alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+median_skill = float(skill_table["skill MAE"].median())
+monthly_wins = int((skill_table["skill MAE"] > 0).sum())
+hypothesis_result = pd.Series({
+    "skill MAE mediano": median_skill,
+    "meses ganados": monthly_wins,
+    "alcanza mejora material del 5%": bool(
+        median_skill >= 0.05 and monthly_wins >= 2
+    ),
+})
+hypothesis_result
+```
+
+La RNN alcanza MAE mediano de 45,95 en julio, 37,79 en agosto y 46,68 en
+septiembre. Frente a la estacionalidad semanal, el skill es 28,4%, 10,5% y
+24,4%: gana los tres meses y supera el umbral material. Sin embargo, julio varía
+entre 35,60 y 47,77 según la semilla; ganar en mediana no elimina inestabilidad.
+Cambiar ventana, unidades o épocas ahora convertiría el backtesting en otro
+periodo de ajuste.
+
+## Abrir el test una sola vez
+
+Con la receta cerrada, cada semilla se reajusta con observaciones hasta
+septiembre. Octubre-diciembre se usa únicamente para evaluación final.
+
+```{python}
+FINAL_FIT_END = pd.Timestamp("2012-09-30 23:00")
+final_train = make_training_tensors(FINAL_FIT_END)
+test_tensors = make_tensors(FINAL_FIT_END, TEST_START, TEST_END)
+test_positions = test_tensors["positions"]
+test_truth = raw_demand[test_positions]
+
+test_rows = []
+test_predictions = {}
+for protocol, prediction in {
+    "Persistencia 1 h": naive_prediction(test_positions, 1),
+    "Estacional 24 h": naive_prediction(test_positions, 24),
+    "Estacional 168 h": naive_prediction(test_positions, 168),
+    "Lineal con rezagos + calendario": fit_linear(final_train, test_tensors),
+}.items():
+    test_predictions[protocol] = prediction
+    test_rows.append({
+        "protocolo": protocol, "semilla": np.nan,
+        **regression_metrics(test_truth, prediction),
+    })
+
+final_runs = {}
+for seed in PAIR_SEEDS:
+    run = train_model(final_train, seed)
+    prediction = predict_model(run["model"], test_tensors)
+    final_runs[seed] = run
+    test_predictions[("RNN", seed)] = prediction
+    test_rows.append({
+        "protocolo": "RNN", "semilla": seed,
+        **regression_metrics(test_truth, prediction),
+    })
+
+test_results = pd.DataFrame(test_rows)
+test_results
+```
+
+```{python}
+rnn_test_summary = (
+    test_results[test_results["protocolo"] == "RNN"]
+    .agg({"MAE": ["median", "min", "max"], "RMSE": ["median", "min", "max"],
+          "WAPE": ["median", "min", "max"]})
+)
+rnn_test_summary
+```
+
+En test, la RNN obtiene MAE mediano 36,56, frente a 62,53 de la regla semanal:
+una reducción de 41,5%. El modelo lineal con rezagos y calendario queda cerca;
+alcanza 37,37 y la semilla 43 de la RNN es peor que ese modelo lineal. La
+recurrencia gana en mediana, pero su margen no justifica afirmar que una
+transformación no lineal sea siempre necesaria.
+
+## Pronosticar 24 horas por retroalimentación
+
+El modelo fue ajustado para un paso usando historia observada. Para alcanzar 24
+horas, insertamos cada predicción en la ventana siguiente. Así, un error temprano
+modifica entradas posteriores. Esta diferencia suele llamarse **exposición**:
+durante ajuste el contexto es real; durante inferencia recursiva puede contener
+salidas del modelo.
+
+```{python}
+multi_positions = contiguous_positions(TEST_START, TEST_END, future=24)
+
+
+@torch.inference_mode()
+def recursive_forecast(model, origins, mean, std, horizon=24):
+    history_positions = origins[:, None] + np.arange(-HISTORY, 0)
+    standardized_demand = (
+        (log_demand[history_positions] - mean) / std
+    ).astype("float32")
+    sequence = np.concatenate([
+        standardized_demand[:, :, None],
+        calendar_features[history_positions],
+    ], axis=2)
+    predictions = np.empty((len(origins), horizon), dtype="float32")
+    model.eval()
+    for step in range(horizon):
+        target_positions = origins + step
+        scaled = model(
+            torch.from_numpy(sequence),
+            torch.from_numpy(calendar_features[target_positions]),
+        ).squeeze(1).numpy()
+        prediction = restore_prediction(scaled, mean, std).astype("float32")
+        predictions[:, step] = prediction
+        next_rows = np.column_stack([
+            (np.log1p(prediction) - mean) / std,
+            calendar_features[target_positions],
+        ]).astype("float32")
+        sequence = np.concatenate([sequence[:, 1:], next_rows[:, None, :]], axis=1)
+    assert np.isfinite(predictions).all()
+    return predictions
+
+
+recursive_by_seed = {
+    seed: recursive_forecast(
+        run["model"], multi_positions, test_tensors["mean"], test_tensors["std"]
+    )
+    for seed, run in final_runs.items()
+}
+
+one_step_indices = np.searchsorted(test_positions, multi_positions)
+assert np.array_equal(test_positions[one_step_indices], multi_positions)
+for seed in PAIR_SEEDS:
+    assert np.allclose(
+        recursive_by_seed[seed][:, 0],
+        test_predictions[("RNN", seed)][one_step_indices],
+        rtol=1e-5,
+        atol=1e-4,
+    )
+
+steps = np.arange(24)
+multi_truth = raw_demand[multi_positions[:, None] + steps]
+daily_seasonal = raw_demand[multi_positions[:, None] + steps - 24]
+weekly_seasonal = raw_demand[multi_positions[:, None] + steps - 168]
+persistence_24 = np.repeat(raw_demand[multi_positions - 1, None], 24, axis=1)
+
+horizon_rows = []
+for horizon in range(24):
+    for protocol, prediction in {
+        "Persistencia": persistence_24[:, horizon],
+        "Estacional 24 h": daily_seasonal[:, horizon],
+        "Estacional 168 h": weekly_seasonal[:, horizon],
+    }.items():
+        horizon_rows.append({
+            "horizonte": horizon + 1, "protocolo": protocol, "semilla": np.nan,
+            **regression_metrics(multi_truth[:, horizon], prediction),
+        })
+    for seed in PAIR_SEEDS:
+        horizon_rows.append({
+            "horizonte": horizon + 1, "protocolo": "RNN recursiva", "semilla": seed,
+            **regression_metrics(
+                multi_truth[:, horizon], recursive_by_seed[seed][:, horizon]
+            ),
+        })
+
+horizon_results = pd.DataFrame(horizon_rows)
+horizon_summary = (
+    horizon_results.groupby(["protocolo", "horizonte"], sort=False)
+    .agg(MAE=("MAE", "median"), RMSE=("RMSE", "median"), WAPE=("WAPE", "median"))
+    .reset_index()
+)
+horizon_summary[horizon_summary["horizonte"].isin([1, 6, 12, 24])]
+```
+
+Cada horizonte reúne todas las horas del día, por lo que no queda fijado a una
+hora como ocurriría si todos los pronósticos se emitieran a medianoche. Las
+ventanas se superponen: las curvas describen cómo cambia el error, pero no
+constituyen 1.386 experimentos independientes.
+
+La RNN obtiene MAE mediano 36,23 a una hora y aumenta a 71,97, 73,24 y 77,93 en
+los horizontes 6, 12 y 24. La regla semanal permanece cerca de 60--63 y supera a
+la RNN desde el horizonte 6. La ventaja a un paso no sobrevive al contexto
+retroalimentado: este es un fallo medible, no una razón para cambiar la receta
+después de abrir test.
+
+```{python}
+#| label: fig-rnn-horizons
+#| fig-cap: "MAE mediano por horizonte desde todos los orígenes horarios continuos."
+#| fig-alt: "Cuatro curvas muestran cómo cambia el error entre una y veinticuatro horas."
+#| fig-width: 9
+#| fig-height: 4.5
+
+fig, axis = plt.subplots(figsize=(9, 4.5))
+for protocol, rows in horizon_summary.groupby("protocolo", sort=False):
+    axis.plot(rows["horizonte"], rows["MAE"], marker="o", markersize=3, label=protocol)
+axis.set(xlabel="horizonte (horas)", ylabel="MAE en bicicletas")
+axis.set_xticks([1, 6, 12, 18, 24])
+axis.grid(alpha=0.2)
+axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: fig-rnn-day-example
+#| fig-cap: "Ejemplo de pronóstico recursivo de 24 horas frente a demanda observada y baseline diario."
+#| fig-alt: "Tres líneas comparan demanda horaria real, RNN recursiva y valores del día anterior."
+#| fig-width: 9
+#| fig-height: 4.2
+
+example_index = len(multi_positions) // 2
+example_origin = timestamps[multi_positions[example_index]]
+hours = np.arange(1, 25)
+fig, axis = plt.subplots(figsize=(9, 4.2))
+axis.plot(hours, multi_truth[example_index], marker="o", label="observado", color="#222222")
+axis.plot(
+    hours, recursive_by_seed[REPRESENTATIVE_SEED][example_index],
+    marker="o", label="RNN, semilla 29", color="#8E4A9E",
+)
+axis.plot(hours, daily_seasonal[example_index], linestyle="--", label="día anterior", color="#3C8DAD")
+axis.set(
+    xlabel="horizonte (horas)", ylabel="bicicletas",
+    title=f"Origen: {example_origin:%Y-%m-%d %H:%M}",
+)
+axis.grid(alpha=0.2)
+axis.legend(frameon=False)
+fig.tight_layout()
+plt.show()
+```
+
+No implementamos un decoder con *teacher forcing*: eso requeriría otra
+arquitectura y mezclaría la pregunta central con secuencia-a-secuencia. Aquí la
+retroalimentación del pronosticador a un paso basta para mostrar por qué el
+horizonte cambia el problema.
+
+## Diagnosticar cuándo falla
+
+Usamos la semilla representativa 29 para localizar errores, no para elegir otra
+receta después de test. Las tablas anteriores conservan las tres semillas.
+
+```{python}
+rnn_representative_prediction = test_predictions[("RNN", REPRESENTATIVE_SEED)]
+test_diagnostics = pd.DataFrame({
+    "timestamp": timestamps[test_positions],
+    "observado": test_truth,
+    "predicción": rnn_representative_prediction,
+})
+test_diagnostics["error"] = test_diagnostics["predicción"] - test_diagnostics["observado"]
+test_diagnostics["error absoluto"] = test_diagnostics["error"].abs()
+test_diagnostics["hora"] = test_diagnostics["timestamp"].dt.hour
+test_diagnostics["mes"] = test_diagnostics["timestamp"].dt.month_name(locale="C")
+
+hourly_error = test_diagnostics.groupby("hora")["error absoluto"].mean()
+monthly_error = test_diagnostics.groupby(test_diagnostics["timestamp"].dt.month)[
+    "error absoluto"
+].agg(["mean", "count"])
+monthly_error.index = ["octubre", "noviembre", "diciembre"]
+monthly_error
+```
+
+```{python}
+#| label: fig-rnn-diagnostics
+#| fig-cap: "Error absoluto por hora y residuos en el test continuo disponible."
+#| fig-alt: "Un panel muestra MAE horario y otro residuos dispersos alrededor de cero."
+#| fig-width: 10
+#| fig-height: 4
+
+fig, axes = plt.subplots(1, 2, figsize=(10, 4))
+axes[0].bar(hourly_error.index, hourly_error.values, color="#4C78A8")
+axes[0].set(xlabel="hora", ylabel="MAE", title="Error por hora")
+axes[1].scatter(
+    test_diagnostics["timestamp"], test_diagnostics["error"],
+    s=8, alpha=0.45, color="#B24C63",
+)
+axes[1].axhline(0, color="black", linewidth=1)
+axes[1].set(xlabel="fecha", ylabel="predicción - observado", title="Residuos")
+for axis in axes:
+    axis.grid(alpha=0.2)
+fig.tight_layout()
+plt.show()
+```
+
+## Medir cobertura, no esconderla
+
+El sistema solo emite un pronóstico cuando dispone de una semana continua. Esta
+es una política explícita de abstención, no solución al dato ausente.
+
+```{python}
+coverage_rows = []
+for name, start, end in [
+    ("ajuste hasta junio", timestamps.min(), pd.Timestamp("2012-06-30 23:00")),
+    ("backtesting", pd.Timestamp("2012-07-01"), pd.Timestamp("2012-09-30 23:00")),
+    ("test", TEST_START, TEST_END),
+]:
+    observed_targets = int(((timestamps >= start) & (timestamps <= end)).sum())
+    one_step = len(contiguous_positions(start, end, future=1))
+    full_day = len(contiguous_positions(start, end, future=24))
+    coverage_rows.append({
+        "periodo": name,
+        "horas observadas": observed_targets,
+        "orígenes válidos a 1 h": one_step,
+        "cobertura a 1 h": one_step / observed_targets,
+        "orígenes válidos a 24 h": full_day,
+        "cobertura a 24 h": full_day / observed_targets,
+    })
+coverage_table = pd.DataFrame(coverage_rows)
+coverage_table
+```
+
+Octubre incluye un salto de 37 horas alrededor del huracán Sandy. Exigir
+continuidad elimina no solo esas horas, sino la semana posterior necesaria para
+reconstruir contexto. Por tanto, las métricas describen periodos con historia
+completa y pueden ser optimistas respecto a una operación que deba continuar
+durante interrupciones.
+
+Persistencia y estacionalidad diaria podrían operar con una historia más corta.
+Aquí se evalúan sobre los mismos objetivos elegibles de la RNN para que el error
+sea comparable; la tabla no afirma que todos los protocolos tengan la misma
+cobertura operacional.
+
+## Qué permite concluir el experimento
+
+- Compartir pesos permite procesar una semana sin crear una capa por hora.
+- La equivalencia numérica separa la fórmula recurrente de la implementación.
+- BPTT atribuye la pérdida a pasos anteriores a través del estado.
+- Los baselines estacionales son adversarios necesarios en demanda horaria.
+- Backtesting expansivo revela variación entre meses y evita entrenar con futuro.
+- Un buen resultado a un paso no garantiza estabilidad al retroalimentar 24
+  predicciones.
+
+No permite afirmar que:
+
+- una fila ausente equivalga a demanda cero;
+- el clima observado esté disponible al emitir un pronóstico futuro;
+- la misma receta funcione en otra ciudad, sistema tarifario o periodo;
+- las ventanas superpuestas sean observaciones estadísticamente independientes;
+- una RNN simple conserve información a cualquier distancia; ni
+- abstenerse después de una interrupción resuelva continuidad operacional.
+
+## Limitaciones y condiciones de uso
+
+- UCI declara diez instancias más de las contenidas en `hour.csv`.
+- Las 165 horas ausentes no incluyen una causa documentada por fila.
+- Las ventanas de 168 horas reducen cobertura, especialmente tras interrupciones.
+- Los datos terminan en 2012 y pueden no representar movilidad actual.
+- El objetivo agregado no distingue estaciones llenas de estaciones vacías.
+- Festivos, eventos, capacidad, tarifas y pronósticos meteorológicos no forman
+  parte del modelo.
+- MAE y RMSE sobre ventanas solapadas son resúmenes descriptivos, no intervalos
+  de incertidumbre independientes.
+- Tres semillas describen inicialización, no incertidumbre poblacional o cambio
+  de régimen.
+
+## Cierre
+
+- Una secuencia exige definir qué información existe en cada instante.
+- Ventanas, escalas y particiones forman parte del modelo experimental.
+- Una RNN resume el pasado mediante un estado actualizado con pesos compartidos.
+- `nn.RNN` implementa la misma recurrencia que un bucle explícito.
+- La evaluación temporal debe comparar contra persistencia y estacionalidad.
+- Horizonte y cobertura deben reportarse junto con el error.
+
+## Ejercicios
+
+1. Calcula las formas de $W_{xh}$, $W_{hh}$ y $W_{hy}$ para este capítulo.
+2. Sustituye 168 por 24 horas y compara cobertura y MAE sin consultar nuevamente
+   el test para elegir.
+3. Elimina el calendario objetivo y cuantifica su aporte durante desarrollo.
+4. Cambia `tanh` por ReLU en la implementación manual y vuelve a verificar
+   equivalencia con `nn.RNN`.
+5. Añade un baseline que promedie las cuatro semanas anteriores de la misma hora.
+6. Calcula MAE separado para horas de alta y baja demanda usando un umbral fijado
+   con ajuste.
+7. Evalúa pronóstico recursivo a 48 horas y describe cómo cambia la cobertura.
+8. Diseña una máscara de observación para no descartar ventanas con interrupciones.
+9. Explica por qué barajar ventanas de ajuste no equivale a una partición aleatoria.
+10. Propón un intervalo de predicción y una métrica para evaluar su cobertura.
+
+## Reto
+
+Diseña un protocolo operacional que deba seguir produciendo pronósticos cuando
+falten horas. Debe distinguir demanda cero de dato ausente, definir cómo se
+actualiza el estado, incluir un indicador de calidad de entrada y evaluar error
+y cobertura durante interrupciones sin ajustar decisiones con el test actual.
+
+::: {.callout-important title="Puente a memoria prolongada"}
+La RNN simple multiplica transformaciones al retroceder por el tiempo. En el
+Capítulo 9 construiremos una tarea donde esa ruta larga sea indispensable y
+compararemos cómo LSTM y GRU controlan qué recordar, olvidar y exponer.
+:::

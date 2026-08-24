@@ -80,3 +80,8 @@ does not own the underlying images and describes access for non-commercial
 research and educational use. This repository does not redistribute ImageNet
 images or the pretrained weights; the chapter downloads and verifies the
 official PyTorch weight file.
+
+The Bike Sharing dataset used in Chapter 8 was created by Hadi Fanaee-T and is
+distributed by the UCI Machine Learning Repository under CC BY 4.0. Dataset
+DOI: <https://doi.org/10.24432/C5W894>. This repository does not redistribute
+the archive; the chapter downloads it from UCI and verifies its SHA-256 digest.
